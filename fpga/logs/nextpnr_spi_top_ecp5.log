@@ -1,0 +1,1129 @@
+
+
+Info: Logic utilisation before packing:
+Info:     Total LUT4s:     30540/43848    69%
+Info:         logic LUTs:  29148/43848    66%
+Info:         carry LUTs:   1392/43848     3%
+Info:           RAM LUTs:      0/ 5481     0%
+Info:          RAMW LUTs:      0/10962     0%
+
+Info:      Total DFFs:      7782/43848    17%
+
+Info: Packing IOs..
+Info: Packing constants..
+Info: Packing carries...
+Info: Packing LUTs...
+Info: Packing LUT5-7s...
+Info: Packing FFs...
+Info:     4110 FFs paired with LUTs.
+Info: Generating derived timing constraints...
+Info: Promoting globals...
+Info:     promoting clock net clk$TRELLIS_IO_IN to global network
+Info: Checksum: 0x663c8a3a
+
+Info: Device utilisation:
+Info: 	          TRELLIS_IO:     151/    245    61%
+Info: 	                DCCA:       1/     56     1%
+Info: 	              DP16KD:       0/    108     0%
+Info: 	          MULT18X18D:       8/     72    11%
+Info: 	              ALU54B:       0/     36     0%
+Info: 	             EHXPLLL:       0/      4     0%
+Info: 	             EXTREFB:       0/      2     0%
+Info: 	                DCUA:       0/      2     0%
+Info: 	           PCSCLKDIV:       0/      2     0%
+Info: 	             IOLOGIC:       0/    160     0%
+Info: 	            SIOLOGIC:       0/     85     0%
+Info: 	                 GSR:       0/      1     0%
+Info: 	               JTAGG:       0/      1     0%
+Info: 	                OSCG:       0/      1     0%
+Info: 	               SEDGA:       0/      1     0%
+Info: 	                 DTR:       0/      1     0%
+Info: 	             USRMCLK:       0/      1     0%
+Info: 	             CLKDIVF:       0/      4     0%
+Info: 	           ECLKSYNCB:       0/     10     0%
+Info: 	             DLLDELD:       0/      8     0%
+Info: 	              DDRDLL:       0/      4     0%
+Info: 	             DQSBUFM:       0/     10     0%
+Info: 	     TRELLIS_ECLKBUF:       0/      8     0%
+Info: 	        ECLKBRIDGECS:       0/      2     0%
+Info: 	                DCSC:       0/      2     0%
+Info: 	          TRELLIS_FF:    7782/  43848    17%
+Info: 	        TRELLIS_COMB:   30830/  43848    70%
+Info: 	        TRELLIS_RAMW:       0/   5481     0%
+
+Info: Placed 0 cells based on constraints.
+Info: Creating initial analytic placement for 25738 cells, random placement wirelen = 2027630.
+Info:     at initial placer iter 0, wirelen = 14566
+Info:     at initial placer iter 1, wirelen = 12545
+Info:     at initial placer iter 2, wirelen = 13043
+Info:     at initial placer iter 3, wirelen = 12977
+Info: Running main analytical placer, max placement attempts per cell = 187908498.
+Info:     at iteration #1, type ALL: wirelen solved = 12421, spread = 472071, legal = 474686; time = 1.24s
+Info:     at iteration #2, type ALL: wirelen solved = 47247, spread = 342146, legal = 347622; time = 1.33s
+Info:     at iteration #3, type ALL: wirelen solved = 107085, spread = 290594, legal = 297628; time = 1.18s
+Info:     at iteration #4, type ALL: wirelen solved = 133159, spread = 267303, legal = 271798; time = 1.27s
+Info:     at iteration #5, type ALL: wirelen solved = 149160, spread = 250887, legal = 255879; time = 1.22s
+Info:     at iteration #6, type ALL: wirelen solved = 158798, spread = 242302, legal = 247695; time = 1.20s
+Info:     at iteration #7, type ALL: wirelen solved = 164073, spread = 238406, legal = 242823; time = 1.18s
+Info:     at iteration #8, type ALL: wirelen solved = 169071, spread = 235851, legal = 241311; time = 1.18s
+Info:     at iteration #9, type ALL: wirelen solved = 173262, spread = 231529, legal = 237560; time = 1.16s
+Info:     at iteration #10, type ALL: wirelen solved = 177369, spread = 228198, legal = 233874; time = 1.13s
+Info:     at iteration #11, type ALL: wirelen solved = 180258, spread = 226257, legal = 231318; time = 1.12s
+Info:     at iteration #12, type ALL: wirelen solved = 183261, spread = 223530, legal = 228519; time = 1.12s
+Info: HeAP Placer Time: 22.84s
+Info:   of which solving equations: 13.81s
+Info:   of which spreading cells: 2.65s
+Info:   of which strict legalisation: 0.73s
+
+Info: Running simulated annealing placer for refinement.
+Info:   at iteration #1: temp = 0.000000, timing cost = 15683, wirelen = 228519
+Info:   at iteration #5: temp = 0.000000, timing cost = 12497, wirelen = 212845
+Info:   at iteration #10: temp = 0.000000, timing cost = 11546, wirelen = 209518
+Info:   at iteration #15: temp = 0.000000, timing cost = 11753, wirelen = 208547
+Info:   at iteration #19: temp = 0.000000, timing cost = 11819, wirelen = 208261 
+Info: SA placement time 86.77s
+
+Info: Max frequency for clock '$glbnet$clk$TRELLIS_IO_IN': 12.05 MHz (PASS at 12.00 MHz)
+
+Info: Max delay <async>                           -> <async>                          : 59.17 ns
+Info: Max delay <async>                           -> posedge $glbnet$clk$TRELLIS_IO_IN: 67.59 ns
+Info: Max delay posedge $glbnet$clk$TRELLIS_IO_IN -> <async>                          : 56.01 ns
+
+Info: Slack histogram:
+Info:  legend: * represents 102 endpoint(s)
+Info:          + represents [1,102) endpoint(s)
+Info: [   364,   4475) |+
+Info: [  4475,   8586) |*+
+Info: [  8586,  12697) |*+
+Info: [ 12697,  16808) |*+
+Info: [ 16808,  20919) |*+
+Info: [ 20919,  25030) |****+
+Info: [ 25030,  29141) |***+
+Info: [ 29141,  33252) |**+
+Info: [ 33252,  37363) |****+
+Info: [ 37363,  41474) |***+
+Info: [ 41474,  45585) |********************+
+Info: [ 45585,  49696) |**********************+
+Info: [ 49696,  53807) |******+
+Info: [ 53807,  57918) |*****+
+Info: [ 57918,  62029) |**+
+Info: [ 62029,  66140) |**+
+Info: [ 66140,  70251) |**********+
+Info: [ 70251,  74362) |***********************************+
+Info: [ 74362,  78473) |************************************************************ 
+Info: [ 78473,  82584) |********************+
+Info: Checksum: 0xf4899860
+Info: Routing globals...
+Info:     routing clock net $glbnet$clk$TRELLIS_IO_IN using global 0
+
+Info: Routing..
+Info: Setting up routing queue.
+Info: Routing 124798 arcs.
+Info:            |   (re-)routed arcs  |   delta    | remaining|       time spent     |
+Info:    IterCnt |  w/ripup   wo/ripup |  w/r  wo/r |      arcs| batch(sec) total(sec)|
+Info:       1000 |      139        860 |  139   860 |    123967|       1.97       1.97|
+Info:       2000 |      413       1586 |  274   726 |    123381|       0.28       2.25|
+Info:       3000 |      653       2346 |  240   760 |    122903|       0.29       2.54|
+Info:       4000 |      864       3135 |  211   789 |    122335|       0.28       2.82|
+Info:       5000 |     1065       3934 |  201   799 |    121735|       0.26       3.09|
+Info:       6000 |     1294       4705 |  229   771 |    121262|       0.26       3.35|
+Info:       7000 |     1521       5478 |  227   773 |    120754|       0.26       3.61|
+Info:       8000 |     1737       6262 |  216   784 |    120237|       0.26       3.87|
+Info:       9000 |     1970       7029 |  233   767 |    119624|       0.29       4.16|
+Info:      10000 |     2215       7784 |  245   755 |    119064|       0.29       4.45|
+Info:      11000 |     2385       8614 |  170   830 |    118778|       0.25       4.70|
+Info:      12000 |     2650       9349 |  265   735 |    118226|       0.29       4.99|
+Info:      13000 |     2917      10082 |  267   733 |    117805|       0.30       5.29|
+Info:      14000 |     3119      10880 |  202   798 |    117310|       0.30       5.59|
+Info:      15000 |     3335      11664 |  216   784 |    116804|       0.32       5.91|
+Info:      16000 |     3585      12414 |  250   750 |    116314|       0.31       6.21|
+Info:      17000 |     3847      13152 |  262   738 |    115862|       0.32       6.53|
+Info:      18000 |     4059      13940 |  212   788 |    115340|       0.31       6.84|
+Info:      19000 |     4242      14757 |  183   817 |    114888|       0.32       7.16|
+Info:      20000 |     4444      15555 |  202   798 |    114294|       0.34       7.50|
+Info:      21000 |     4717      16282 |  273   727 |    113877|       0.37       7.88|
+Info:      22000 |     4958      17041 |  241   759 |    113429|       0.37       8.25|
+Info:      23000 |     5256      17743 |  298   702 |    112989|       0.36       8.61|
+Info:      24000 |     5527      18472 |  271   729 |    112577|       0.35       8.96|
+Info:      25000 |     5765      19234 |  238   762 |    112067|       0.34       9.29|
+Info:      26000 |     6038      19961 |  273   727 |    111608|       0.33       9.63|
+Info:      27000 |     6284      20715 |  246   754 |    111144|       0.36       9.99|
+Info:      28000 |     6582      21417 |  298   702 |    110593|       0.34      10.33|
+Info:      29000 |     6864      22135 |  282   718 |    110103|       0.33      10.66|
+Info:      30000 |     7162      22837 |  298   702 |    109721|       0.40      11.06|
+Info:      31000 |     7445      23554 |  283   717 |    109178|       0.33      11.39|
+Info:      32000 |     7738      24261 |  293   707 |    108724|       0.34      11.74|
+Info:      33000 |     8044      24955 |  306   694 |    108344|       0.41      12.15|
+Info:      34000 |     8320      25679 |  276   724 |    107911|       0.38      12.53|
+Info:      35000 |     8611      26388 |  291   709 |    107513|       0.36      12.90|
+Info:      36000 |     8931      27068 |  320   680 |    107145|       0.40      13.30|
+Info:      37000 |     9203      27796 |  272   728 |    106664|       0.34      13.64|
+Info:      38000 |     9471      28528 |  268   732 |    106192|       0.34      13.98|
+Info:      39000 |     9786      29213 |  315   685 |    105958|       0.34      14.32|
+Info:      40000 |    10108      29891 |  322   678 |    105541|       0.34      14.66|
+Info:      41000 |    10424      30575 |  316   684 |    105048|       0.33      14.99|
+Info:      42000 |    10719      31280 |  295   705 |    104506|       0.34      15.34|
+Info:      43000 |    11032      31967 |  313   687 |    104025|       0.34      15.68|
+Info:      44000 |    11322      32677 |  290   710 |    103696|       0.36      16.03|
+Info:      45000 |    11625      33374 |  303   697 |    103293|       0.33      16.37|
+Info:      46000 |    11933      34066 |  308   692 |    102928|       0.40      16.77|
+Info:      47000 |    12241      34758 |  308   692 |    102465|       0.36      17.13|
+Info:      48000 |    12524      35475 |  283   717 |    101954|       0.35      17.47|
+Info:      49000 |    12811      36188 |  287   713 |    101736|       0.36      17.83|
+Info:      50000 |    13085      36914 |  274   726 |    101258|       0.32      18.15|
+Info:      51000 |    13376      37623 |  291   709 |    100836|       0.35      18.50|
+Info:      52000 |    13661      38338 |  285   715 |    100464|       0.37      18.87|
+Info:      53000 |    13993      39006 |  332   668 |    100164|       0.40      19.27|
+Info:      54000 |    14274      39725 |  281   719 |     99657|       0.37      19.64|
+Info:      55000 |    14555      40444 |  281   719 |     99222|       0.37      20.01|
+Info:      56000 |    14837      41162 |  282   718 |     98947|       0.42      20.43|
+Info:      57000 |    15136      41863 |  299   701 |     98518|       0.43      20.86|
+Info:      58000 |    15428      42571 |  292   708 |     97992|       0.36      21.22|
+Info:      59000 |    15726      43273 |  298   702 |     97541|       0.36      21.58|
+Info:      60000 |    16070      43929 |  344   656 |     97084|       0.35      21.93|
+Info:      61000 |    16394      44605 |  324   676 |     96539|       0.43      22.36|
+Info:      62000 |    16581      45418 |  187   813 |     96290|       0.45      22.81|
+Info:      63000 |    16885      46114 |  304   696 |     95883|       0.37      23.18|
+Info:      64000 |    17224      46775 |  339   661 |     95447|       0.38      23.56|
+Info:      65000 |    17577      47422 |  353   647 |     95102|       0.40      23.96|
+Info:      66000 |    17943      48056 |  366   634 |     94777|       0.41      24.38|
+Info:      67000 |    18234      48765 |  291   709 |     94254|       0.36      24.74|
+Info:      68000 |    18554      49445 |  320   680 |     93853|       0.39      25.13|
+Info:      69000 |    18831      50168 |  277   723 |     93391|       0.34      25.47|
+Info:      70000 |    19114      50885 |  283   717 |     92992|       0.34      25.81|
+Info:      71000 |    19351      51648 |  237   763 |     92560|       0.43      26.24|
+Info:      72000 |    19717      52282 |  366   634 |     92161|       0.43      26.67|
+Info:      73000 |    19995      53004 |  278   722 |     91619|       0.50      27.16|
+Info:      74000 |    20325      53674 |  330   670 |     91155|       0.50      27.66|
+Info:      75000 |    20646      54353 |  321   679 |     90808|       0.39      28.05|
+Info:      76000 |    20989      55010 |  343   657 |     90313|       0.42      28.47|
+Info:      77000 |    21373      55626 |  384   616 |     89899|       0.40      28.88|
+Info:      78000 |    21623      56376 |  250   750 |     89707|       0.56      29.44|
+Info:      79000 |    22000      56999 |  377   623 |     89251|       0.43      29.87|
+Info:      80000 |    22447      57552 |  447   553 |     88843|       0.41      30.28|
+Info:      81000 |    22814      58185 |  367   633 |     88394|       0.45      30.74|
+Info:      82000 |    23237      58762 |  423   577 |     87984|       0.43      31.16|
+Info:      83000 |    23545      59454 |  308   692 |     87414|       0.42      31.58|
+Info:      84000 |    23888      60111 |  343   657 |     86926|       0.50      32.08|
+Info:      85000 |    24240      60759 |  352   648 |     86462|       0.37      32.45|
+Info:      86000 |    24518      61481 |  278   722 |     85865|       0.39      32.85|
+Info:      87000 |    24837      62162 |  319   681 |     85294|       0.43      33.28|
+Info:      88000 |    25138      62861 |  301   699 |     84972|       0.45      33.73|
+Info:      89000 |    25469      63530 |  331   669 |     84463|       0.46      34.19|
+Info:      90000 |    25751      64248 |  282   718 |     83976|       0.49      34.68|
+Info:      91000 |    26161      64838 |  410   590 |     83549|       0.42      35.09|
+Info:      92000 |    26535      65464 |  374   626 |     83198|       0.41      35.51|
+Info:      93000 |    26927      66072 |  392   608 |     82780|       0.43      35.94|
+Info:      94000 |    27298      66701 |  371   629 |     82398|       0.47      36.40|
+Info:      95000 |    27629      67370 |  331   669 |     82102|       0.50      36.90|
+Info:      96000 |    28024      67975 |  395   605 |     81811|       0.52      37.42|
+Info:      97000 |    28438      68561 |  414   586 |     81509|       0.44      37.86|
+Info:      98000 |    28875      69124 |  437   563 |     81091|       0.38      38.25|
+Info:      99000 |    29324      69675 |  449   551 |     80639|       0.39      38.64|
+Info:     100000 |    29800      70199 |  476   524 |     80238|       0.42      39.06|
+Info:     101000 |    30186      70813 |  386   614 |     79724|       0.40      39.46|
+Info:     102000 |    30579      71420 |  393   607 |     79284|       0.50      39.95|
+Info:     103000 |    30897      72102 |  318   682 |     78806|       0.41      40.36|
+Info:     104000 |    31115      72884 |  218   782 |     79288|       0.64      41.00|
+Info:     105000 |    31297      73702 |  182   818 |     78443|       0.69      41.69|
+Info:     106000 |    31662      74337 |  365   635 |     78064|       0.44      42.13|
+Info:     107000 |    32034      74965 |  372   628 |     77638|       0.47      42.60|
+Info:     108000 |    32416      75583 |  382   618 |     77187|       0.43      43.03|
+Info:     109000 |    32772      76227 |  356   644 |     76686|       0.43      43.46|
+Info:     110000 |    33124      76875 |  352   648 |     76245|       0.46      43.92|
+Info:     111000 |    33457      77542 |  333   667 |     75717|       0.43      44.35|
+Info:     112000 |    33804      78195 |  347   653 |     75253|       0.44      44.80|
+Info:     113000 |    34187      78812 |  383   617 |     74817|       0.41      45.21|
+Info:     114000 |    34567      79432 |  380   620 |     74299|       0.42      45.63|
+Info:     115000 |    34888      80111 |  321   679 |     74188|       0.56      46.19|
+Info:     116000 |    35188      80811 |  300   700 |     73830|       0.48      46.66|
+Info:     117000 |    35489      81510 |  301   699 |     73513|       0.44      47.10|
+Info:     118000 |    35899      82100 |  410   590 |     73076|       0.48      47.58|
+Info:     119000 |    36290      82709 |  391   609 |     72764|       0.45      48.03|
+Info:     120000 |    36741      83258 |  451   549 |     72436|       0.41      48.44|
+Info:     121000 |    37152      83847 |  411   589 |     72014|       0.42      48.86|
+Info:     122000 |    37611      84388 |  459   541 |     71713|       0.53      49.39|
+Info:     123000 |    38158      84841 |  547   453 |     71364|       0.38      49.77|
+Info:     124000 |    38626      85373 |  468   532 |     71074|       0.47      50.24|
+Info:     125000 |    39141      85858 |  515   485 |     70685|       0.42      50.65|
+Info:     126000 |    39670      86329 |  529   471 |     70289|       0.41      51.06|
+Info:     127000 |    40063      86936 |  393   607 |     69887|       0.48      51.54|
+Info:     128000 |    40483      87516 |  420   580 |     69492|       0.43      51.97|
+Info:     129000 |    40832      88167 |  349   651 |     68988|       0.39      52.36|
+Info:     130000 |    41243      88756 |  411   589 |     68494|       0.40      52.76|
+Info:     131000 |    41528      89471 |  285   715 |     68321|       0.49      53.25|
+Info:     132000 |    41850      90149 |  322   678 |     67873|       0.52      53.76|
+Info:     133000 |    42203      90796 |  353   647 |     67319|       0.42      54.19|
+Info:     134000 |    42435      91564 |  232   768 |     69120|       1.06      55.25|
+Info:     135000 |    42598      92401 |  163   837 |     68200|       1.01      56.26|
+Info:     136000 |    42781      93218 |  183   817 |     67399|       0.85      57.11|
+Info:     137000 |    43116      93883 |  335   665 |     66815|       0.52      57.64|
+Info:     138000 |    43484      94515 |  368   632 |     66322|       0.43      58.07|
+Info:     139000 |    43785      95214 |  301   699 |     65726|       0.42      58.49|
+Info:     140000 |    44131      95868 |  346   654 |     65331|       0.44      58.93|
+Info:     141000 |    44476      96523 |  345   655 |     65231|       0.53      59.46|
+Info:     142000 |    44821      97178 |  345   655 |     64876|       0.55      60.01|
+Info:     143000 |    45256      97743 |  435   565 |     64467|       0.47      60.48|
+Info:     144000 |    45598      98401 |  342   658 |     64056|       0.51      60.99|
+Info:     145000 |    45935      99056 |  337   655 |     63544|       0.42      61.41|
+Info:     146000 |    46208      99765 |  273   709 |     62942|       0.47      61.88|
+Info:     147000 |    46508     100425 |  300   660 |     62416|       0.49      62.37|
+Info:     148000 |    46787     101100 |  279   675 |     61809|       0.48      62.85|
+Info:     149000 |    47131     101676 |  344   576 |     61215|       0.37      63.22|
+Info:     150000 |    47391     102345 |  260   669 |     60546|       0.40      63.62|
+Info:     151000 |    47762     102905 |  371   560 |     60078|       0.45      64.06|
+Info:     152000 |    48119     103470 |  357   565 |     59599|       0.44      64.50|
+Info:     153000 |    48429     104048 |  310   578 |     59012|       0.37      64.87|
+Info:     154000 |    48837     104574 |  408   526 |     58506|       0.41      65.28|
+Info:     155000 |    49230     105092 |  393   518 |     58016|       0.42      65.71|
+Info:     156000 |    49572     105680 |  342   588 |     57571|       0.46      66.16|
+Info:     157000 |    49964     106243 |  392   563 |     57049|       0.43      66.59|
+Info:     158000 |    50368     106784 |  404   541 |     56532|       0.42      67.02|
+Info:     159000 |    50770     107337 |  402   553 |     56120|       0.50      67.51|
+Info:     160000 |    51121     107955 |  351   618 |     55593|       0.45      67.96|
+Info:     161000 |    51515     108499 |  394   544 |     55045|       0.39      68.34|
+Info:     162000 |    51847     109115 |  332   616 |     54433|       0.42      68.76|
+Info:     163000 |    52211     109695 |  364   580 |     53949|       0.43      69.19|
+Info:     164000 |    52545     110299 |  334   604 |     53527|       0.47      69.66|
+Info:     165000 |    52921     110839 |  376   540 |     52989|       0.40      70.06|
+Info:     166000 |    53294     111391 |  373   552 |     52466|       0.40      70.46|
+Info:     167000 |    53694     111910 |  400   519 |     52010|       0.45      70.91|
+Info:     168000 |    54111     112412 |  417   502 |     51516|       0.41      71.32|
+Info:     169000 |    54520     112913 |  409   501 |     51036|       0.44      71.76|
+Info:     170000 |    54934     113413 |  414   500 |     50485|       0.42      72.18|
+Info:     171000 |    55343     113893 |  409   480 |     49972|       0.52      72.71|
+Info:     172000 |    55701     114462 |  358   569 |     49548|       0.49      73.20|
+Info:     173000 |    56052     115015 |  351   553 |     49008|       0.45      73.65|
+Info:     174000 |    56395     115599 |  343   584 |     48439|       0.48      74.12|
+Info:     175000 |    56751     116170 |  356   571 |     47865|       0.41      74.54|
+Info:     176000 |    57144     116734 |  393   564 |     47494|       0.74      75.28|
+Info:     177000 |    57489     117315 |  345   581 |     46915|       0.47      75.76|
+Info:     178000 |    57885     117898 |  396   583 |     46721|       3.74      79.49|
+Info:     179000 |    58270     118425 |  385   527 |     46224|       0.58      80.08|
+Info:     180000 |    58654     118968 |  384   543 |     45756|       0.66      80.74|
+Info:     181000 |    58995     119594 |  341   626 |     45307|       0.61      81.35|
+Info:     182000 |    59369     120181 |  374   587 |     44847|       0.66      82.01|
+Info:     183000 |    59697     120810 |  328   629 |     44411|       0.80      82.82|
+Info:     184000 |    60046     121431 |  349   621 |     44013|       0.69      83.51|
+Info:     185000 |    60383     122027 |  337   596 |     43541|       0.54      84.06|
+Info:     186000 |    60651     122668 |  268   641 |     42876|       0.49      84.54|
+Info:     187000 |    60957     123301 |  306   633 |     42569|       0.51      85.06|
+Info:     188000 |    61212     123974 |  255   673 |     41875|       0.44      85.50|
+Info:     189000 |    61422     124681 |  210   707 |     41217|       0.41      85.91|
+Info:     190000 |    61629     125419 |  207   738 |     40715|       0.47      86.38|
+Info:     191000 |    61862     126153 |  233   734 |     40070|       0.44      86.82|
+Info:     192000 |    62092     126904 |  230   751 |     39455|       0.47      87.30|
+Info:     193000 |    62301     127656 |  209   752 |     38683|       0.47      87.77|
+Info:     194000 |    62526     128390 |  225   734 |     38047|       0.52      88.29|
+Info:     195000 |    62871     129026 |  345   636 |     37487|       0.62      88.90|
+Info:     196000 |    63221     129667 |  350   641 |     37227|       0.89      89.79|
+Info:     197000 |    63543     130313 |  322   646 |     36659|       0.56      90.34|
+Info:     198000 |    63865     130963 |  322   650 |     36096|       0.56      90.91|
+Info:     199000 |    64257     131545 |  392   582 |     35602|       0.77      91.68|
+Info:     200000 |    64596     132168 |  339   623 |     35169|       0.64      92.32|
+Info:     201000 |    64931     132826 |  335   658 |     34959|       0.82      93.14|
+Info:     202000 |    65235     133460 |  304   634 |     34422|       0.68      93.82|
+Info:     203000 |    65495     134138 |  260   678 |     33776|       0.52      94.34|
+Info:     204000 |    65686     134921 |  191   783 |     33121|       2.54      96.88|
+Info:     205000 |    65803     135780 |  117   859 |     32294|       0.45      97.33|
+Info:     206000 |    65924     136648 |  121   868 |     31454|       0.43      97.76|
+Info:     207000 |    66041     137500 |  117   852 |     30586|       0.45      98.21|
+Info:     208000 |    66337     138200 |  296   700 |     31638|       9.76     107.97|
+Info:     209000 |    66627     138910 |  290   710 |     31228|      11.33     119.30|
+Info:     210000 |    66916     139621 |  289   711 |     30855|       2.00     121.30|
+Info:     211000 |    67228     140307 |  312   686 |     30422|       1.10     122.40|
+Info:     212000 |    67364     141146 |  136   839 |     29741|       0.49     122.90|
+Info:     213000 |    67516     141979 |  152   833 |     29093|       0.56     123.46|
+Info:     214000 |    67716     142765 |  200   786 |     28385|       0.67     124.12|
+Info:     215000 |    67910     143556 |  194   791 |     27739|       0.60     124.72|
+Info:     216000 |    68069     144366 |  159   810 |     26938|       0.52     125.24|
+Info:     217000 |    68240     145164 |  171   798 |     26181|       0.70     125.93|
+Info:     218000 |    68383     145952 |  143   788 |     25374|       0.51     126.44|
+Info:     219000 |    68540     146769 |  157   817 |     24728|       0.51     126.95|
+Info:     220000 |    68706     147582 |  166   813 |     24019|       0.54     127.48|
+Info:     221000 |    68827     148446 |  121   864 |     23158|       0.57     128.05|
+Info:     222000 |    68963     149271 |  136   825 |     22354|       0.55     128.60|
+Info:     223000 |    69154     150058 |  191   787 |     21593|       0.62     129.22|
+Info:     224000 |    69380     150795 |  226   737 |     20951|       0.85     130.07|
+Info:     225000 |    69589     151541 |  209   746 |     20192|       0.56     130.64|
+Info:     226000 |    69748     152322 |  159   781 |     19435|       0.60     131.23|
+Info:     227000 |    69949     153077 |  201   755 |     18848|       0.61     131.84|
+Info:     228000 |    70243     153753 |  294   676 |     18408|       0.80     132.64|
+Info:     229000 |    70494     154439 |  251   686 |     17934|       0.65     133.29|
+Info:     230000 |    70678     155191 |  184   752 |     17253|       0.59     133.88|
+Info:     231000 |    70880     155939 |  202   748 |     16572|       0.60     134.48|
+Info:     232000 |    71075     156676 |  195   737 |     15855|       0.63     135.11|
+Info:     233000 |    71255     157434 |  180   758 |     15093|       0.61     135.72|
+Info:     234000 |    71481     158165 |  226   731 |     14408|       0.63     136.35|
+Info:     235000 |    71701     158869 |  220   704 |     13825|       0.60     136.95|
+Info:     236000 |    71902     159643 |  201   774 |     13178|       0.63     137.58|
+Info:     237000 |    72171     160332 |  269   689 |     12604|       2.20     139.78|
+Info:     238000 |    72338     161076 |  167   744 |     11847|       0.60     140.38|
+Info:     239000 |    72593     161774 |  255   698 |     11321|       0.85     141.24|
+Info:     240000 |    72784     162499 |  191   725 |     10641|       0.60     141.83|
+Info:     241000 |    72962     163254 |  178   755 |      9860|       0.55     142.39|
+Info:     242000 |    73159     164010 |  197   756 |      9139|       0.62     143.01|
+Info:     243000 |    73413     164722 |  254   712 |      8721|       0.69     143.70|
+Info:     244000 |    73613     165457 |  200   735 |      8072|       0.69     144.39|
+Info:     245000 |    73804     166143 |  191   686 |      7395|       0.59     144.98|
+Info:     246000 |    73981     166928 |  177   785 |      6668|       0.61     145.59|
+Info:     247000 |    74173     167706 |  192   778 |      6018|       0.77     146.36|
+Info:     248000 |    74392     168463 |  219   757 |      5287|       0.56     146.92|
+Info:     249000 |    74633     169221 |  241   758 |      4812|       0.62     147.53|
+Info:     250000 |    74845     170009 |  212   788 |      4125|       0.66     148.20|
+Info:     251000 |    75101     170753 |  256   744 |      3462|       0.48     148.68|
+Info:     252000 |    75337     171494 |  236   741 |      2886|       0.53     149.21|
+Info:     253000 |    75676     172091 |  339   597 |      2752|       1.31     150.53|
+Info:     254000 |    75945     172695 |  269   604 |      2463|       1.88     152.40|
+Info:     255000 |    76087     173399 |  142   704 |      2111|       0.84     153.24|
+Info:     256000 |    76262     173940 |  175   541 |      1708|       0.65     153.89|
+Info:     257000 |    76407     174563 |  145   623 |      1010|       1.21     155.10|
+Info:     258000 |    76588     175096 |  181   533 |       406|       0.90     156.01|
+Info:     258778 |    76734     175570 |  146   474 |         0|       0.62     156.63|
+Info: Routing complete.
+Info: Router1 time 156.63s
+Info: Checksum: 0xe4b60e43
+
+Info: Critical path report for clock '$glbnet$clk$TRELLIS_IO_IN' (posedge -> posedge):
+Info:       type curr  total name
+Info:   clk-to-q  0.52  0.52 Source u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_buffer.lsu_bus_clk_en_q_TRELLIS_FF_Q.Q
+Info:    routing  4.41  4.94 Net u_core.caliptra_top_dut.rvtop.veer.pic_ctrl_inst.picm_raddr_ff[29] (10,35) -> (78,40)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.mdseac_locked_ns_TRELLIS_FF_DI_Q_PFUMX_Z_1_ALUT_LUT4_Z.C
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  5.17 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.mdseac_locked_ns_TRELLIS_FF_DI_Q_PFUMX_Z_1_ALUT_LUT4_Z.F
+Info:    routing  0.00  5.17 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.mdseac_locked_ns_TRELLIS_FF_DI_Q_PFUMX_Z_1_ALUT (78,40) -> (78,40)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.mdseac_locked_ns_TRELLIS_FF_DI_Q_PFUMX_Z_1_BLUT_LUT4_Z.F1
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:133.22-133.24
+Info:      logic  0.17  5.34 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.mdseac_locked_ns_TRELLIS_FF_DI_Q_PFUMX_Z_1_BLUT_LUT4_Z.OFX
+Info:    routing  3.67  9.01 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.mdseac_locked_ns_TRELLIS_FF_DI_Q[4] (78,40) -> (36,60)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.pic_ctrl_inst.wake_up_ff.din_TRELLIS_FF_DI_Q_PFUMX_Z_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  9.26 Source u_core.caliptra_top_dut.rvtop.veer.pic_ctrl_inst.wake_up_ff.din_TRELLIS_FF_DI_Q_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.69  9.95 Net u_core.caliptra_top_dut.rvtop.veer.dec.decode.dec_tlu_flush_pause_r_TRELLIS_FF_DI_Q_LUT4_Z_D_LUT4_B_Z[4] (36,60) -> (36,59)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  10.21 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.00  10.21 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D1 (36,59) -> (36,59)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.FXB
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:157.62-157.64
+Info:      logic  0.24  10.45 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.00  10.45 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1 (36,59) -> (36,59)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.FXB
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:157.70-157.72
+Info:      logic  0.24  10.69 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.61  11.31 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.pmu_fw_halt_req_ns_TRELLIS_FF_DI_Q[5] (36,59) -> (38,59)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  11.56 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.00  11.56 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_L6MUX21_Z_D1 (38,59) -> (38,59)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.FXB
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:157.70-157.72
+Info:      logic  0.24  11.80 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  1.59  13.40 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode (38,59) -> (50,53)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_LUT4_C.C
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  13.63 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_LUT4_C.F
+Info:    routing  1.08  14.71 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.internal_pmu_fw_halt_mode_LUT4_C_Z[6] (50,53) -> (52,49)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.interrupt_valid_r_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  14.97 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.interrupt_valid_r_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  3.55  18.52 Net u_core.caliptra_top_dut.rvtop.veer.dec.lsu_pmu_load_external_m_PFUMX_C0_Z[3] (52,49) -> (49,3)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_buffer.ibuf_dataff.genblock.genblock.dff.din_LUT4_Z_11_D_LUT4_Z_B_PFUMX_Z_ALUT_LUT4_Z_B_LUT4_B_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_D0_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  18.77 Source u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_buffer.ibuf_dataff.genblock.genblock.dff.din_LUT4_Z_11_D_LUT4_Z_B_PFUMX_Z_ALUT_LUT4_Z_B_LUT4_B_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_D0_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.62  19.39 Net u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_buffer.ibuf_dataff.genblock.genblock.dff.din_LUT4_Z_11_D_LUT4_Z_B_PFUMX_Z_C0_L6MUX21_Z_D0_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z_C_LUT4_B_1_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_Z_1_SD[6] (49,3) -> (50,3)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_buffer.ibuf_dataff.genblock.genblock.dff.din_LUT4_Z_11_D_LUT4_Z_B_PFUMX_Z_C0_L6MUX21_Z_D0_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z_C_LUT4_B_1_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_Z_1_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  19.65 Source u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_buffer.ibuf_dataff.genblock.genblock.dff.din_LUT4_Z_11_D_LUT4_Z_B_PFUMX_Z_C0_L6MUX21_Z_D0_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z_C_LUT4_B_1_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_Z_1_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.98  20.62 Net u_core.caliptra_top_dut.rvtop.veer.lsu.lsu_lsc_ctl.addrcheck.is_sideeffects_mff.dout_LUT4_C_Z_LUT4_C_Z_LUT4_Z_1_C[3] (50,3) -> (50,8)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_10_C_PFUMX_Z_C0_PFUMX_C0_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  20.88 Source u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_10_C_PFUMX_Z_C0_PFUMX_C0_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  1.33  22.21 Net u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_10_C_PFUMX_Z_C0_PFUMX_C0_Z[3] (50,8) -> (54,12)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  22.47 Source u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.00  22.47 Net u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C_L6MUX21_Z_D1 (54,12) -> (54,12)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.FXB
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:157.70-157.72
+Info:      logic  0.24  22.71 Source u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.89  23.60 Net u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C[6] (54,12) -> (54,15)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C_L6MUX21_SD_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  23.86 Source u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_6_C_L6MUX21_SD_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  1.04  24.90 Net u_core.caliptra_top_dut.rvtop.veer.lsu.bus_intf.bus_read_data_m_LUT4_Z_5_D_LUT4_Z_D_PFUMX_C0_Z[6] (54,15) -> (52,19)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  25.13 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.F
+Info:    routing  0.00  25.13 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT (52,19) -> (52,19)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_BLUT_LUT4_Z.F1
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:157.38-157.40
+Info:      logic  0.17  25.30 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.00  25.30 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0 (52,19) -> (52,19)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.FXA
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:157.58-157.60
+Info:      logic  0.24  25.54 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.00  25.54 Net u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1 (52,19) -> (52,19)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.FXB
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:157.70-157.72
+Info:      logic  0.24  25.78 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  1.61  27.39 Net u_core.caliptra_top_dut.rvtop.veer.exu.i_mul.rs1_in_LUT4_Z_13_C[4] (52,19) -> (49,9)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_PFUMX_C0_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  27.65 Source u_core.caliptra_top_dut.rvtop.veer.dec.tlu.minstreth_ff.genblock.genblock.dff.din_LUT4_Z_24_B_LUT4_B_A_LUT4_A_Z_PFUMX_C0_BLUT_LUT4_Z.OFX
+Info:    routing  1.48  29.12 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_B1_PFUMX_Z_ALUT_LUT4_Z_C[4] (49,9) -> (50,23)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_B0_PFUMX_Z_ALUT_LUT4_Z_D_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  29.38 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_B0_PFUMX_Z_ALUT_LUT4_Z_D_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.89  30.27 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_B0_PFUMX_Z_ALUT_LUT4_Z_D[6] (50,23) -> (52,25)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_B1_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  30.53 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_B1_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  1.36  31.88 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_B1 (52,25) -> (50,28)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.B
+Info:      logic  0.45  32.33 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.FCO
+Info:    routing  0.00  32.33 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT (50,28) -> (50,28)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:6002.30-6002.121
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  32.40 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB0.FCO
+Info:    routing  0.00  32.40 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_FCI_INT (50,28) -> (50,28)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.FCI
+Info:      logic  0.00  32.40 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.FCO
+Info:    routing  0.00  32.40 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT (50,28) -> (50,28)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:6002.30-6002.121
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  32.47 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB0.FCO
+Info:    routing  0.00  32.47 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_FCI_INT (50,28) -> (50,28)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.FCI
+Info:      logic  0.00  32.47 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.FCO
+Info:    routing  0.00  32.47 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT (50,28) -> (51,28)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:6002.30-6002.121
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  32.54 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB0.FCO
+Info:    routing  0.00  32.54 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_FCI_INT (51,28) -> (51,28)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.FCI
+Info:      logic  0.40  32.95 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN$CCU2_COMB1.F
+Info:    routing  1.03  33.98 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_S1[3] (51,28) -> (51,33)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_S0_LUT4_Z_2.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  34.22 Source u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_S0_LUT4_Z_2.F
+Info:    routing  0.55  34.76 Net u_core.caliptra_top_dut.rvtop.veer.exu.i0_flush_path_d_LUT4_Z_23_C_CCU2C_S0_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_COUT_CCU2C_CIN_S0[6] (51,33) -> (51,36)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.aln.exu_flush_final_LUT4_Z_C_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  35.02 Source u_core.caliptra_top_dut.rvtop.veer.ifu.aln.exu_flush_final_LUT4_Z_C_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  2.20  37.22 Net u_core.caliptra_top_dut.rvtop.veer.ifu.aln.exu_flush_final_LUT4_Z_C[3] (51,36) -> (60,54)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.aln.exu_flush_final_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  37.45 Source u_core.caliptra_top_dut.rvtop.veer.ifu.aln.exu_flush_final_LUT4_Z.F
+Info:    routing  0.98  38.43 Net u_core.caliptra_top_dut.rvtop.veer.exu_flush_final (60,54) -> (66,55)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.ic_act_miss_f_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  38.69 Source u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.ic_act_miss_f_L6MUX21_Z_D1_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.64  39.32 Net u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.ic_act_miss_f (66,55) -> (65,55)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[4].byp_data_valid_ff.din_TRELLIS_FF_DI_Q_LUT4_D_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_D0_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  39.58 Source u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[4].byp_data_valid_ff.din_TRELLIS_FF_DI_Q_LUT4_D_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_D0_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.87  40.45 Net u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[4].byp_data_valid_ff.din_TRELLIS_FF_DI_Q_LUT4_D_Z_PFUMX_ALUT_Z_L6MUX21_D0_Z_L6MUX21_D0_Z[2] (65,55) -> (65,54)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1_PFUMX_Z_ALUT_LUT4_Z.C
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  40.69 Source u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1_PFUMX_Z_ALUT_LUT4_Z.F
+Info:    routing  0.00  40.69 Net u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1_PFUMX_Z_ALUT (65,54) -> (65,54)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1_PFUMX_Z_BLUT_LUT4_Z.F1
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:141.30-141.32
+Info:      logic  0.17  40.85 Source u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.00  40.85 Net u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1 (65,54) -> (65,54)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1_PFUMX_Z_ALUT_LUT4_Z.FXB
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:141.38-141.40
+Info:      logic  0.24  41.09 Source u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z_L6MUX21_Z_1_D1_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.62  41.71 Net u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.wr_flop[2].byp_data_valid_ff.din_L6MUX21_SD_Z[6] (65,54) -> (64,54)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.ifc_fetch_req_qual_bf_LUT4_Z_C_LUT4_Z_C_LUT4_D_Z_LUT4_D_C_LUT4_D_Z_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  41.97 Source u_core.caliptra_top_dut.rvtop.veer.ifu.mem_ctl.ifc_fetch_req_qual_bf_LUT4_Z_C_LUT4_Z_C_LUT4_D_Z_LUT4_D_C_LUT4_D_Z_LUT4_A_Z_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  1.19  43.16 Net u_core.caliptra_top_dut.rvtop.veer.ifu.aln.ifu_fetch_data_f_LUT4_Z_2_B[2] (64,54) -> (57,53)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.ifu.ifc.genblock2.iccm_acc_in_range_bf_LUT4_C_Z_TRELLIS_FF_Q_DI_LUT4_Z_C_LUT4_D_Z_L6MUX21_Z_2_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  43.41 Source u_core.caliptra_top_dut.rvtop.veer.ifu.ifc.genblock2.iccm_acc_in_range_bf_LUT4_C_Z_TRELLIS_FF_Q_DI_LUT4_Z_C_LUT4_D_Z_L6MUX21_Z_2_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  0.81  44.22 Net u_core.caliptra_top_dut.rvtop.veer.ifu.ifc.genblock2.iccm_acc_in_range_bf_LUT4_C_Z_TRELLIS_FF_Q_DI_LUT4_Z_C_LUT4_D_Z[6] (57,53) -> (58,54)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.dec.dma_iccm_stall_any_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  44.47 Source u_core.caliptra_top_dut.rvtop.veer.dec.dma_iccm_stall_any_TRELLIS_FF_DI_Q_L6MUX21_Z_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  3.90  48.38 Net u_core.caliptra_top_dut.rvtop.veer.dec.dma_iccm_stall_any_TRELLIS_FF_DI_Q[5] (58,54) -> (24,31)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.iccm_rw_addr_L6MUX21_Z_7_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  48.63 Source u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.iccm_rw_addr_L6MUX21_Z_7_D1_L6MUX21_Z_D0_PFUMX_Z_ALUT_LUT4_Z.OFX
+Info:    routing  1.10  49.73 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D_LUT4_D_Z_LUT4_C_Z_LUT4_C_Z_LUT4_Z_27_C_LUT4_Z_C_PFUMX_Z_C0_LUT4_Z_B_LUT4_B_1_Z_PFUMX_BLUT_Z[1] (24,31) -> (24,29)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.addr_bank_inc_CCU2C_S1$CCU2_COMB1.B
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:9663.33-9663.45
+Info:      logic  0.45  50.18 Source u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.addr_bank_inc_CCU2C_S1$CCU2_COMB1.FCO
+Info:    routing  0.00  50.18 Net u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.addr_bank_inc_CCU2C_S1_COUT (24,29) -> (24,29)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.addr_bank_inc_CCU2C_S0$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:32394.49-32394.96
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.44  50.62 Source u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.addr_bank_inc_CCU2C_S0$CCU2_COMB0.F
+Info:    routing  1.07  51.70 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D_LUT4_D_Z_LUT4_C_Z_LUT4_C_Z_LUT4_Z_27_C_LUT4_Z_C_PFUMX_Z_C0_LUT4_Z_B_LUT4_B_1_Z_PFUMX_BLUT_Z[3] (24,29) -> (27,29)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.mem_bank[2].selred0.din_L6MUX21_Z_D0_PFUMX_Z_C0_LUT4_Z_C_LUT4_B.D
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:432.27-432.30
+Info:      logic  0.24  51.93 Source u_core.caliptra_top_dut.rvtop.mem.iccm.iccm.mem_bank[2].selred0.din_L6MUX21_Z_D0_PFUMX_Z_C0_LUT4_Z_C_LUT4_B.F
+Info:    routing  0.73  52.66 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D_LUT4_D_Z_LUT4_C_Z_LUT4_C_Z_LUT4_Z_27_C_LUT4_Z_C_PFUMX_Z_C0_LUT4_Z_B[3] (27,29) -> (27,28)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_15.next_c_LUT4_Z_C_LUT4_Z_D_LUT4_Z_D_LUT4_Z_B_LUT4_B_Z_PFUMX_Z_1_BLUT_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.40  53.06 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_15.next_c_LUT4_Z_C_LUT4_Z_D_LUT4_Z_D_LUT4_Z_B_LUT4_B_Z_PFUMX_Z_1_BLUT_LUT4_Z.OFX
+Info:    routing  0.61  53.68 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D_LUT4_D_Z_LUT4_C_Z_LUT4_C_Z_LUT4_Z_24_C_LUT4_Z_B[0] (27,28) -> (28,28)
+Info:                          Sink u_spi_ram.req_we_TRELLIS_FF_DI_Q_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  53.91 Source u_spi_ram.req_we_TRELLIS_FF_DI_Q_LUT4_Z.F
+Info:    routing  0.48  54.39 Net u_spi_ram.req_is_64b_LUT4_D_B[2] (28,28) -> (28,28)
+Info:                          Sink u_spi_ram.req_is_64b_LUT4_D_C_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  54.63 Source u_spi_ram.req_is_64b_LUT4_D_C_LUT4_Z.F
+Info:    routing  0.95  55.58 Net u_spi_ram.req_is_64b_LUT4_D_C[2] (28,28) -> (22,26)
+Info:                          Sink u_spi_ram.req_is_64b_LUT4_D_B_LUT4_B.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  55.81 Source u_spi_ram.req_is_64b_LUT4_D_B_LUT4_B.F
+Info:    routing  2.81  58.62 Net u_spi_ram.req_is_64b_LUT4_D_B_LUT4_B_Z[1] (22,26) -> (61,33)
+Info:                          Sink u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI_CE_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  58.86 Source u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI_CE_LUT4_Z.F
+Info:    routing  0.45  59.31 Net u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI_CE (61,33) -> (60,32)
+Info:                          Sink u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI.CE
+Info:      setup  0.00  59.31 Source u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI.CE
+Info: 12.52 ns logic, 46.78 ns routing
+
+Info: Critical path report for cross-domain path '<async>' -> '<async>':
+Info:       type curr  total name
+Info:     source  0.00  0.00 Source s_axi_wvalid$tr_io.O
+Info:    routing  4.97  4.97 Net s_axi_wvalid$TRELLIS_IO_IN (4,0) -> (5,68)
+Info:                          Sink s_axi_wvalid_LUT4_D.D
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:28727.13-28727.25
+Info:      logic  0.24  5.21 Source s_axi_wvalid_LUT4_D.F
+Info:    routing  0.41  5.62 Net s_axi_wvalid_LUT4_D_Z[3] (5,68) -> (6,68)
+Info:                          Sink s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  5.86 Source s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_Z.F
+Info:    routing  0.64  6.50 Net s_axi_arready_LUT4_Z_D_LUT4_C_B[3] (6,68) -> (6,68)
+Info:                          Sink s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  6.73 Source s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_D.F
+Info:    routing  5.93  12.67 Net s_axi_araddr_TRELLIS_FF_DI_1_Q[2] (6,68) -> (83,42)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0_LUT4_Z_3.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  12.90 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0_LUT4_Z_3.F
+Info:    routing  4.63  17.54 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0[3] (83,42) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.45  17.98 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  17.98 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  17.98 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  17.98 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:21543.98-21543.151
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  18.06 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  18.06 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  18.06 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  18.06 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:21543.98-21543.151
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  18.13 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  18.13 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  18.13 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  18.13 Net $nextpnr_CCU2C_131$CIN (15,51) -> (16,51)
+Info:                          Sink $nextpnr_CCU2C_131$CCU2_COMB0.FCI
+Info:      logic  0.44  18.57 Source $nextpnr_CCU2C_131$CCU2_COMB0.F
+Info:    routing  1.06  19.63 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_A_LUT4_A_D[1] (16,51) -> (16,59)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  19.87 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2.F
+Info:    routing  1.01  20.88 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q[2] (16,59) -> (11,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  21.12 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_Z.F
+Info:    routing  0.80  21.92 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_B[2] (11,59) -> (12,55)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  22.15 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_D.F
+Info:    routing  1.25  23.40 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D[0] (12,55) -> (16,54)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_arb.mbox_req_data_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  23.64 Source u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_arb.mbox_req_data_LUT4_Z_1.F
+Info:    routing  0.94  24.58 Net u_core.caliptra_top_dut.soc_ifc_top1.mbox_req_data[37] (16,54) -> (16,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_23_D_LUT4_D_B_LUT4_A_B_LUT4_C_Z_LUT4_A.C
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:33227.17-33227.30
+Info:      logic  0.24  24.81 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_23_D_LUT4_D_B_LUT4_A_B_LUT4_C_Z_LUT4_A.F
+Info:    routing  0.61  25.43 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_4.load_next_c_LUT4_Z_C_LUT4_Z_C_LUT4_C_Z_LUT4_Z_B[2] (16,52) -> (16,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_1_A_LUT4_Z_1.C
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  25.66 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_1_A_LUT4_Z_1.F
+Info:    routing  0.66  26.32 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_1_A[4] (16,52) -> (15,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2_A_PFUMX_Z_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  26.57 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2_A_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.43  27.01 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2_A[3] (15,52) -> (14,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  27.24 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2.F
+Info:    routing  0.95  28.19 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z[3] (14,52) -> (13,54)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  28.42 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A.F
+Info:    routing  1.37  29.80 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A_Z[3] (13,54) -> (8,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A_Z_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  30.03 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A_Z_LUT4_D.F
+Info:    routing  1.01  31.04 Net mailbox_data_avail_LUT4_B_C[3] (8,59) -> (5,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ns_LUT4_Z_A_LUT4_C_Z_LUT4_Z_2.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  31.27 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ns_LUT4_Z_A_LUT4_C_Z_LUT4_Z_2.F
+Info:    routing  0.63  31.91 Net mailbox_data_avail_LUT4_B_Z[3] (5,60) -> (5,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.sv2v_autoblock_186.next_c_LUT4_Z_B_LUT4_A_D_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  32.14 Source u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.sv2v_autoblock_186.next_c_LUT4_Z_B_LUT4_A_D_LUT4_Z.F
+Info:    routing  1.01  33.15 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ps_TRELLIS_FF_Q_CE_LUT4_Z_C_LUT4_Z_B[2] (5,60) -> (9,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_26_B_LUT4_B_Z_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  33.39 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_26_B_LUT4_B_Z_LUT4_Z_1.F
+Info:    routing  2.74  36.13 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_1_B[3] (9,59) -> (26,44)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  36.37 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_Z.F
+Info:    routing  3.15  39.52 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z[2] (26,44) -> (65,40)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  39.76 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_D.F
+Info:    routing  0.42  40.17 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_D[4] (65,40) -> (65,40)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_axi_sub_sif_soc_ifc.i_axi_sub_rd.DATA_PIPELINE[0].i_dp_skd.o_data_PFUMX_Z_21_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  40.43 Source u_core.caliptra_top_dut.soc_ifc_top1.i_axi_sub_sif_soc_ifc.i_axi_sub_rd.DATA_PIPELINE[0].i_dp_skd.o_data_PFUMX_Z_21_BLUT_LUT4_Z.OFX
+Info:    routing  3.59  44.02 Net s_axi_rdata[22]$TRELLIS_IO_OUT (65,40) -> (69,0)
+Info:                          Sink s_axi_rdata[22]$tr_io.I
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:28743.21-28743.32
+Info: 5.79 ns logic, 38.23 ns routing
+
+Info: Critical path report for cross-domain path '<async>' -> 'posedge $glbnet$clk$TRELLIS_IO_IN':
+Info:       type curr  total name
+Info:     source  0.00  0.00 Source s_axi_wvalid$tr_io.O
+Info:    routing  4.97  4.97 Net s_axi_wvalid$TRELLIS_IO_IN (4,0) -> (5,68)
+Info:                          Sink s_axi_wvalid_LUT4_D.D
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:28727.13-28727.25
+Info:      logic  0.24  5.21 Source s_axi_wvalid_LUT4_D.F
+Info:    routing  0.41  5.62 Net s_axi_wvalid_LUT4_D_Z[3] (5,68) -> (6,68)
+Info:                          Sink s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  5.86 Source s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_Z.F
+Info:    routing  0.64  6.50 Net s_axi_arready_LUT4_Z_D_LUT4_C_B[3] (6,68) -> (6,68)
+Info:                          Sink s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  6.73 Source s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_D.F
+Info:    routing  5.93  12.67 Net s_axi_araddr_TRELLIS_FF_DI_1_Q[2] (6,68) -> (83,42)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0_LUT4_Z_3.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  12.90 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0_LUT4_Z_3.F
+Info:    routing  4.63  17.54 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0[3] (83,42) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.45  17.98 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  17.98 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  17.98 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  17.98 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:21543.98-21543.151
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  18.06 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  18.06 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  18.06 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  18.06 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:21543.98-21543.151
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  18.13 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  18.13 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  18.13 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  18.13 Net $nextpnr_CCU2C_131$CIN (15,51) -> (16,51)
+Info:                          Sink $nextpnr_CCU2C_131$CCU2_COMB0.FCI
+Info:      logic  0.44  18.57 Source $nextpnr_CCU2C_131$CCU2_COMB0.F
+Info:    routing  1.06  19.63 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_A_LUT4_A_D[1] (16,51) -> (16,59)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  19.87 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2.F
+Info:    routing  1.01  20.88 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q[2] (16,59) -> (11,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  21.12 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_Z.F
+Info:    routing  0.80  21.92 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_B[2] (11,59) -> (12,55)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  22.15 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_D.F
+Info:    routing  1.60  23.75 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D[0] (12,55) -> (21,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_15.next_c_LUT4_Z_C_LUT4_Z_D_LUT4_Z_D_LUT4_Z_B_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  23.99 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_15.next_c_LUT4_Z_C_LUT4_Z_D_LUT4_Z_D_LUT4_Z_B_LUT4_Z.F
+Info:    routing  0.96  24.94 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_6_B_LUT4_B_Z[1] (21,60) -> (11,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_15.next_c_LUT4_Z_C_LUT4_Z_D_LUT4_Z_D_LUT4_Z_C_LUT4_Z.C
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  25.18 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_15.next_c_LUT4_Z_C_LUT4_Z_D_LUT4_Z_D_LUT4_Z_C_LUT4_Z.F
+Info:    routing  0.63  25.81 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_15.next_c_LUT4_Z_C_LUT4_Z_D_LUT4_Z_D_LUT4_Z_C[1] (11,60) -> (11,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ps_TRELLIS_FF_Q_CE_LUT4_Z_C_LUT4_Z_B_LUT4_Z_D_LUT4_Z_D_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  26.05 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ps_TRELLIS_FF_Q_CE_LUT4_Z_C_LUT4_Z_B_LUT4_Z_D_LUT4_Z_D_LUT4_Z_1.F
+Info:    routing  0.66  26.71 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ps_TRELLIS_FF_Q_CE_LUT4_Z_C_LUT4_Z_B_LUT4_Z_D_LUT4_Z_D[1] (11,60) -> (9,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ns_LUT4_Z_A_LUT4_C_Z_LUT4_Z_1_C_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  26.95 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ns_LUT4_Z_A_LUT4_C_Z_LUT4_Z_1_C_LUT4_Z_1.F
+Info:    routing  0.72  27.67 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ns_LUT4_Z_A_LUT4_C_Z_LUT4_Z_1_C[2] (9,60) -> (10,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_arb.toggle_priority_LUT4_Z_D_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  27.91 Source u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_arb.toggle_priority_LUT4_Z_D_LUT4_Z.F
+Info:    routing  0.65  28.55 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_B[3] (10,59) -> (11,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  28.79 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z.F
+Info:    routing  3.86  32.65 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q[2] (11,59) -> (68,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  32.88 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1.F
+Info:    routing  0.42  33.30 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1_Z[1] (68,52) -> (70,52)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.Gen_AXI_To_AHB.dma_ahb_to_axi4.state_reg.genblock.dffs.en_LUT4_Z_A_LUT4_Z_D_LUT4_C_Z_LUT4_D_Z_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  33.54 Source u_core.caliptra_top_dut.rvtop.veer.Gen_AXI_To_AHB.dma_ahb_to_axi4.state_reg.genblock.dffs.en_LUT4_Z_A_LUT4_Z_D_LUT4_C_Z_LUT4_D_Z_LUT4_Z.F
+Info:    routing  0.88  34.41 Net u_core.caliptra_top_dut.rvtop.veer.Gen_AXI_To_AHB.dma_ahb_to_axi4.state_reg.genblock.dffs.en_LUT4_Z_A_LUT4_Z_D_LUT4_C_Z_LUT4_D_Z[1] (70,52) -> (70,51)
+Info:                          Sink u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.hresp_error_LUT4_Z_C_LUT4_Z_A_PFUMX_Z_BLUT_LUT4_Z.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.40  34.81 Source u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.hresp_error_LUT4_Z_C_LUT4_Z_A_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.17  34.99 Net u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.hresp_error_LUT4_Z_C_LUT4_Z_A[3] (70,51) -> (70,51)
+Info:                          Sink u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_B.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  35.22 Source u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_B.F
+Info:    routing  0.42  35.65 Net u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.hresp_error_LUT4_Z_C_LUT4_Z_C[3] (70,51) -> (70,51)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1_Z_LUT4_C_1_D_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  35.88 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1_Z_LUT4_C_1_D_LUT4_Z.F
+Info:    routing  0.46  36.34 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1_Z_LUT4_C_1_D[3] (70,51) -> (70,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1_Z_LUT4_C_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  36.58 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1_Z_LUT4_C_1.F
+Info:    routing  0.61  37.19 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_LUT4_C_1_Z_LUT4_C_1_Z[3] (70,52) -> (70,52)
+Info:                          Sink u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C_Z_TRELLIS_FF_DI_Q_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  37.43 Source u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C_Z_TRELLIS_FF_DI_Q_LUT4_Z_1.F
+Info:    routing  0.49  37.92 Net u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C_Z_TRELLIS_FF_DI_Q[4] (70,52) -> (68,52)
+Info:                          Sink u_core.caliptra_top_dut.rvtop.veer.Gen_AXI_To_AHB.lsu_axi4_to_ahb.ahb_hready_LUT4_Z_B_LUT4_C_1_Z_PFUMX_Z_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  38.17 Source u_core.caliptra_top_dut.rvtop.veer.Gen_AXI_To_AHB.lsu_axi4_to_ahb.ahb_hready_LUT4_Z_B_LUT4_C_1_Z_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.19  38.37 Net u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.htrans_q_LUT4_D_Z[3] (68,52) -> (68,52)
+Info:                          Sink u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  38.60 Source u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C.F
+Info:    routing  0.48  39.08 Net u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C_Z[1] (68,52) -> (66,52)
+Info:                          Sink u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C_Z_LUT4_D_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  39.31 Source u_core.caliptra_top_dut.ahb_lite_bus_i.u_ahb_lite_address_decoder.haddr_i_LUT4_Z_10_C_LUT4_A_Z_LUT4_B_Z_LUT4_Z_D_LUT4_D_Z_LUT4_Z_D_LUT4_C_Z_LUT4_D_1.F
+Info:    routing  1.19  40.50 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D_LUT4_D_Z_LUT4_C_Z_LUT4_C_Z_LUT4_Z_24_C_LUT4_Z_B_LUT4_Z_2_A_LUT4_Z_1_A[2] (66,52) -> (63,51)
+Info:                          Sink u_spi_ram.req_we_TRELLIS_FF_DI_Q_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  40.74 Source u_spi_ram.req_we_TRELLIS_FF_DI_Q_LUT4_Z_1.F
+Info:    routing  3.99  44.73 Net u_spi_ram.req_is_64b_LUT4_D_B[1] (63,51) -> (28,28)
+Info:                          Sink u_spi_ram.req_is_64b_LUT4_D_C_LUT4_Z.C
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  44.97 Source u_spi_ram.req_is_64b_LUT4_D_C_LUT4_Z.F
+Info:    routing  0.95  45.91 Net u_spi_ram.req_is_64b_LUT4_D_C[2] (28,28) -> (22,26)
+Info:                          Sink u_spi_ram.req_is_64b_LUT4_D_B_LUT4_B.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  46.15 Source u_spi_ram.req_is_64b_LUT4_D_B_LUT4_B.F
+Info:    routing  2.81  48.96 Net u_spi_ram.req_is_64b_LUT4_D_B_LUT4_B_Z[1] (22,26) -> (61,33)
+Info:                          Sink u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI_CE_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  49.20 Source u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI_CE_LUT4_Z.F
+Info:    routing  0.45  49.64 Net u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI_CE (61,33) -> (60,32)
+Info:                          Sink u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI.CE
+Info:      setup  0.00  49.64 Source u_spi_ram.req_is_64b_TRELLIS_FF_DI_Q_CCU2C_S1_S0_LUT4_D_Z_TRELLIS_FF_DI.CE
+Info: 7.59 ns logic, 42.05 ns routing
+
+Info: Critical path report for cross-domain path 'posedge $glbnet$clk$TRELLIS_IO_IN' -> '<async>':
+Info:       type curr  total name
+Info:   clk-to-q  0.52  0.52 Source s_axi_wvalid_LUT4_B_Z_TRELLIS_FF_CE.Q
+Info:    routing  1.99  2.51 Net s_axi_wvalid_LUT4_B_Z_TRELLIS_FF_CE_Q[0] (3,48) -> (5,68)
+Info:                          Sink s_axi_wvalid_LUT4_D.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  2.75 Source s_axi_wvalid_LUT4_D.F
+Info:    routing  0.41  3.16 Net s_axi_wvalid_LUT4_D_Z[3] (5,68) -> (6,68)
+Info:                          Sink s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  3.40 Source s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_Z.F
+Info:    routing  0.64  4.04 Net s_axi_arready_LUT4_Z_D_LUT4_C_B[3] (6,68) -> (6,68)
+Info:                          Sink s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  4.28 Source s_axi_arready_LUT4_Z_D_LUT4_C_B_LUT4_D.F
+Info:    routing  5.93  10.21 Net s_axi_araddr_TRELLIS_FF_DI_1_Q[2] (6,68) -> (83,42)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0_LUT4_Z_3.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  10.45 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0_LUT4_Z_3.F
+Info:    routing  4.63  15.08 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_B0[3] (83,42) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.45  15.53 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  15.53 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  15.53 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  15.53 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT_CIN (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:21543.98-21543.151
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  15.60 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  15.60 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  15.60 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  15.60 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT_CIN (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB0.FCI
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:21543.98-21543.151
+Info:                               /usr/bin/../share/yosys/ecp5/arith_map.v:74.7-80.4
+Info:                               /usr/bin/../share/yosys/ecp5/cells_sim.v:82.9-82.13
+Info:      logic  0.07  15.67 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB0.FCO
+Info:    routing  0.00  15.67 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_FCI_INT (15,51) -> (15,51)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB1.FCI
+Info:      logic  0.00  15.67 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_B_CCU2C_COUT$CCU2_COMB1.FCO
+Info:    routing  0.00  15.67 Net $nextpnr_CCU2C_131$CIN (15,51) -> (16,51)
+Info:                          Sink $nextpnr_CCU2C_131$CCU2_COMB0.FCI
+Info:      logic  0.44  16.11 Source $nextpnr_CCU2C_131$CCU2_COMB0.F
+Info:    routing  1.06  17.17 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2_A_LUT4_A_D[1] (16,51) -> (16,59)
+Info:                          Sink s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2.B
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  17.41 Source s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_2.F
+Info:    routing  1.01  18.42 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q[2] (16,59) -> (11,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  18.66 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_Z.F
+Info:    routing  0.80  19.46 Net u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_B[2] (11,59) -> (12,55)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  19.69 Source u_core.caliptra_top_dut.soc_ifc_top1.i_ahb_slv_sif_soc_ifc.err_TRELLIS_FF_DI_Q_LUT4_Z_C_LUT4_D.F
+Info:    routing  1.25  20.94 Net ready_for_fuses_LUT4_A_Z_LUT4_Z_1_B_LUT4_B_1_Z_LUT4_D_C_LUT4_Z_D[0] (12,55) -> (16,54)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_arb.mbox_req_data_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  21.18 Source u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_arb.mbox_req_data_LUT4_Z_1.F
+Info:    routing  0.94  22.12 Net u_core.caliptra_top_dut.soc_ifc_top1.mbox_req_data[37] (16,54) -> (16,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_23_D_LUT4_D_B_LUT4_A_B_LUT4_C_Z_LUT4_A.C
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:33227.17-33227.30
+Info:      logic  0.24  22.35 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_23_D_LUT4_D_B_LUT4_A_B_LUT4_C_Z_LUT4_A.F
+Info:    routing  0.61  22.97 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.sv2v_autoblock_4.load_next_c_LUT4_Z_C_LUT4_Z_C_LUT4_C_Z_LUT4_Z_B[2] (16,52) -> (16,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_1_A_LUT4_Z_1.C
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  23.20 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_1_A_LUT4_Z_1.F
+Info:    routing  0.66  23.86 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_1_A[4] (16,52) -> (15,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2_A_PFUMX_Z_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  24.12 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2_A_PFUMX_Z_BLUT_LUT4_Z.OFX
+Info:    routing  0.43  24.55 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2_A[3] (15,52) -> (14,52)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  24.78 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_Z_2.F
+Info:    routing  0.95  25.73 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z[3] (14,52) -> (13,54)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  25.97 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A.F
+Info:    routing  1.37  27.34 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A_Z[3] (13,54) -> (8,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A_Z_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  27.57 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_19_D_LUT4_D_B_LUT4_A_B_LUT4_B_Z_LUT4_A_Z_LUT4_D.F
+Info:    routing  1.01  28.58 Net mailbox_data_avail_LUT4_B_C[3] (8,59) -> (5,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ns_LUT4_Z_A_LUT4_C_Z_LUT4_Z_2.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  28.82 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ns_LUT4_Z_A_LUT4_C_Z_LUT4_Z_2.F
+Info:    routing  0.63  29.45 Net mailbox_data_avail_LUT4_B_Z[3] (5,60) -> (5,60)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.sv2v_autoblock_186.next_c_LUT4_Z_B_LUT4_A_D_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  29.68 Source u_core.caliptra_top_dut.soc_ifc_top1.i_soc_ifc_reg.sv2v_autoblock_186.next_c_LUT4_Z_B_LUT4_A_D_LUT4_Z.F
+Info:    routing  1.01  30.69 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_fsm_ps_TRELLIS_FF_Q_CE_LUT4_Z_C_LUT4_Z_B[2] (5,60) -> (9,59)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_26_B_LUT4_B_Z_LUT4_Z_1.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  30.93 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.dlen_in_dws_nxt_LUT4_Z_8_C_LUT4_Z_D_CCU2C_S1_B0_LUT4_B_Z_LUT4_Z_26_B_LUT4_B_Z_LUT4_Z_1.F
+Info:    routing  2.74  33.68 Net s_axi_rready_LUT4_C_Z_TRELLIS_FF_CE_Q_LUT4_Z_1_B[3] (9,59) -> (26,44)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_Z.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  33.91 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_Z.F
+Info:    routing  3.15  37.06 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z[2] (26,44) -> (65,40)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_D.D
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.24  37.30 Source u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_Z_LUT4_D.F
+Info:    routing  0.42  37.72 Net u_core.caliptra_top_dut.soc_ifc_top1.i_mbox.mbox_csr1.hwif_in_LUT4_Z_9_D_LUT4_A_D[4] (65,40) -> (65,40)
+Info:                          Sink u_core.caliptra_top_dut.soc_ifc_top1.i_axi_sub_sif_soc_ifc.i_axi_sub_rd.DATA_PIPELINE[0].i_dp_skd.o_data_PFUMX_Z_21_BLUT_LUT4_Z.M
+Info:                          Defined in:
+Info:                               /usr/bin/../share/yosys/ecp5/cells_map.v:108.23-108.24
+Info:      logic  0.26  37.97 Source u_core.caliptra_top_dut.soc_ifc_top1.i_axi_sub_sif_soc_ifc.i_axi_sub_rd.DATA_PIPELINE[0].i_dp_skd.o_data_PFUMX_Z_21_BLUT_LUT4_Z.OFX
+Info:    routing  3.59  41.56 Net s_axi_rdata[22]$TRELLIS_IO_OUT (65,40) -> (69,0)
+Info:                          Sink s_axi_rdata[22]$tr_io.I
+Info:                          Defined in:
+Info:                               /home/swenson/calightra/fpga/calightra_spi_top.v:28743.21-28743.32
+Info: 6.32 ns logic, 35.24 ns routing
+
+Info: Max frequency for clock '$glbnet$clk$TRELLIS_IO_IN': 16.86 MHz (PASS at 12.00 MHz)
+
+Info: Max delay <async>                           -> <async>                          : 44.02 ns
+Info: Max delay <async>                           -> posedge $glbnet$clk$TRELLIS_IO_IN: 49.64 ns
+Info: Max delay posedge $glbnet$clk$TRELLIS_IO_IN -> <async>                          : 41.56 ns
+
+Info: Slack histogram:
+Info:  legend: * represents 101 endpoint(s)
+Info:          + represents [1,101) endpoint(s)
+Info: [ 24028,  26947) |*+
+Info: [ 26947,  29866) |+
+Info: [ 29866,  32785) |**+
+Info: [ 32785,  35704) |*+
+Info: [ 35704,  38623) |**+
+Info: [ 38623,  41542) |**+
+Info: [ 41542,  44461) |******+
+Info: [ 44461,  47380) |**+
+Info: [ 47380,  50299) |****+
+Info: [ 50299,  53218) |************+
+Info: [ 53218,  56137) |***************+
+Info: [ 56137,  59056) |***************+
+Info: [ 59056,  61975) |***********+
+Info: [ 61975,  64894) |*****+
+Info: [ 64894,  67813) |**+
+Info: [ 67813,  70732) |**+
+Info: [ 70732,  73651) |************+
+Info: [ 73651,  76570) |**********************************+
+Info: [ 76570,  79489) |************************************************************ 
+Info: [ 79489,  82408) |******************+
+
+Info: Program finished normally.

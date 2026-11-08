@@ -1,0 +1,23 @@
+Caliptra HW Release Note 
+Nightly release_v20261008_1-2.x
+Caliptra-RTL Rev: 49370266d12cb0c4a8f71b3a0ff7e54ba7d4866e
+Caliptra-SW Rev: dd1e79d5bf55a9bd5bdb05915757eaf34844145d
+RTL hash (see rtl_hash.sh): 7fe7c5be4da2cdbc1f12233dcce67d5e1204cc9344462aebc7b0fac88c5d9c99a94fee5774410bfb9d83762d47814133
+Content:
+	RTL: caliptra-rtl/
+	ROM Bin: caliptra-rom.bin
+	ROM ELF: caliptra-rom.elf
+	Image Bundle Bins:
+		LMS: image-bundle-lms.bin
+		MLDSA: image-bundle-mldsa.bin
+	FMC ELF: caliptra-fmc.elf
+	RTFW ELF: caliptra-runtime.elf
+	Fake ROM Bin: fake-caliptra-rom.bin
+	Fake ROM ELF: fake-caliptra-rom.elf
+	Fake Image Bundle Bin: fake-image-bundle.bin
+	Fake FMC ELF: fake-caliptra-fmc.elf
+	Fake RTFW ELF: fake-caliptra-runtime.elf
+	LIBCaliptra: libcaliptra/
+	FPGA Model: fpga/
+	RTL hash tool: rtl_hash.sh
+	RTL hash file list: rtl_hash_file_list.txt

@@ -1,0 +1,40 @@
+     $scopeinfo                   1954
+     SB_CARRY                     1534
+     SB_DFFER                     7005
+     SB_DFFES                      197
+     SB_DFFR                       566
+     SB_DFFS                        12
+     SB_LUT4                     22995
+     SB_MAC16                        4
+
+2.55. Executing CHECK pass (checking for obvious problems).
+Checking module calightra_spi_top...
+Found and reported 0 problems.
+
+3. Printing statistics.
+
+=== calightra_spi_top ===
+
+   Number of wires:              26890
+   Number of wire bits:         212813
+   Number of public wires:       26890
+   Number of public wire bits:  212813
+   Number of ports:                 33
+   Number of port bits:            151
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:              34267
+     $scopeinfo                   1954
+     SB_CARRY                     1534
+     SB_DFFER                     7005
+     SB_DFFES                      197
+     SB_DFFR                       566
+     SB_DFFS                        12
+     SB_LUT4                     22995
+     SB_MAC16                        4
+
+Warnings: 11 unique messages, 11 total
+End of script. Logfile hash: c49be1ba1f, CPU: user 102.63s system 0.54s, MEM: 895.97 MB peak
+Yosys 0.52 (git sha1 fee39a3284c90249e1d9684cf6944ffbbcbb8f90)
+Time spent: 31% 1x abc9_exe (47 sec), 17% 43x opt_clean (25 sec), ...

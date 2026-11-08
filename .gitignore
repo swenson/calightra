@@ -1,0 +1,21 @@
+# Verilator build outputs
+sim/out/
+sim/out_*/
+
+# FPGA intermediate synthesis & PnR outputs
+fpga/*.v
+fpga/*.json
+fpga/*.config
+fpga/*.asc
+fpga/*.log
+fpga/*.stat
+!fpga/logs/
+
+# Large unpacked firmware release archive & ELFs (keep .bin images & libcaliptra)
+fw/*.zip
+fw/*.elf
+fw/caliptra-rtl/
+fw/fpga/
+
+# Temporary duplicate walkthrough file (README.md is canonical)
+WALKTHROUGH.md

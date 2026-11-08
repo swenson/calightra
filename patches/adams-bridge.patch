@@ -1,0 +1,182 @@
+diff --git a/src/abr_libs/rtl/abr_icg.sv b/src/abr_libs/rtl/abr_icg.sv
+index 247f93c..78331a1 100644
+--- a/src/abr_libs/rtl/abr_icg.sv
++++ b/src/abr_libs/rtl/abr_icg.sv
+@@ -18,6 +18,9 @@
+         input logic en,
+         output clk_cg
+     );
++`ifdef CALIGHTRA_PHASE1
++        assign clk_cg = clk;
++`else
+         logic en_lat;
+     
+         //Latch disable for both clk and soc_ifc clk
+@@ -29,6 +32,7 @@
+          
+         //Gate clk
+         assign clk_cg = clk && en_lat;
++`endif
+     
+     endmodule
+ `endif
+\ No newline at end of file
+diff --git a/src/abr_sha3/rtl/abr_keccak_round.sv b/src/abr_sha3/rtl/abr_keccak_round.sv
+index 3ce4a12..b11205d 100644
+--- a/src/abr_sha3/rtl/abr_keccak_round.sv
++++ b/src/abr_sha3/rtl/abr_keccak_round.sv
+@@ -365,7 +365,12 @@ module abr_keccak_round
+     .out_o(rst_n)
+   );
+ 
++`ifdef CALIGHTRA_PHASE1
++  logic [Width-1:0] storage_dp1[Share];
++  logic [Width-1:0] storage_dp2[Share];
++`else
+   logic [Width-1:0] storage_datapath[RoundsPerClock:0][Share];
++`endif
+   logic [Width-1:0] storage   [Share];
+   logic [Width-1:0] storage_d [Share];
+   always_ff @(posedge clk_i or negedge rst_n) begin
+@@ -385,7 +390,11 @@ module abr_keccak_round
+   // Storage register input
+   // The incoming message is XORed with the existing storage registers.
+   always_comb begin
++`ifdef CALIGHTRA_PHASE1
++    storage_d = storage_dp2;
++`else
+     storage_d = storage_datapath[RoundsPerClock];
++`endif
+     if (xor_message) begin
+       for (int j = 0 ; j < Share ; j++) begin
+         storage_d[j] = storage[j] ^ data_i[j];
+@@ -413,6 +422,36 @@ module abr_keccak_round
+   //////////////
+   // Datapath //
+   //////////////
++`ifdef CALIGHTRA_PHASE1
++  abr_keccak_2share #(
++    .Width     (Width),
++    .EnMasking (EnMasking)
++  ) u_keccak_p0 (
++    .clk_i,
++    .rst_b,
++    .rnd_i           (RndW'(round)),
++    .phase_sel_i     (phase_sel),
++    .cycle_i         (cycle),
++    .rand_aux_i      (keccak_rand_aux),
++    .rand_i          (keccak_rand_data),
++    .s_i             (storage),
++    .s_o             (storage_dp1)
++  );
++  abr_keccak_2share #(
++    .Width     (Width),
++    .EnMasking (EnMasking)
++  ) u_keccak_p1 (
++    .clk_i,
++    .rst_b,
++    .rnd_i           (RndW'(round+1)),
++    .phase_sel_i     (phase_sel),
++    .cycle_i         (cycle),
++    .rand_aux_i      (keccak_rand_aux),
++    .rand_i          (keccak_rand_data),
++    .s_i             (storage_dp1),
++    .s_o             (storage_dp2)
++  );
++`else
+   assign storage_datapath[0] = storage;
+ 
+   generate
+@@ -434,6 +473,7 @@ module abr_keccak_round
+       );
+     end
+   endgenerate
++`endif
+ 
+   // keccak entropy handling
+   assign rand_consumed_o = keccak_rand_consumed;
+diff --git a/src/abr_top/rtl/abr_ctrl_pkg.sv b/src/abr_top/rtl/abr_ctrl_pkg.sv
+index 67e9db6..36b7413 100644
+--- a/src/abr_top/rtl/abr_ctrl_pkg.sv
++++ b/src/abr_top/rtl/abr_ctrl_pkg.sv
+@@ -227,6 +227,46 @@ package abr_ctrl_pkg;
+         logic [ABR_OPR_WIDTH-1 : 0]    operand3;
+     } abr_seq_instr_t;
+ 
++`ifdef CALIGHTRA_NO_COUNTERMEASURES
++    // MLDSA ISA (Unmasked & Unshuffled)
++    localparam abr_opcode_t ABR_UOP_NOP              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SAMPLER_NONE,     masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_SHAKE256         = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SHAKE256,         masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_SHAKE128         = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SHAKE128,         masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_REJB             = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_REJ_BOUNDED,      masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_REJS_PWM         = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWM_SMPL,       masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_REJS_PWMA        = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWM_ACCUM_SMPL, masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_REJS_MASKED_PWM  = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWM_SMPL,       masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_REJS_MASKED_PWMA = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWM_ACCUM_SMPL, masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_SIB              = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SAMPLE_IN_BALL,   masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_EXP_MASK         = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_EXP_MASK,         masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_NTT              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_NTT,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_INTT             = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_INTT,           masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_PWM              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWM,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_PWA              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWA,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_PWS              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWS,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MASKED_NTT       = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_NTT,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MASKED_INTT      = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_INTT,           masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MASKED_PWM       = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWM,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MASKED_PWA       = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWA,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MASKED_PWS       = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLDSA_PWS,            masking_en:1'b0, shuffling_en:1'b0};
++    // MLKEM ISA (Unmasked & Unshuffled)
++    localparam abr_opcode_t ABR_UOP_SHA512                 = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SHA512,           masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_SHA256                 = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SHA256,           masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_CBD                    = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_CBD_SAMPLER,      masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_REJS_PWM         = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM_SMPL,       masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_REJS_PWMA        = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM_ACCUM_SMPL, masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_MASKED_REJS_PWM  = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM_SMPL,       masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_MASKED_REJS_PWMA = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM_ACCUM_SMPL, masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_NTT              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_NTT,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_INTT             = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_INTT,           masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_MASKED_INTT      = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_INTT,           masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_PWA              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWA,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_PWM              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_PWMA             = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM_ACCUM,      masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_MASKED_PWM       = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM,            masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_MASKED_PWMA      = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM_ACCUM,      masking_en:1'b0, shuffling_en:1'b0};
++    localparam abr_opcode_t ABR_UOP_MLKEM_PWS              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWS,            masking_en:1'b0, shuffling_en:1'b0};
++`else
+     // MLDSA ISA
+     localparam abr_opcode_t ABR_UOP_NOP              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SAMPLER_NONE,     masking_en:1'b0, shuffling_en:1'b0};
+     localparam abr_opcode_t ABR_UOP_SHAKE256         = '{keccak_en: 1'b1, sampler_en:1'b1, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SHAKE256,         masking_en:1'b0, shuffling_en:1'b0};
+@@ -265,6 +305,7 @@ package abr_ctrl_pkg;
+     localparam abr_opcode_t ABR_UOP_MLKEM_MASKED_PWM       = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM,            masking_en:1'b1, shuffling_en:1'b1};
+     localparam abr_opcode_t ABR_UOP_MLKEM_MASKED_PWMA      = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWM_ACCUM,      masking_en:1'b1, shuffling_en:1'b1};
+     localparam abr_opcode_t ABR_UOP_MLKEM_PWS              = '{keccak_en: 1'b0, sampler_en:1'b0, ntt_en:1'b1, aux_en: 1'b0, mode:MLKEM_PWS,            masking_en:1'b0, shuffling_en:1'b1};
++`endif
+ 
+     //Load Keccak with data but don't run it yet
+     localparam abr_opcode_t ABR_UOP_LD_SHAKE256 = '{keccak_en: 1'b1, sampler_en:1'b0, ntt_en:1'b0, aux_en: 1'b0, mode:ABR_SHAKE256, masking_en:1'b0, shuffling_en:1'b0};
+diff --git a/src/ntt_top/rtl/ntt_hybrid_butterfly_2x2.sv b/src/ntt_top/rtl/ntt_hybrid_butterfly_2x2.sv
+index 1d5076b..8e969f9 100644
+--- a/src/ntt_top/rtl/ntt_hybrid_butterfly_2x2.sv
++++ b/src/ntt_top/rtl/ntt_hybrid_butterfly_2x2.sv
+@@ -197,6 +197,13 @@ always_comb begin
+     z1_share  = pairwm_mode ? mlkem_shares_pairwm_zeta13_i.z1_i : '0;
+ end
+ 
++`ifdef CALIGHTRA_NO_COUNTERMEASURES
++assign mldsa_uv0_share = '0;
++assign mldsa_uv1_share = '0;
++assign mldsa_masked_gs_stage1_uvo = '0;
++assign bf_pwm_shares_uvo = '0;
++assign mlkem_masked_gs_stage1_uvo = '0;
++`else
+ //----------------------------------------------------
+ //Masked PWMs - Used in masked PWM+INTT mode only - 210 clks
+ //----------------------------------------------------
+@@ -304,6 +311,7 @@ ntt_mlkem_masked_butterfly1x2 mlkem_masked_bf_1x2_inst0
+     .rnd_i({rnd_i[1][13:0], rnd_i[0][13:0], rnd_i[4][13:0], rnd_i[3][13:0], rnd_i[2][13:0]}),
+     .uv_o(mlkem_masked_gs_stage1_uvo)
+ );
++`endif
+ 
+ //----------------------------------------------------
+ //MLDSA/MLKEM - Unmasked BFU stage 1 - Used in all other modes

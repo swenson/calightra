@@ -1,0 +1,10 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "HMAC"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/hmac/stimulus/tests/directed/hmac_normal_test.yml
+        - ${CALIPTRA_ROOT}/src/hmac/stimulus/tests/directed/hmac_acvp_512_test.yml
+        - ${CALIPTRA_ROOT}/src/hmac/stimulus/tests/directed/hmac_acvp_384_test.yml

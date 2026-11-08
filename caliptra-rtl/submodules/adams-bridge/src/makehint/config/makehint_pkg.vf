@@ -1,0 +1,2 @@
++incdir+${ADAMSBRIDGE_ROOT}/src/makehint/rtl
+${ADAMSBRIDGE_ROOT}/src/makehint/rtl/makehint_defines_pkg.sv
