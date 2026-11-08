@@ -150,3 +150,4 @@ ${CALIPTRA_ROOT}/src/soc_ifc/rtl/wdt.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_top.sv
 /home/swenson/calightra/fpga/calightra_spi_ram_bridge.sv
 /home/swenson/calightra/fpga/calightra_fpga_top.sv
+/home/swenson/calightra/fpga/ulx3s_top.sv

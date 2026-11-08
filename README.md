@@ -121,16 +121,16 @@ The automated `sv2v` + `yosys` + `nextpnr` flow lives in [`fpga/`](fpga/):
 
 ### 4.2 Full-Chip Synthesis & Place-and-Route on Lattice ECP5 (`nextpnr-ecp5`)
 
-Synthesizing [`calightra_spi_top`](fpga/calightra_fpga_top.sv) with `yosys synth_ecp5` and running full timing-driven placement and routing with `nextpnr-ecp5 --45k --package CABGA381` (full log in [`fpga/logs/nextpnr_spi_top_ecp5.log`](fpga/logs/nextpnr_spi_top_ecp5.log)):
+Synthesizing [`ulx3s_top`](fpga/ulx3s_top.sv) (which wraps [`calightra_spi_top`](fpga/calightra_fpga_top.sv) with an onboard ESP32 SPI-to-AXI4-Lite host bridge, 115,200-baud FTDI UART TX serializer, and 8 status LEDs constrained by [`fpga/ulx3s_v20.lpf`](fpga/ulx3s_v20.lpf)) and running `nextpnr-ecp5` + `ecppack` (`calightra_ulx3s_85f.bit` = 721 KB, logs in [`fpga/logs/nextpnr_ulx3s_85f.log`](fpga/logs/nextpnr_ulx3s_85f.log) and [`fpga/logs/nextpnr_spi_top_ecp5.log`](fpga/logs/nextpnr_spi_top_ecp5.log)):
 
-| Resource / Metric | Used | Available (`LFE5U-45F-CABGA381`) | Utilization | Notes |
-| :--- | :---: | :---: | :---: | :--- |
-| **`TRELLIS_COMB` (LUT4 / Carry)** | **`30,830`** | `43,848` | **`70%`** | Includes `29,148 LUT4` + `696 CCU2C` (`1,392` carry cells) |
-| **`TRELLIS_FF` (Flip-Flops)** | **`7,782`** | `43,848` | **`17%`** | Zero latches (`0 DLATCH`) |
-| **`MULT18X18D` (18x18 DSPs)** | **`8`** | `72` | **`11%`** | Used by VeeR EL2 `el2_exu_mul_ctl` |
-| **`TRELLIS_RAMW` / `DP16KD` (BRAM)** | **`0`** | `5,481` (`108` EBRs) | **`0%`** | All 608 KB memory mapped via `calightra_spi_ram_bridge` |
-| **`TRELLIS_IO` (I/O Pins)** | **`151`** | `245` | **`61%`** | Compact AXI4-Lite + 6-pin QSPI RAM + UART + status |
-| **Placed & Routed `Fmax`** | **`16.86 MHz`** | `12.00 MHz` (target) | **PASS** | Single global clock domain (`$glbnet$clk$TRELLIS_IO_IN`) |
+| Resource / Metric | Radiona ULX3S-85F (`LFE5U-85F-6BG381C`) | Generic ECP5-45F (`LFE5U-45F-CABGA381`) | Notes |
+| :--- | :---: | :---: | :--- |
+| **`TRELLIS_COMB` (LUT4 / Carry)** | **`29,690 / 83,640` (`35%`)** | **`30,830 / 43,848` (`70%`)** | Full Core + QSPI RAM bridge + ESP32 SPI-AXI host |
+| **`TRELLIS_FF` (Flip-Flops)** | **`8,062 / 83,640` (`9%`)** | **`7,782 / 43,848` (`17%`)** | Zero latches (`0 DLATCH`) |
+| **`MULT18X18D` (18x18 DSPs)** | **`8 / 156` (`5%`)** | **`8 / 72` (`11%`)** | Used by VeeR EL2 `el2_exu_mul_ctl` |
+| **`DP16KD` / `TRELLIS_RAMW` (BRAM)** | **`0 / 208` (`0%`)** | **`0 / 108` (`0%`)** | All 608 KB memory mapped via `calightra_spi_ram_bridge` (leaves `416 KB` EBR free on `85F`!) |
+| **`TRELLIS_IO` (I/O Pins)** | **`25 / 365` (`6%`)** | **`151 / 245` (`61%`)** | ULX3S uses 6-pin ESP32 SPI + 6-pin QSPI + UART + 8 LEDs + buttons |
+| **Placed & Routed `Fmax`** | **`17.86 MHz`** (12.5 MHz core) | **`16.86 MHz`** (12.0 MHz target) | **PASS** + `721 KB` compressed bitstream (`calightra_ulx3s_85f.bit`) |
 
 ---
 

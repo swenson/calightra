@@ -6,6 +6,7 @@ sim/out_*/
 fpga/*.v
 fpga/*.json
 fpga/*.config
+fpga/*.bit
 fpga/*.asc
 fpga/*.log
 fpga/*.stat
