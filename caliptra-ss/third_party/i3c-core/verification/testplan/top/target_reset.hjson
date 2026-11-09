@@ -1,0 +1,156 @@
+{
+  name: target_peripheral_reset
+  testpoints:
+  [
+    {
+      name: target_peripheral_reset
+      desc: Issues I3C target reset pattern and verifies successful peripheral reset.
+      tests: ["target_peripheral_reset"]
+      tags: ["top"]
+    }
+    {
+      name: target_escalated_reset
+      desc: Issues I3C target reset patterns and verifies successful reset escalation.
+      tests: ["target_escalated_reset"]
+      tags: ["top"]
+    }
+    {
+      name: reset_at_min_timing
+      desc:
+        '''
+        Valid reset at exact spec minimum timing (tDIG_H = 140ns). Tests the
+        target reset detector when the bus operates at the minimum timing
+        thresholds specified in the I3C specification.
+        '''
+      tests: ["reset_at_min_timing"]
+      tags: ["top"]
+    }
+    {
+      name: 13_transitions_fails
+      desc:
+        '''
+        Only 13 SDA transitions should NOT trigger reset. The spec requires
+        exactly 14 SDA transitions. With only 13, the FSM should remain in
+        AwaitPattern and not trigger a reset.
+        '''
+      tests: ["13_transitions_fails"]
+      tags: ["top"]
+    }
+    {
+      name: 15_transitions_before_scl
+      desc:
+        '''
+        15 SDA transitions before SCL rise should NOT trigger reset. Extra
+        transitions beyond 14 while SCL is still low should prevent the
+        pattern from being recognized.
+        '''
+      tests: ["15_transitions_before_scl"]
+      tags: ["top"]
+    }
+    {
+      name: scl_glitch_during_pattern
+      desc:
+        '''
+        SCL goes high briefly during SDA transitions. When SCL goes stable
+        high during the 14 SDA transitions, the transition counter should
+        reset and pattern recognition should fail.
+        '''
+      tests: ["scl_glitch_during_pattern"]
+      tags: ["top"]
+    }
+    {
+      name: sda_stable_low_during_await_scl
+      desc:
+        '''
+        SDA goes stable low while waiting for SCL rise. In AwaitSCL state,
+        if SDA becomes stable low, FSM should abort back to AwaitPattern.
+        '''
+      tests: ["sda_stable_low_during_await_scl"]
+      tags: ["top"]
+    }
+    {
+      name: scl_drops_during_await_sr
+      desc:
+        '''
+        SCL goes low before START condition detected. In AwaitSr state, if
+        SCL becomes stable low before START is detected, FSM should abort
+        back to AwaitPattern.
+        '''
+      tests: ["scl_drops_during_await_sr"]
+      tags: ["top"]
+    }
+    {
+      name: scl_drops_during_await_p
+      desc:
+        '''
+        SCL goes low before STOP condition detected. In AwaitP state, if
+        SCL becomes stable low before STOP is detected, FSM should abort
+        back to AwaitPattern.
+        '''
+      tests: ["scl_drops_during_await_p"]
+      tags: ["top"]
+    }
+    {
+      name: back_to_back_resets
+      desc:
+        '''
+        Multiple valid resets in succession. Verifies that the FSM returns
+        cleanly to initial state after reset and can detect subsequent
+        reset patterns.
+        '''
+      tests: ["back_to_back_resets"]
+      tags: ["top"]
+    }
+    {
+      name: reset_after_failed_pattern
+      desc:
+        '''
+        Verifies FSM recovers after a failed pattern and can detect subsequent
+        valid reset patterns.
+        '''
+      tests: ["reset_after_failed_pattern"]
+      tags: ["top"]
+    }
+    {
+      name: first_edge_must_be_falling
+      desc:
+        '''
+        Pattern counting starts on negative edge. Per FSM logic, the first
+        counted transition must be a falling edge. Starting with a rising edge
+        should not be counted.
+        '''
+      tests: ["first_edge_must_be_falling"]
+      tags: ["top"]
+    }
+    {
+      name: timing_at_2x_minimum
+      desc:
+        '''
+        Verifies reset detection works at 2x minimum timing (more relaxed
+        timing). Serves as a sanity check that the detector is not too strict.
+        '''
+      tests: ["timing_at_2x_minimum"]
+      tags: ["top"]
+    }
+    {
+      name: very_fast_timing_below_spec
+      desc:
+        '''
+        Test with timing faster than spec minimum (aggressive timing). Tests
+        if the detector can keep up with fast transitions.
+        '''
+      tests: ["very_fast_timing_below_spec"]
+      tags: ["top"]
+    }
+    {
+      name: mixed_valid_and_invalid_patterns
+      desc:
+        '''
+        Sends a mix of valid and invalid patterns to stress the FSM
+        transitions and verify correct behavior under varied conditions.
+        '''
+      tests: ["mixed_valid_and_invalid_patterns"]
+      tags: ["top"]
+    }
+  ]
+}

@@ -203,3 +203,81 @@ make -C fpga blocks
   - [`patches/adams-bridge.patch`](patches/adams-bridge.patch)
 - [`fw/`](fw/): Official unmodified [`chipsalliance/caliptra-sw`](https://github.com/chipsalliance/caliptra-sw) `rom-2.1.3-1` release binaries (`caliptra-rom.bin`, `caliptra-rom-with-log.bin`, `image-bundle-mldsa.bin`, `image-bundle-lms.bin`).
 - [`caliptra-rtl/`](caliptra-rtl/): Full Caliptra 2.1 RTL source tree with `CALIGHTRA_PHASE1`, `CALIGHTRA_NO_COUNTERMEASURES`, `CALIGHTRA_NO_BP`, and `CALIGHTRA_ICE40` `ifdef` guards applied.
+- [`caliptra-ss/`](caliptra-ss/): Full Caliptra 2.1 Subsystem (`chipsalliance/caliptra-ss` `patch_ss_v2.1` branch `8b4add30` + `i3c-core` `db4a6f34`) with `CALIGHTRA_PHASE1`, `CALIGHTRA_NO_BP`, and `CALIGHTRA_ICE40` `ifdef` guards applied.
+- [`ss/`](ss/): Calightra-SS subsystem AXI4 crossbar, MCU firmware, Verilator testbench, and ULX3S-85F FPGA build flow:
+  - [`ss/rtl/calightra_ss_axi_xbar.sv`](ss/rtl/calightra_ss_axi_xbar.sv): Open-source Apache-2.0 5-Manager $\times$ 7-Subordinate AXI4 crossbar interconnect (`391 LUT4` / `264 FF` on ECP5-85F).
+  - [`ss/fw/`](ss/fw/): Bare-metal RISC-V MCU boot ROM firmware (`mcu_boot.c`, `start.S`, `link.ld`) that boots the MCU VeeR EL2 core over the AXI4 crossbar, verifies `OTP_CTRL`, `LC_CTRL`, `MCU_SRAM`, `MCU_MBOX0`, and `SOC_SRAM`, brings Caliptra Core out of reset via `MCI CPTRA_BOOT_GO`, programs fuses, and services ETRNG requests through `READY_FOR_MB_PROCESSING=1`.
+  - [`ss/sim/`](ss/sim/): Verilator wrapper (`calightra_ss_verilated.sv`), filelist (`calightra_ss_top.vf`), and C++ simulation harness (`ss_boot_sim.cpp`).
+  - [`ss/fpga/`](ss/fpga/): Radiona ULX3S-85F top-level wrapper (`calightra_ss_ulx3s_top.sv`), filelist (`calightra_ss_fpga.vf`), `sv2v` runner (`run_sv2v.py`), and synthesis/place-and-route `Makefile` producing `calightra_ss_ulx3s_85f.bit`.
+
+---
+
+## 8. Calightra-SS: Full Caliptra 2.1 Subsystem (`caliptra-ss` Branch)
+
+On the `caliptra-ss` branch, Calightra extends all stripping and open-source FPGA synthesis optimizations to the full **Caliptra 2.1 Subsystem (`chipsalliance/caliptra-ss`, `patch_ss_v2.1` branch)**, which integrates:
+1. **Caliptra Core (`caliptra_top`)**: First VeeR EL2 RISC-V core + cryptographic mailbox, fuse controller, and key/data/PCR vaults.
+2. **Subsystem MCU (`css_mcu0_el2_veer_wrapper`)**: Second VeeR EL2 RISC-V core (`rvtop_wrapper`) executing from MCU ROM (`0x8000_0000`) with exported DCCM (`16 KB` in ECP5 `DP16KD` EBR BRAM).
+3. **MCI (`mci_top`)**: Microcontroller Interface containing the subsystem boot sequencer (`mci_boot_seqr`), MCU SRAM controller (`mci_mcu_sram_ctrl`), MCU Mailbox 0 (`mcu_mbox0`), watchdog timers (`mci_wdt_top`), and MCI CSR register block (`mci_reg_top`).
+4. **OpenTitan Fuse Controller (`otp_ctrl`) & Lifecycle Controller (`lc_ctrl`)**: Dual-AXI/TL-UL controllers initialized under `CALIGHTRA_PHASE1` to `DAI_IDLE` (`OTP_STATUS = 0x4000_0000`) and `LcStTestUnlocked0` (`LC_STATUS = 0x0000_0003`, `LC_STATE = 0x0210_8421`, `LC_CNT = 1`) with hardware debug unlocked.
+5. **I3C Core (`i3c_wrapper`)**: MIPI I3C target/controller peripheral (`0x2000_4000`).
+6. **Open-Source Apache-2.0 AXI4 Crossbar ([`ss/rtl/calightra_ss_axi_xbar.sv`](ss/rtl/calightra_ss_axi_xbar.sv))**: Replaces the proprietary Avery VIP `aaxi4_interconnect.sv` used in upstream `caliptra-ss` simulation testbenches with a clean, single-file, zero-bubble synthesizable SystemVerilog AXI4 crossbar connecting **5 AXI4 Managers** (`M0: MCU IFU 64b`, `M1: MCU LSU 64b`, `M2: Caliptra DMA 32b`, `M3: SoC/ESP32 Host 32b`, `M4: MCU System Bus 64b`) to **7 AXI4 Subordinates** (`S0: MCU ROM 64b @ 0x8000_0000`, `S1: MCI 32b @ 0x2100_0000`, `S2: Caliptra Core 32b @ 0xA000_0000 / 0x3000_0000`, `S3: OTP_CTRL 32b @ 0x7000_0000`, `S4: LC_CTRL 32b @ 0x7000_0400`, `S5: I3C 32b @ 0x2000_4000`, `S6: SoC SRAM 32b @ 0xB000_0000`) with automatic 64-bit $\leftrightarrow$ 32-bit downsizing/upsizing and round-robin arbitration.
+
+### 8.1 Radiona ULX3S-85F (`LFE5U-85F-6BG381C`) Synthesis & Place-and-Route Results for `calightra_ss_ulx3s_top`
+
+Synthesizing and placing-and-routing the **entire dual-VeeR-EL2 `calightra-ss` subsystem** ([`ss/fpga/calightra_ss_ulx3s_top.sv`](ss/fpga/calightra_ss_ulx3s_top.sv)) with `sv2v` + `yosys synth_ecp5` + `nextpnr-ecp5 --85k --package CABGA381` + `ecppack --compress` ([`ss/fpga/calightra_ss_ulx3s_85f.bit`](ss/fpga/calightra_ss_ulx3s_85f.bit), `1.2 MB`):
+
+| Resource / Metric | Utilization on ULX3S-85F (`LFE5U-85F-6BG381C`) | Percentage | Notes |
+| :--- | :---: | :---: | :--- |
+| **`TRELLIS_COMB` (LUT4 + Carry)** | **`59,257 / 83,640`** | **`70%`** | `55,893` `LUT4` + `2,798` carry (`1,399 CCU2C`) |
+| **`TRELLIS_FF` (Flip-Flops)** | **`16,037 / 83,640`** | **`19%`** | Zero latches (`0 DLATCH`) |
+| **`DP16KD` (18 Kb EBR Block RAMs)** | **`16 / 208`** | **`7%`** | MCU DCCM (8), MCU ROM (2), MCU SRAM (2), MCU MBOX0 (2), SoC SRAM (2) |
+| **`MULT18X18D` (18x18 DSP Slices)** | **`14 / 156`** | **`8%`** | Caliptra Core VeeR EL2 (8) + MCU VeeR EL2 (6) |
+| **`TRELLIS_IO` (I/O Pins)** | **`25 / 365`** | **`6%`** | Clock, reset, UART, 8 LEDs, ESP32 SPI, QSPI RAM bridge |
+| **Core Clock `Fmax` (`$glbnet$clk_core`)** | **`17.12 MHz`** | **PASS** | Passes `12.50 MHz` core clock constraint (+37% timing margin) |
+| **Input Clock `Fmax` (`clk_25mhz`)** | **`894.45 MHz`** | **PASS** | Passes `25.00 MHz` board oscillator constraint |
+
+### 8.2 Hierarchical Resource Breakdown (`calightra_ss_ulx3s_top` on ECP5-85F)
+
+| Subsystem / Module Instance | `LUT4` | `TRELLIS_FF` | `DP16KD` | `MULT18X18D` | Role |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **`caliptra_ss_dut.caliptra_top_dut.rvtop`** | `25,044` | `6,248` | `0` | `8` | Caliptra Core VeeR EL2 RISC-V processor |
+| **`caliptra_ss_dut.rvtop_wrapper.rvtop`** | `20,103` | `4,510` | `0` | `6` | Subsystem MCU VeeR EL2 RISC-V processor |
+| **`caliptra_ss_dut.caliptra_top_dut.soc_ifc_top1`** | `3,380` | `1,074` | `0` | `0` | Caliptra Core SoC interface, mailbox, BootFSM & CSRs |
+| **`caliptra_ss_dut` (Top glue + EBR memories)** | `2,037` | `1,091` | `16` | `0` | Subsystem top-level + 16 EBR BRAMs (`MCU DCCM/ROM/SRAM/MBOX0`, `SOC_SRAM`) |
+| **`caliptra_ss_dut.mci_top_i.i_mci_reg_top`** | `1,277` | `573` | `0` | `0` | MCI CSR block (stripped from `15,976` LUT4 / `6,650` FF via `CALIGHTRA_ICE40`) |
+| **`caliptra_ss_dut.u_otp_ctrl`** | `660` | `488` | `0` | `0` | OpenTitan Fuse Controller (`axi2tlul` + `u_reg_core`) |
+| **`caliptra_ss_dut.mci_top_i.mcu_mbox0`** | `430` | `194` | `0` | `0` | MCI MCU Mailbox 0 controller |
+| **[`u_axi_xbar` (`calightra_ss_axi_xbar`)](ss/rtl/calightra_ss_axi_xbar.sv)** | **`391`** | **`264`** | **`0`** | **`0`** | **Open-source Apache-2.0 5M $\times$ 7S AXI4 crossbar (`0.5%` of ECP5-85F!)** |
+| **`caliptra_ss_dut.mci_top_i.i_mci_axi_sub_top`** | `287` | `170` | `0` | `0` | MCI AXI4 subordinate interface |
+| **`caliptra_ss_dut.u_lc_ctrl`** | `237` | `135` | `0` | `0` | OpenTitan Lifecycle Controller (`axi2tlul` + `u_reg`) |
+| **`caliptra_ss_dut.mcu_rom_i.i_axi_sub`** | `215` | `207` | `0` | `0` | 64-bit AXI4 subordinate for MCU ROM |
+| **`u_qspi_ram_bridge`** | `36` | `84` | `0` | `0` | External QSPI RAM bridge for Caliptra Core SRAMs |
+
+### 8.3 Full Dual-Core `caliptra-ss` Verilator Boot Benchmark (`ss/sim/ss_boot_sim.log`)
+
+Building and running the full dual-VeeR-EL2 subsystem in Verilator ([`ss/sim/Makefile`](ss/sim/Makefile), full log in [`ss/sim/ss_boot_sim.log`](ss/sim/ss_boot_sim.log)):
+- **Verilator Build Time (`Vcalightra_ss_verilated`)**: **`60.73 s`** (8 threads)
+- **Simulation Speed**: **`2.20 kHz`** (running **both** the MCU VeeR EL2 core and the Caliptra Core VeeR EL2 + crypto engines concurrently over [`calightra_ss_axi_xbar.sv`](ss/rtl/calightra_ss_axi_xbar.sv))
+
+| Subsystem Boot Milestone | Cycle Count | Elapsed Wall Time | Description |
+| :--- | :---: | :---: | :--- |
+| **`cptra_ss_mcu_rst_b_o = 1`** | `51` | `0.02 s` | MCI Boot Sequencer releases Subsystem MCU VeeR EL2 from reset |
+| **MCU Boot & `OTP_CTRL`/`LC_CTRL` Readback (`0x2`)** | `9,967` | `4.5 s` | MCU boots from `0x8000_0000`, verifies `OTP_STATUS=0x40000000`, `LC_STATUS=0x00000003`, `LC_STATE=0x02108421`, `LC_CNT=1` |
+| **AXI4 Crossbar SRAM Verification (`0x3`)** | `13,929` | `6.3 s` | MCU verifies read/write to `MCU_SRAM` (`0x21C0_0000`), `MCU_MBOX0` (`0x2140_0000`), and `SOC_SRAM` (`0xB000_0000`) |
+| **`MCI CPTRA_BOOT_GO` & `ready_for_fuses` (`0x4`)** | `16,730` | `7.6 s` | MCU writes `MCI CPTRA_BOOT_GO=1`; MCI releases Caliptra Core reset (`16,721`); Caliptra Core asserts `ready_for_fuses=1` (`16,730`) |
+| **MCU Programs Caliptra Fuses & `BOOTFSM_GO` (`0x5`)** | `24,133` | `11.0 s` | MCU writes `CPTRA_WDT_CFG_0`, `CPTRA_FUSE_WR_DONE=1`, and `CPTRA_BOOTFSM_GO=1` over AXI4 crossbar (`0xA003_0000`) |
+| **`ready_for_mb_processing = 1` (`BOOT_STATUS=0x101`)** | **`5,124,565`** | **`2,329.2 s`** | MCU services all `21` (`0x15`) 384-bit ETRNG requests over AXI4 crossbar while Caliptra Core completes all ROM KATs & `IDevId` |
+| **MCU Signals `0xCA1100AA` (`TEST PASS`)** | **`5,131,428`** | **`2,332.36 s` (`2.20 kHz`)** | MCU detects `READY_FOR_MB_PROCESSING=1`, writes `0xCA1100AA` to `MCI GENERIC_OUTPUT_WIRES_0`, and exits cleanly |
+
+### 8.4 Reproducing the `caliptra-ss` Simulation & ULX3S-85F Bitstream
+
+```bash
+# 1. Build MCU boot ROM (ss/fw/mcu_rom.bin and mcu_rom.hex)
+make -C ss/fw clean all
+
+# 2. Build and run full Calightra-SS Verilator simulation (MCU + AXI4 Crossbar + Caliptra Core ROM boot)
+make -C ss/sim clean run
+
+# 3. Synthesize, place-and-route, and pack the Radiona ULX3S-85F bitstream (ss/fpga/calightra_ss_ulx3s_85f.bit)
+make -C ss/fpga clean all
+```

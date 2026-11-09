@@ -1,0 +1,746 @@
+{
+  name: Recovery mode tests
+  testpoints:
+  [
+    {
+      name: virtual_write
+      desc:
+        '''
+        Tests CSR write(s) through recovery protocol using the virtual
+        target address. In the beginning sets the TTI and recovery
+        addresses via two SETDASA CCCs.
+
+        Performs a write to DEVICE_RESET register via the recovery
+        protocol targeting the virtual address. Reads the CSR content
+        back through AHB/AXI, checks if the transfer was successful and
+        the content read back matches. Then reads again the DEVICE_RESET
+        register, this time via the recovery protocol. Check if the content
+        matches.
+
+        Reads PENDING_INTERRUPT field from INTERRUPT_STATUS CSR via the
+        GET_STATUS CCC command issued to the TTI I3C address. Verifies
+        that the content read back matches what is set in the CSR.
+
+        Writes to the INDIRECT_FIFO_CTRL register using recovery protocol,
+        reads content of the register via AHB/AXI and verifies that their
+        content matches.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["virtual_write"]
+      tags: ["top"]
+    }
+    {
+      name: virtual_overwrite
+      desc:
+        '''
+        Tests CSR write(s) with lengths over CSR size to the virtual
+        address using recovery protocol.
+
+        Performs a write to on of DEVICE_RESET/RECOVERY_CTRL/INDIRECT_FIFO_CTRL
+        registers via the recovery protocol targeting the virtual address.
+        Reads the CSR content back through AHB/AXI. Then reads again
+        the selected register, this time via the recovery protocol.
+        Check if the content matches value stored in the register.
+        '''
+      tests: ["virtual_overwrite"]
+      tags: ["top"]
+    }
+    {
+      name: virtual_write_alternating
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes to DEVICE_RESET via recovery protocol targeting the virtual
+        device address. Reads the register content through AHB/AXI and
+        check if it matches with what has been written.
+
+        Sends a private write transfer to the TTI address. Reads the
+        data back from TTI TX data queue and check that it matches.
+
+        Disables the recovery mode by writing 0x2 to DEVICE_STATUS register
+        and repeats the previous steps to test whether the I3C core
+        responds both to TTI and virtual addresses.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["virtual_write_alternating"]
+      tags: ["top"]
+    }
+    {
+      name: read_fifo_ctrl
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes to DEVICE_RESET via recovery protocol targeting the virtual
+        device address. Reads the register content through AHB/AXI and
+        check if it matches with what has been written.
+
+        Writes to INDIRECT_FIFO_CTRL via recovery protocol targeting the virtual
+        device address. Reads the register content via recovery protocol targeting
+        the virtual device address and check if it matches with what has been written.
+        Reads the register content through AHB/AXI and check if it matches with
+        what has been written.
+        '''
+      tests: ["read_fifo_ctrl"]
+      tags: ["top"]
+    }
+    {
+      name: write
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Performs a write to DEVICE_RESET register via the recovery
+        protocol targeting the virtual address. Reads the CSR content
+        back through AHB/AXI, checks if the transfer was successful and
+        the content read back matches. Then reads again the DEVICE_RESET
+        register, this time via the recovery protocol. Check if the content
+        matches.
+
+        Writes to the INDIRECT_FIFO_CTRL register using recovery protocol,
+        reads content of the register via AHB/AXI and verifies that their
+        content matches.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["write"]
+      tags: ["top"]
+    }
+    {
+      name: indirect_fifo_write
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Retrieves indirect FIFO status and pointers by reading
+        INDIRECT_FIFO_STATUS CSR over AHB/AXI bus. Writes data to the
+        indirect FIFO through the recovery interface and retrieves status
+        and pointers again. Reads the data from the FIFO back through
+        AHB/AXI bus, retrieves FIFO pointers. Lastly clears the indirect
+        FIFO by writing to INDIRECT_FIFO_CTRL through the recovery
+        interface and obtains the pointers again.
+
+        After each FIFO status and pointer retrieval checks if both
+        match the expected behavior.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["indirect_fifo_write"]
+      tags: ["top"]
+    }
+    {
+      name: write_pec
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes some data to DEVICE_RESET register using the recovery
+        interface. Then, repeats the write with different data but
+        deliberately corrupts the recovery packet's checksum (PEC).
+        Finally, reads the content of DEVICE_RESET CSR over AHB/AXI
+        and ensures that it matches with what was written in the first
+        transfer.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["write_pec"]
+      tags: ["top"]
+    }
+    {
+      name: read
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes random data to the PROT_CAP recovery CSR via AHB/AXI.
+        Disables the recovery mode, writes some data to TTI TX queues
+        via AHB/AXI, enables the recovery mode and reads PROT_CAP using
+        the recovery protocol. Checks if the content matches what was
+        written in the beginning of the test.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["read"]
+      tags: ["top"]
+    }
+    {
+      name: read_short
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes random data to the PROT_CAP recovery CSR via AHB/AXI.
+        Disables the recovery mode, writes some data to TTI TX queues
+        via AHB/AXI, enables the recovery mode and reads PROT_CAP using
+        the recovery protocol. The I3C read transfer is deliberately
+        shorter - the recovery read is terminated by the I3C controller.
+        Checks if the content read back matches what was written in the
+        beginning of the test.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["read_short"]
+      tags: ["top"]
+    }
+    {
+      name: read_long
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes random data to the PROT_CAP recovery CSR via AHB/AXI.
+        Disables the recovery mode, writes some data to TTI TX queues
+        via AHB/AXI, enables the recovery mode and reads PROT_CAP using
+        the recovery protocol. The I3C read transfer is deliberately
+        longer - the recovery read is terminated by the I3C target.
+        Checks if the content read back matches what was written in the
+        beginning of the test.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["read_long"]
+      tags: ["top"]
+    }
+    {
+      name: virtual_read
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs. Disables
+        the recovery mode.
+
+        Issues a series of recovery read commands to all CSRs mentioned in the
+        spec. The series is repeated twice - for recovery mode enabled and disabled.
+        Each transfer is checked if the response is ACK or NACK and in case of
+        ACK if PEC checksum is correct.
+
+        Checks if CSRs that should be available anytime (i.e. when the recovery
+        mode is off) are always accessible, checks if other CSRs are accessible
+        only in the recovery mode.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["virtual_read"]
+      tags: ["top"]
+    }
+    {
+      name: virtual_read_alternating
+      desc:
+        '''
+        Alternates between recovery mode reads and TTI reads. Initially
+        sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes random data to the PROT_CAP register over AHB/AXI, reads
+        the register through the recovery protocol and check if the
+        content matches.
+
+        Writes data and its descriptor to TTI TX queues, issues a private
+        I3C read, verifies that the data read back matches.
+
+        Disables the recovery mode and repeats the recovery and TTI reads
+        to ensure that both TTI and recovery transfers are possible
+        regardless of the recovery mode setting.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["virtual_read_alternating"]
+      tags: ["top"]
+    }
+    {
+      name: payload_available
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Ensures that initially the recovery_payload_available_o signal
+        is deasserted. Then writes data to the indirect FIFO via the
+        recovery interface and checks if the signal gets asserted.
+
+        Reads from INDIRECT_FIFO_DATA CSR over AHB/AXI and checks if the
+        read causes the signal to be deasserted again.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["payload_available"]
+      tags: ["top"]
+    }
+    {
+      name: image_activated
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Ensures that initially the image_activated_o signal is deasserted.
+        Writes 0xF to the 3rd byte of the RECOVERY_CTRL register using the
+        recovery interface. Checks if the signal gets asserted. Then writes
+        0xFF to the same byte of the register and checks if the signal
+        gets deasserted.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["image_activated"]
+      tags: ["top"]
+    }
+    {
+      name: indirect_fifo_reset_access
+      desc:
+        '''
+        Sets the recovery address via SETDASA CCC.
+
+        Writes data to indirect FIFO and waits for the values to propagate
+        through the core.
+
+        Resets indirect FIFO and writes new data to the indirect FIFO.
+        Reads indirect FIFO and compares received data with one written after reset.
+        '''
+      tests: ["indirect_fifo_reset_access"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_flow
+      desc:
+        '''
+        The test exercises firmware image transfer flow using the recovery
+        protocol. It consists of two agents running concurrently.
+
+        The AHB/AXI agent is responsible for recovery operation from the
+        system bus side. It mimics operation of the recovery handling
+        firmware.
+
+        The BFM agent issues I3C transactions and is responsible for pushing
+        a firmware image to the target.
+
+        The test runs at core clock of 100 and 200 MHz. The slowest clock that does not result in a tSCO violation is 166 MHz.
+        The I3C bus clock is set to 12.5 MHz.
+        '''
+      tests: ["recovery_flow"]
+      tags: ["top"]
+    }
+    {
+      name: ocp_csr_access
+      desc:
+        '''
+        Sets the TTI and recovery addresses via two SETDASA CCCs.
+
+        Writes to DEVICE_RESET via recovery protocol targeting the virtual
+        device address. Reads the register content through AHB/AXI and
+        check if it matches with what has been written.
+
+        Writes to all remaining recovery CSRs using AHB/AXI, reads back
+        their values and compares them.
+        '''
+      tests: ["ocp_csr_access"]
+      tags: ["top"]
+    }
+    {
+      name: ri_error_detection
+      desc:
+        '''
+        Tests Recovery Interface error detection, interrupt status, and counters.
+        Validates RI_PEC_ERR (PEC/CRC error detection), RI_PROT_ERR (protocol
+        error detection), and associated interrupt and counter behavior.
+        '''
+      tests: ["ri_error_detection"]
+      tags: ["top"]
+    }
+    {
+      name: ri_comprehensive_stress
+      desc:
+        '''
+        Comprehensive Recovery Interface stress test covering PEC errors,
+        T-bit parity errors, and protocol edge cases in rapid succession.
+        '''
+      tests: ["ri_comprehensive_stress"]
+      tags: ["top"]
+    }
+    {
+      name: ri_error_injection_stress
+      desc:
+        '''
+        Tests Recovery Interface resilience to various I3C framing errors and
+        abnormal conditions including controller-side protocol violations and
+        unexpected bus events.
+        '''
+      tests: ["ri_error_injection_stress"]
+      tags: ["top"]
+    }
+    {
+      name: ri_length_underrun
+      desc:
+        '''
+        Tests that writing to INDIRECT_FIFO_DATA with RI length field 1 byte
+        larger than actual data sent results in a length underrun error.
+        '''
+      tests: ["ri_length_underrun"]
+      tags: ["top"]
+    }
+    {
+      name: ri_mid_byte_stop
+      desc:
+        '''
+        Tests that issuing STOP mid-byte during different phases of the RI
+        protocol is handled correctly. The device should detect the error
+        and recover gracefully.
+        '''
+      tests: ["ri_mid_byte_stop"]
+      tags: ["top"]
+    }
+    {
+      name: ri_read_interrupted_by_ccc
+      desc:
+        '''
+        Tests RI protocol error handling when the READ command's read phase is
+        interrupted by various bus conditions instead of the expected
+        Sr + Addr+R sequence.
+        '''
+      tests: ["ri_read_interrupted_by_ccc"]
+      tags: ["top"]
+    }
+    {
+      name: chained_ri_and_ccc_commands
+      desc:
+        '''
+        Tests chaining of Recovery Interface commands, CCCs, and private writes
+        within sequences using Sr. All RI/private transfers use Sr, only CCCs
+        use broadcast address. Verifies correct interleaving.
+        '''
+      tests: ["chained_ri_and_ccc_commands"]
+      tags: ["top"]
+    }
+    {
+      name: indirect_fifo_large_write
+      desc:
+        '''
+        Tests writing more than 256 bytes to the INDIRECT_FIFO via I3C
+        interface. The INDIRECT_FIFO has a fixed size (typically 256 bytes).
+        Verifies correct handling of writes that exceed capacity.
+        '''
+      tests: ["indirect_fifo_large_write"]
+      tags: ["top"]
+    }
+    {
+      name: indirect_fifo_two_writes_overflow
+      desc:
+        '''
+        Tests two consecutive writes to the INDIRECT_FIFO that together exceed
+        capacity. First write fits, second write overflows. Verifies correct
+        handling of the overflow condition.
+        '''
+      tests: ["indirect_fifo_two_writes_overflow"]
+      tags: ["top"]
+    }
+    {
+      name: indirect_fifo_parity_error
+      desc:
+        '''
+        Tests that T-bit (parity) errors during INDIRECT_FIFO_DATA write are
+        handled correctly. Verifies parity errors on specific bytes are
+        detected and reported.
+        '''
+      tests: ["indirect_fifo_parity_error"]
+      tags: ["top"]
+    }
+    {
+      name: indirect_fifo_overflow_pointer
+      desc:
+        '''
+        Tests that WRITE_INDEX does not increment when writing to a full
+        INDIRECT_FIFO. Fills the hardware FIFO completely and verifies
+        the pointer behavior on overflow.
+        '''
+      tests: ["indirect_fifo_overflow_pointer"]
+      tags: ["top"]
+    }
+    {
+      name: write_exceeds_register_size
+      desc:
+        '''
+        Tests behavior when writing more data than the register size allows.
+        Attempts to write excess bytes to a recovery CSR and verifies
+        correct handling.
+        '''
+      tests: ["write_exceeds_register_size"]
+      tags: ["top"]
+    }
+    {
+      name: private_read_and_ri_read
+      desc:
+        '''
+        Verifies that a recovery interface PROT_CAP read and a standard private
+        read from the TTI TX FIFO work correctly and do not interfere with
+        each other.
+        '''
+      tests: ["private_read_and_ri_read"]
+      tags: ["top"]
+    }
+    {
+      name: parity_error_isolation
+      desc:
+        '''
+        Verifies that parity/PEC errors on RI writes do not leak into the TTI
+        interrupt path, and that T-bit errors on normal target writes do
+        produce the expected TTI interrupts.
+        '''
+      tests: ["parity_error_isolation"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_readonly_write_error
+      desc:
+        '''
+        Coverage: recovery_handler readonly_err=1, unsupported_err=0.
+        Sends WRITE commands to read-only registers (PROT_CAP, DEVICE_ID,
+        DEVICE_STATUS, HW_STATUS) and verifies PROT_ERROR=READONLY.
+        Also tests readonly_err_det_en toggle for suppression.
+        '''
+      tests: ["recovery_readonly_write_error"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_read_write_phase_parity
+      desc:
+        '''
+        Coverage: RxLenH parity error on write-phase PEC.
+        Sends a recovery READ command with a T-bit parity error on the PEC byte
+        of the write phase. Recovery receiver detects error in RxLenH and
+        transitions to Error.
+        '''
+      tests: ["recovery_read_write_phase_parity"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_write_pec_tbit_error
+      desc:
+        '''
+        Coverage: RxPec parity error on descriptor.
+        Sends a recovery WRITE command where the PEC byte has a T-bit parity
+        error. Verifies the error is detected in RxPec state.
+        '''
+      tests: ["recovery_write_pec_tbit_error"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_all_det_en_toggle
+      desc:
+        '''
+        Coverage: Toggle all *_det_en_i signals.
+        For each error detection enable bit in TARGET_ERR_CTRL: disable det_en
+        and trigger error (verify not flagged), enable det_en and trigger error
+        (verify flagged).
+        '''
+      tests: ["recovery_all_det_en_toggle"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_read_abort_at_len
+      desc:
+        '''
+        Coverage: TxLenL/TxLenH bus_rstart_i -> Done.
+        Aborts a recovery READ at different points in the response length
+        transmission using command_read_abort.
+        '''
+      tests: ["recovery_read_abort_at_len"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_premature_sr_in_header
+      desc:
+        '''
+        Coverage: Premature stop in RxCmd/RxLenL via bus_rstart_i.
+        Sends partial recovery command headers with Sr at unexpected points
+        during RxCmd and RxLenL states.
+        '''
+      tests: ["recovery_premature_sr_in_header"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_queue_resets
+      desc:
+        '''
+        Coverage: Toggle reg_rst_i, reg_rst_we_o, reg_rst_data_o on all queues.
+        Exercises all RESET_CONTROL queue reset bits to toggle the reg_rst
+        signals on every queue (IBI, RX desc, RX data, TX data).
+        '''
+      tests: ["recovery_queue_resets"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_hdr_mode_abort
+      desc:
+        '''
+        Coverage: in_hdr_mode_i override -> Error.
+        Triggers TE0 error during an active recovery transaction to force
+        in_hdr_mode_i=1 while the recovery FSM is in an active state.
+        Recovers via HDR exit.
+        '''
+      tests: ["recovery_hdr_mode_abort"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_length_det_en_toggle
+      desc:
+        '''
+        Coverage: length error detection enable combinations.
+        Tests length_err_det_en=0 (error suppressed), length_err_det_en=1
+        with underrun (error detected), and correct length (no error).
+        '''
+      tests: ["recovery_length_det_en_toggle"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_queue_thresholds
+      desc:
+        '''
+        Coverage: Toggle threshold input signals on all queues.
+        Writes non-default values to QUEUE_THLD_CTRL and DATA_BUFFER_THLD_CTRL
+        to toggle start_thrld_i and ready_thrld_i on all queues.
+        '''
+      tests: ["recovery_queue_thresholds"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_write_premature_stop_in_data
+      desc:
+        '''
+        Coverage: Premature stop in RxData and RxPec with length underrun.
+        Sends a recovery WRITE with premature STOP during data or PEC phase,
+        verifying correct error handling.
+        '''
+      tests: ["recovery_write_premature_stop_in_data"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_indirect_fifo_overflow
+      desc:
+        '''
+        Coverage: Toggle indirect_fifo_overflow_err_det_en_i and
+        rx_fifo_overflow_err_det_en_i.
+        Writes more data to INDIRECT_FIFO_DATA than the FIFO can hold to
+        trigger overflow, with det_en toggled.
+        '''
+      tests: ["recovery_indirect_fifo_overflow"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_ibi_queue_full
+      desc:
+        '''
+        Coverage: Toggle ibi_queue.full_o.
+        Fills the IBI queue (depth=64) by writing MDB-only IBI descriptors
+        without triggering IBI acceptance. Verifies queue fills and device
+        remains functional after reset.
+        '''
+      tests: ["recovery_ibi_queue_full"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_bypass_fifo_done
+      desc:
+        '''
+        Coverage: Bypass path to Done in ExecFifoWrite.
+        Enables bypass mode, writes data to INDIRECT_FIFO via recovery
+        interface, then asserts REC_PAYLOAD_DONE to trigger the bypass
+        exit path from ExecFifoWrite.
+        '''
+      tests: ["recovery_bypass_fifo_done"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_hdr_abort_per_state
+      desc:
+        '''
+        Coverage: in_hdr_mode_i Error from ExecCsrWrite, TxData, TxLenH,
+        TxLenL, TxPec.
+        Uses TE0 injection to force the recovery FSM into Error from specific
+        Tx states during READ responses.
+        '''
+      tests: ["recovery_hdr_abort_per_state"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_read_abort_txlenl
+      desc:
+        '''
+        Coverage: TxLenL bus_rstart_i -> Done.
+        Sends Sr immediately after the read address ACK, before the target
+        finishes transmitting the LEN_L byte.
+        '''
+      tests: ["recovery_read_abort_txlenl"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_bypass_fifo_race
+      desc:
+        '''
+        Coverage: Bypass ExecFifoWrite -> Done.
+        Enables bypass mode, sends a large INDIRECT_FIFO_DATA write via I3C,
+        then races to set REC_PAYLOAD_DONE via CSR before the normal dcnt
+        path completes.
+        '''
+      tests: ["recovery_bypass_fifo_race"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_readonly_write_irq
+      desc:
+        '''
+        Verifies that writing to a read-only recovery register triggers the
+        RI_READONLY_ERR interrupt output (irq_o toggle 0->1->0).
+        '''
+      tests: ["recovery_readonly_write_irq"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_unsupported_cmd_irq
+      desc:
+        '''
+        Verifies that sending an unsupported command code triggers the
+        RI_UNSUPPORTED_ERR interrupt output (irq_o toggle 0->1->0).
+        '''
+      tests: ["recovery_unsupported_cmd_irq"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_tx_pec_csr_data_race
+      desc:
+        '''
+        PEC coherency under concurrent FW CSR writes. FW toggles
+        RECOVERY_STATUS every few clocks in the background while
+        the controller performs reads of the same register via I3C.
+        Verifies that PEC is always correct despite concurrent AXI
+        writes, proving csr_data snapshot integrity.
+        Spec ref: OCP Recovery v1.1 Section 8.4.
+        '''
+      tests: ["recovery_tx_pec_csr_data_race"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_ri_csr_concurrent_stress
+      desc:
+        '''
+        Stress test: concurrent random FW (AXI) and I3C accesses to
+        recovery interface CSRs. FW randomly reads/writes RI CSRs via
+        AXI in the background while I3C performs random read/write
+        operations via the recovery protocol. Every I3C read checks
+        PEC, data length, and NACK status. Exposes data races,
+        coherency bugs, or FSM hangs under concurrent access.
+        '''
+      tests: ["recovery_ri_csr_concurrent_stress"]
+      tags: ["top"]
+    }
+  ]
+}

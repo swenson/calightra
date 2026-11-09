@@ -1,0 +1,18 @@
+---
+provides: [axi2tlul]
+schema_version: 2.4.0
+requires:
+  - axi_pkg
+  - axi_sub
+  - tlul_pkg
+  - caliptra_prim_secded
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:  
+      - $COMPILE_ROOT/rtl/axi2tlul_cmd_intg_gen.sv
+      - $COMPILE_ROOT/rtl/sub2tlul.sv
+      - $COMPILE_ROOT/rtl/axi2tlul.sv
+    tops: [axi2tlul]
+
+

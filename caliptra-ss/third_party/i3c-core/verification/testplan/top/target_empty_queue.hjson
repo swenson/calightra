@@ -1,0 +1,131 @@
+{
+  name: Empty queue read handling
+  testpoints:
+  [
+    {
+      name: normal_read_empty_rx_desc_queue
+      desc:
+        '''
+        Read TTI RX_DESC_QUEUE_PORT when empty in normal mode. Must complete
+        without hanging and return 0.
+        '''
+      tests: ["normal_read_empty_rx_desc_queue"]
+      tags: ["top"]
+    }
+    {
+      name: normal_read_empty_rx_data_port
+      desc:
+        '''
+        Read TTI RX_DATA_PORT when empty in normal mode. Must complete
+        without hanging and return 0.
+        '''
+      tests: ["normal_read_empty_rx_data_port"]
+      tags: ["top"]
+    }
+    {
+      name: normal_read_empty_indirect_fifo_data
+      desc:
+        '''
+        Read INDIRECT_FIFO_DATA when empty in normal mode. Must complete
+        without hanging and return 0.
+        '''
+      tests: ["normal_read_empty_indirect_fifo_data"]
+      tags: ["top"]
+    }
+    {
+      name: normal_read_empty_all_queues
+      desc:
+        '''
+        Read all three empty FIFO ports in normal mode sequentially.
+        Verifies no AXI bus deadlock from back-to-back external reads.
+        '''
+      tests: ["normal_read_empty_all_queues"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_read_empty_rx_desc_queue
+      desc:
+        '''
+        Read TTI RX_DESC_QUEUE_PORT when empty in recovery mode. This is
+        the scenario that caused the AXI deadlock bug: recovery_pending=1
+        caused R1MUX contention.
+        '''
+      tests: ["recovery_read_empty_rx_desc_queue"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_read_empty_rx_data_port
+      desc:
+        '''
+        Read TTI RX_DATA_PORT when empty in recovery mode. Must complete
+        without hanging.
+        '''
+      tests: ["recovery_read_empty_rx_data_port"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_read_empty_indirect_fifo_data
+      desc:
+        '''
+        Read INDIRECT_FIFO_DATA when empty in recovery mode. Must complete
+        without hanging.
+        '''
+      tests: ["recovery_read_empty_indirect_fifo_data"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_read_empty_all_queues
+      desc:
+        '''
+        Read all three empty FIFO ports in recovery mode sequentially.
+        Verifies no AXI bus deadlock from back-to-back external reads while
+        recovery_pending is asserted.
+        '''
+      tests: ["recovery_read_empty_all_queues"]
+      tags: ["top"]
+    }
+    {
+      name: concurrent_recovery_xfer_and_rx_desc_read
+      desc:
+        '''
+        While an I3C recovery read (PROT_CAP) is in-flight, which asserts
+        recovery_pending, concurrently read TTI RX_DESC_QUEUE_PORT via AXI.
+        This is the exact scenario that triggered the AXI deadlock bug.
+        '''
+      tests: ["concurrent_recovery_xfer_and_rx_desc_read"]
+      tags: ["top"]
+    }
+    {
+      name: concurrent_recovery_xfer_and_tx_desc_write
+      desc:
+        '''
+        While an I3C recovery read (PROT_CAP) is in-flight, which asserts
+        recovery_pending, concurrently write TTI TX_DESC_QUEUE_PORT via AXI.
+        '''
+      tests: ["concurrent_recovery_xfer_and_tx_desc_write"]
+      tags: ["top"]
+    }
+    {
+      name: concurrent_recovery_xfer_and_all_queue_access
+      desc:
+        '''
+        While an I3C recovery read (PROT_CAP) is in-flight, which asserts
+        recovery_pending, concurrently access all TTI queue ports via AXI:
+        read RX_DESC, read RX_DATA, write TX_DESC, and read INDIRECT_FIFO.
+        '''
+      tests: ["concurrent_recovery_xfer_and_all_queue_access"]
+      tags: ["top"]
+    }
+    {
+      name: recovery_write_rx_data_observation
+      desc:
+        '''
+        Writes data to INDIRECT_FIFO_DATA on the virtual target via the
+        recovery interface. In parallel, monitors the RTL signal
+        tti_rx_depth to verify data flow observation.
+        '''
+      tests: ["recovery_write_rx_data_observation"]
+      tags: ["top"]
+    }
+  ]
+}

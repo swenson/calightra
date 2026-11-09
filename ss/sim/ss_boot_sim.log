@@ -1,0 +1,53 @@
+[SIM] Loaded MCU ROM (1616 bytes, 202 64-bit words) from ../fw/mcu_rom.bin
+[SIM] Loaded Caliptra Core ROM (98304 bytes, 12288 64-bit words) from ../../fw/caliptra-rom.bin
+[SIM] Starting Calightra-SS simulation (max_cycles = 10000000)...
+[SIM @      15] Asserted cptra_ss_pwrgood_i = 1
+[SIM @      40] Deasserted cptra_ss_rst_b_i = 1
+[SIM @      51] MCI Boot Sequencer released MCU reset (cptra_ss_mcu_rst_b_o = 1)
+[SIM @     290] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000001
+
+[MCU] Calightra-SS MCU VeeR EL2 booted from 0x80000000
+[MCU] OTP_STATUS=0x40000000 LC_STATUS=0x00000003 LC_STATE=0x02108421 LC_CNT=0x00000001
+[SIM @    9967] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000002
+[MCU] MCU_SRAM, MCU_MBOX0, and SOC_SRAM verified over AXI4 crossbar
+[SIM @   13929] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000003
+[MCU] Asserting MCI CPTRA_BOOT_GO (0x21000108) = 1
+[SIM @   16721] MCI released Caliptra Core reset (cptra_ss_mci_cptra_rst_b_o = 1)
+[SIM @   16730] Caliptra Core asserted ready_for_fuses = 1
+[SIM @   16741] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000004
+[MCU] Waiting for Caliptra Core READY_FOR_FUSES...
+[MCU] Caliptra Core READY_FOR_FUSES=1! Programming WDT, FUSE_WR_DONE & BOOTFSM_GO
+[SIM @   24133] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000005
+[MCU] CPTRA_BOOT_STATUS=0x00000000 FLOW=0x08000000 ETRNG=0x00000000
+[SIM @  500000] Progress: 240.08 s elapsed (2.08 kHz), mci_out=0x00000005
+[MCU] CPTRA_BOOT_STATUS=0x00000181 FLOW=0x08000000 ETRNG=0x00000003
+[MCU] CPTRA_BOOT_STATUS=0x00000182 FLOW=0x08000000 ETRNG=0x00000006
+[SIM @ 1000000] Progress: 467.00 s elapsed (2.14 kHz), mci_out=0x00000005
+[SIM @ 1500000] Progress: 696.78 s elapsed (2.15 kHz), mci_out=0x00000005
+[SIM @ 2000000] Progress: 926.03 s elapsed (2.16 kHz), mci_out=0x00000005
+[SIM @ 2500000] Progress: 1155.12 s elapsed (2.16 kHz), mci_out=0x00000005
+[SIM @ 3000000] Progress: 1385.54 s elapsed (2.17 kHz), mci_out=0x00000005
+[SIM @ 3500000] Progress: 1614.99 s elapsed (2.17 kHz), mci_out=0x00000005
+[SIM @ 4000000] Progress: 1836.25 s elapsed (2.18 kHz), mci_out=0x00000005
+[SIM @ 4500000] Progress: 2054.93 s elapsed (2.19 kHz), mci_out=0x00000005
+[SIM @ 5000000] Progress: 2275.25 s elapsed (2.20 kHz), mci_out=0x00000005
+[MCU] CPTRA_BOOT_STATUS=0x00000183 FLOW=0x08000000 ETRNG=0x00000015
+[MCU] CPTRA_BOOT_STATUS=0x00000101 FLOW=0x08000000 ETRNG=0x00000015
+
+[SIM @ 5124565] Caliptra Core asserted ready_for_mb_processing = 1!
+[MCU] Total ETRNG requests serviced: 0x00000015
+[MCU] Caliptra-SS Full Boot Complete (READY_FOR_MB_PROCESSING=1)!
+[SIM @ 5131301] MCI GENERIC_OUTPUT_WIRES_0 = 0xca1100aa
+
+[SIM @ 5131428] MCU signaled TEST PASS (0xFF) via MCI DEBUG_OUT!
+================================================================
+Calightra-SS Simulation Summary:
+  Total Cycles            : 5131428
+  Wall-Clock Time         : 2332.36 s (2.20 kHz)
+  MCU Reset Released      : YES
+  Caliptra Reset Released : YES
+  ready_for_fuses         : YES
+  ready_for_mb_processing : YES
+  MCI Final Milestone     : 0xca1100aa
+  Status                  : PASS
+================================================================

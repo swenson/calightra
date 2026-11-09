@@ -1,0 +1,93 @@
+{
+  name: Enter and exit HDR mode
+  testpoints:
+  [
+    {
+      name: Enter and exit HDR-DDR mode
+      desc:
+        '''
+        Issues ENTHDR0 CCC to the target, verifies that the target FSM
+        is in IdleHDR state. Issues at least 1 read/write HDR-DDR command(s)
+        followed by HDR exit pattern, verifies that
+        the target FSM is back in Idle state.
+        '''
+      tests: [
+        "enter_exit_hdr_mode_write",
+        "enter_restart_exit_hdr_mode_write",
+        "enter_exit_hdr_mode_read",
+        "enter_restart_exit_hdr_mode_read"
+      ]
+      tags: ["top"]
+    }
+    {
+      name: HDR timeout disabled by default
+      desc:
+        '''
+        Verifies that the HDR timeout timer does not fire when the enable bit
+        is 0 (default configuration).
+        '''
+      tests: ["hdr_timeout_disabled_by_default"]
+      tags: ["top"]
+    }
+    {
+      name: HDR timeout configurable threshold
+      desc:
+        '''
+        Verifies that the HDR timeout timer fires at the configured threshold,
+        not a hardcoded value.
+        '''
+      tests: ["hdr_timeout_configurable_threshold"]
+      tags: ["top"]
+    }
+    {
+      name: HDR timeout resets on line low
+      desc:
+        '''
+        Verifies that the HDR timeout timer resets when either SCL or SDA
+        goes low.
+        '''
+      tests: ["hdr_timeout_resets_on_line_low"]
+      tags: ["top"]
+    }
+    {
+      name: HDR timeout does not fire for CCC HDR
+      desc:
+        '''
+        Verifies that the HDR timeout timer does NOT fire during normal HDR
+        mode entered via ENTHDR CCC.
+        '''
+      tests: ["hdr_timeout_does_not_fire_for_ccc_hdr"]
+      tags: ["top"]
+    }
+    {
+      name: HDR timeout recovery TE0
+      desc:
+        '''
+        Verifies 60us timeout recovery after TE0 error (invalid reserved
+        address). Timer triggers HDR exit and recovery.
+        '''
+      tests: ["hdr_timeout_recovery_te0"]
+      tags: ["top"]
+    }
+    {
+      name: HDR timeout recovery TE1
+      desc:
+        '''
+        Verifies 60us timeout recovery after TE1 error (CCC parity error).
+        Timer triggers HDR exit and recovery.
+        '''
+      tests: ["hdr_timeout_recovery_te1"]
+      tags: ["top"]
+    }
+    {
+      name: HDR exit pattern works alongside timer
+      desc:
+        '''
+        Verifies that the normal HDR Exit Pattern still works correctly when
+        the HDR timeout timer is enabled.
+        '''
+      tests: ["hdr_exit_pattern_works_alongside_timer"]
+      tags: ["top"]
+    }
+  ]
+}

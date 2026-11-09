@@ -1,0 +1,30 @@
+{
+  name: tSCO timing verification
+  testpoints:
+  [
+    {
+      name: tsco_write_ack_handoff
+      desc:
+        '''
+        PROSECUTOR TEST: Verifies tSCO timing on write-ACK handoff.
+        Per I3C spec S5.1.2.3.1 step 2 and Table 87, after the target sees the
+        rising edge of SCL during ACK, it shall release SDA to Hi-Z within tSCO
+        (max 12ns). Sends a private write and measures tSCO on the ACK handoff.
+        '''
+      tests: ["tsco_write_ack_handoff"]
+      tags: ["top"]
+    }
+    {
+      name: tsco_setdasa_virtual_target
+      desc:
+        '''
+        PROSECUTOR TEST: Verifies tSCO timing on SETDASA to virtual target.
+        The bus monitor has detected a tSCO violation specifically during
+        SETDASA directed to the virtual target address. Measures tSCO during
+        that specific transaction.
+        '''
+      tests: ["tsco_setdasa_virtual_target"]
+      tags: ["top"]
+    }
+  ]
+}

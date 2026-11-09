@@ -1,0 +1,745 @@
+{
+  name: CCC handling
+  testpoints:
+  [
+    {
+      name: ccc_getstatus
+      desc:
+        '''
+        The test reads PENDING_INTERRUPT field from the TTI INTERRUPT
+        status CSR. Next, it issues the GETSTATUS directed CCC to the
+        target. Finally it compares the interrupt status returned by the
+        CCC with the one read from the register.
+        '''
+      tests: ["ccc_getstatus"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setdasa
+      desc:
+        '''
+        The test sets dynamic address and virtual dynamic address by
+        sending SETDASA CCC. Then it verifies that correct addresses have
+        been set by reading STBY_CR_DEVICE_ADDR CSR.
+        The test also sends a random number of CCCs targeting devices other
+        than DUT, and checks if the dynamic address was not accepted.
+        '''
+      tests: ["ccc_setdasa"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setdasa_nack
+      desc:
+        '''
+        The test sets dynamic address and virtual dynamic address by
+        sending SETDASA CCC. Then it sends second SETDASA command and checks
+        that targets NACKed them.
+        '''
+      tests: ["ccc_setdasa_nack"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setnewda
+      desc:
+        '''
+        The test sets dynamic address and virtual dynamic address directly
+        using CSR accesses. Then it sends SETNEWDA commands to both targets
+        and checks their dynamic addresses got updated.
+        '''
+      tests: ["ccc_setnewda"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstdaa
+      desc:
+        '''
+        Sets dynamic address via STBY_CR_DEVICE_ADDR CSR, then sends
+        RSTDAA CCC and verifies that the address got cleared.
+        '''
+      tests: ["ccc_rstdaa"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getbcr
+      desc:
+        '''
+        Reads BCR register content by sending GETBCR CCC and examining
+        returned data.
+        '''
+      tests: ["ccc_getbcr"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getdcr
+      desc:
+        '''
+        Reads DCR register content by sending GETDCR CCC and examining
+        returned data.
+        '''
+      tests: ["ccc_getdcr"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getmwl
+      desc:
+        '''
+        Reads MWL register content by sending GETMWL CCC and examining
+        returned data.
+        '''
+      tests: ["ccc_getmwl"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getmrl
+      desc:
+        '''
+        Reads MRL register content by sending GETMWL CCC and examining
+        returned data.
+        '''
+      tests: ["ccc_getmrl"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setaasa
+      desc:
+        '''
+        Issues the broadcast SETAASA CCC and checks if the target uses
+        its static address as dynamic by examining STBY_CR_DEVICE_ADDR
+        CSR.
+        '''
+      tests: ["ccc_setaasa"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setaasa_ignore
+      desc:
+        '''
+        Assigns dynamic address different to static address using CSR.
+        Issues the broadcast SETAASA CCC and checks if the target ignores
+        this command by examining STBY_CR_DEVICE_ADDR CSR.
+        '''
+      tests: ["ccc_setaasa_ignore"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getpid
+      desc:
+        '''
+        Sends the CCC to the target and examines if the returned PID
+        matches the expected.
+        '''
+      tests: ["ccc_getpid"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_enec_disec_direct
+      desc:
+        '''
+        Sends DISEC CCC to the target and verifies that events are disabled.
+        Then, sends ENEC CCC to the target and checks that events are enabled.
+        '''
+      tests: ["ccc_enec_disec_direct"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_enec_disec_bcast
+      desc:
+        '''
+        Sends broadcast DISEC CCC and verifies that events are disabled.
+        Then, sends broadcast ENEC CCC and checks that events are enabled.
+        '''
+      tests: ["ccc_enec_disec_bcast"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setmwl_direct
+      desc:
+        '''
+        Sends directed SETMWL CCC to the target and verifies that the
+        register got correctly set. The check is performed by examining
+        relevant wires in the target DUT.
+        '''
+      tests: ["ccc_setmwl_direct"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setmrl_direct
+      desc:
+        '''
+        Sends directed SETMRL CCC to the target and verifies that the
+        register got correctly set. The check is performed by examining
+        relevant wires in the target DUT.
+        '''
+      tests: ["ccc_setmrl_direct"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setmwl_bcast
+      desc:
+        '''
+        Sends broadcast SETMWL CCC and verifies that the
+        register got correctly set. The check is performed by examining
+        relevant wires in the target DUT.
+        '''
+      tests: ["ccc_setmwl_bcast"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setmrl_bcast
+      desc:
+        '''
+        Sends SETMRL CCC and verifies that the
+        register got correctly set. The check is performed by examining
+        relevant wires in the target DUT.
+        '''
+      tests: ["ccc_setmrl_bcast"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstact
+      desc:
+        '''
+        Sends directed/broadcast RSTACT CCC to the target followed by reset pattern
+        and checks if reset action was stored correctly. The check is
+        done by examining DUT wires. Then, triggers target reset and
+        verifies that the peripheral_reset_o signal gets asserted.
+        '''
+      tests: ["ccc_rstact"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_direct_multiple_wr
+      desc:
+        '''
+        Sends a sequence of multiple directed SETMWL CCCs. The first and
+        the last have non-matching address. The two middle ones set MWL
+        to different values. Verify that the target responded to correct
+        addresses and executed both CCCs.
+        '''
+      tests: ["ccc_direct_multiple_wr"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_direct_multiple_rd
+      desc:
+        '''
+        Sends SETMWL CCC. Then sends multiple directed GETMWL CCCs to
+        thee different addresses. Only the one for the target should
+        be ACK-ed with the correct MWL content.
+        '''
+      tests: ["ccc_direct_multiple_rd"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa
+      desc:
+        '''
+        Verifies ENTDAA procedure: controller issues ENTDAA CCC, target responds
+        with 64-bit device ID, controller assigns dynamic address. Checks address
+        is set correctly in STBY_CR_DEVICE_ADDR CSR.
+        '''
+      tests: ["ccc_entdaa"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_arb_lost
+      desc:
+        '''
+        Verifies ENTDAA arbitration-lost path: when arbitration_lost_i is asserted
+        during ID bit transmission, the DUT enters LostArbitration state and
+        retries on the next ENTDAA round.
+        '''
+      tests: ["ccc_entdaa_arb_lost"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_early_stop
+      desc:
+        '''
+        Verifies ENTDAA with early STOP after assigning only the main target.
+        The virtual target should remain unaddressed.
+        '''
+      tests: ["ccc_entdaa_early_stop"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_te3_te4
+      desc:
+        '''
+        Verifies TE3 and TE4 error handling during ENTDAA.
+
+        TE3: Parity error on assigned address causes target to NACK, retries
+        on next ENTDAA round.
+        TE4: Controller assigns same address to two targets, causes error.
+        '''
+      tests: ["ccc_entdaa_te3_te4"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_enthdr_all_codes
+      desc:
+        '''
+        Verifies all ENTHDR codes (0x20-0x27) cause the target to enter HDR mode.
+        After each ENTHDR, verifies clean recovery with HDR exit pattern.
+        '''
+      tests: ["ccc_enthdr_all_codes"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_error_det_enable
+      desc:
+        '''
+        Verifies TE0-TE5 error detection enable CSR bits can be toggled.
+        When TE0 is disabled, unsupported CCC should not trigger error.
+        When TE0 is re-enabled, error detection resumes.
+        '''
+      tests: ["ccc_error_det_enable"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getcaps
+      desc:
+        '''
+        Tests GETCAPS (0x95) direct GET CCC with various defining bytes,
+        targeting both main and virtual targets.
+        '''
+      tests: ["ccc_getcaps"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setdasa_padding_err
+      desc:
+        '''
+        Verifies that SETDASA/SETNEWDA with padding bit[0]=1 triggers a framing
+        error and does NOT apply the address.
+        '''
+      tests: ["ccc_setdasa_padding_err"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_te2_parity
+      desc:
+        '''
+        Verifies TE2 error detection: bad T-bit parity on CCC defining byte
+        causes the target to abort the CCC and signal TE2.
+        '''
+      tests: ["ccc_te2_parity"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_te5_wrong_direction
+      desc:
+        '''
+        TE5 error: wrong R/W direction for direct CCC.
+        GET CCC sent with W direction causes NACK.
+        SET CCC sent with R direction causes NACK.
+        '''
+      tests: ["ccc_te5_wrong_direction"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_unknown_broadcast
+      desc:
+        '''
+        Unknown broadcast CCCs should be silently ignored (target accepts data
+        but takes no action). Verifies no crash and clean recovery.
+        '''
+      tests: ["ccc_unknown_broadcast"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_unsupported_direct_nack
+      desc:
+        '''
+        Verifies that unsupported direct CCCs are NACKed by the target.
+        Tests deprecated, unsupported, and vendor-specific CCC codes.
+        '''
+      tests: ["ccc_unsupported_direct_nack"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_vendor_codes
+      desc:
+        '''
+        Verifies vendor-specific CCC codes:
+        Broadcast vendor CCCs (0x61-0x7F): target ignores data silently.
+        Direct vendor CCCs: target NACKs.
+        '''
+      tests: ["ccc_vendor_codes"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_abort_bcast_stop
+      desc:
+        '''
+        Controller STOP during CCC at various phases:
+        STOP during broadcast SET data (incomplete data).
+        Verifies clean recovery.
+        '''
+      tests: ["ccc_abort_bcast_stop"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_abort_get_sr
+      desc:
+        '''
+        Controller Sr abort during multi-byte GET CCC reads. Reads fewer bytes
+        than expected, then sends Sr to abort. Verifies clean recovery and
+        correct subsequent CCC processing.
+        '''
+      tests: ["ccc_abort_get_sr"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_addr_lifecycle
+      desc:
+        '''
+        Full address lifecycle: RSTDAA -> SETDASA -> verify -> SETNEWDA -> verify ->
+        RSTDAA -> verify cleared. Tests both main and virtual targets.
+        '''
+      tests: ["ccc_addr_lifecycle"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_back_to_back
+      desc:
+        '''
+        Back-to-back CCCs with no idle gap between transactions.
+        Verifies all CCCs process correctly.
+        '''
+      tests: ["ccc_back_to_back"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_chain_bcast
+      desc:
+        '''
+        Chain multiple broadcast CCCs via Sr+7E/W within a single frame.
+        Verifies each CCC takes effect.
+        '''
+      tests: ["ccc_chain_bcast"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_chain_direct
+      desc:
+        '''
+        Chain multiple direct CCCs within a single frame.
+        Verifies correct target address matching across chained CCCs.
+        '''
+      tests: ["ccc_chain_direct"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_random_interleave
+      desc:
+        '''
+        Random sequence of SET/GET CCCs to random targets. Stress tests the
+        CCC FSM state machine with varied patterns.
+        '''
+      tests: ["ccc_random_interleave"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstact_arm_clear_on_start
+      desc:
+        '''
+        Verifies RSTACT arm is cleared by START (not Sr). After arming with
+        whole-target reset, a private transfer (START) clears the arm state.
+        '''
+      tests: ["ccc_rstact_arm_clear_on_start"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstact_escalation_clear
+      desc:
+        '''
+        Verifies that RSTACT CCC and GETSTATUS CCC clear the escalation counter,
+        preventing escalated reset on the next target reset pattern.
+        '''
+      tests: ["ccc_rstact_escalation_clear"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstact_read_action
+      desc:
+        '''
+        Verifies RSTACT internal state after arming. Per spec, rstact_armed is
+        cleared by the next START (not Sr), so a subsequent read may return
+        the armed action.
+        '''
+      tests: ["ccc_rstact_read_action"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstact_unsupported_db
+      desc:
+        '''
+        Verifies RSTACT with unsupported defining bytes is NACKed.
+        '''
+      tests: ["ccc_rstact_unsupported_db"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstact_vt_detect
+      desc:
+        '''
+        Verifies RSTACT Defining Byte 0x04 (Virtual Target Detect) flag set/clear
+        and Defining Byte 0x84 (Virtual Target Indication) behavior.
+        '''
+      tests: ["ccc_rstact_vt_detect"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_rstact_vt_detect_no_reset_arm
+      desc:
+        '''
+        Verifies DB=0x04 does not arm a reset action: default peripheral->escalation
+        path still works after sending RSTACT with VT detect defining byte.
+        '''
+      tests: ["ccc_rstact_vt_detect_no_reset_arm"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_setmwl_sr_abort_during_data
+      desc:
+        '''
+        Sr abort during SETMWL data phase. Verifies that the target does not apply
+        the partial data.
+
+        BLOCKED BY DESIGN BUG: set_tx_data_complete fires unconditionally on Sr
+        abort.
+        '''
+      tests: ["ccc_setmwl_sr_abort_during_data"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getstatus_abort_then_chain_setmwl
+      desc:
+        '''
+        Verifies that aborting GETSTATUS mid-read and immediately chaining into
+        another CCC (SETMWL) in the same bus frame does not corrupt the target
+        state.
+        '''
+      tests: ["ccc_getstatus_abort_then_chain_setmwl"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_getstatus_sr_abort_clears_protocol_err
+      desc:
+        '''
+        Verifies GETSTATUS Sr abort behavior with protocol error flag. Per spec,
+        a target shall only clear its pending status upon successfully completing
+        the GETSTATUS response.
+
+        BLOCKED BY DESIGN BUG: set_tx_data_complete fires unconditionally on Sr
+        abort, causing premature error clearing.
+        '''
+      tests: ["ccc_getstatus_sr_abort_clears_protocol_err"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_virtual_only
+      desc:
+        '''
+        Coverage: ccc.sv RxCmdTbit -> HandleVirtualTargetENTDAA.
+        Boot with main target already addressed. Virtual target has no dynamic
+        address. ENTDAA skips HandleTargetENTDAA and goes directly to
+        HandleVirtualTargetENTDAA.
+        '''
+      tests: ["ccc_entdaa_virtual_only"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_main_only
+      desc:
+        '''
+        Coverage: HandleTargetENTDAA -> WaitForENTDAAEnd (entdaa_needs_virt_addr=0).
+        Boot with virtual target already addressed. Main target has no dynamic
+        address. After main completes, FSM goes to WaitForENTDAAEnd.
+        '''
+      tests: ["ccc_entdaa_main_only"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_both_addressed
+      desc:
+        '''
+        Coverage: RxCmdTbit -> WaitForENTDAAEnd.
+        Boot with both targets already addressed. ENTDAA goes directly to
+        WaitForENTDAAEnd since neither target needs an address.
+        '''
+      tests: ["ccc_entdaa_both_addressed"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_te0_reserved_addr_direct
+      desc:
+        '''
+        Coverage: Toggle is_te0_err_condition, te0_err_ccc (ccc.sv:769).
+        Send a direct CCC where the target address phase uses 7E/R (reserved
+        address with read bit). Triggers TE0 in TxTargetAddrAck.
+        '''
+      tests: ["ccc_te0_reserved_addr_direct"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_direct_chain_7e_termination
+      desc:
+        '''
+        Coverage: ccc.sv target_addr_matches_rsvd -> NextCCC.
+        After a direct GET CCC response, send Sr+7E/W instead of STOP. Triggers
+        the reserved address path in TxTargetAddrAck, transitioning to NextCCC
+        for CCC chaining.
+        '''
+      tests: ["ccc_direct_chain_7e_termination"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_all_det_en_toggle
+      desc:
+        '''
+        Coverage: All *_det_en_i toggle coverage.
+        For TE0, TE1, TE2, TE5: toggle the detection enable CSR, inject
+        the error with det_en=0 (verify no error flag), then with det_en=1
+        (verify error fires).
+        '''
+      tests: ["ccc_all_det_en_toggle"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_te2_direct_def_byte_tbit
+      desc:
+        '''
+        Coverage: ccc.sv RxDirectDefByteTbit -> DoneCCC,
+        WaitDirectRstart -> RxDirectDefByteTbit.
+        Send a direct CCC with defining byte, then an extra data byte with bad
+        T-bit parity before the repeated start for the target address.
+        '''
+      tests: ["ccc_te2_direct_def_byte_tbit"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_direct_extra_data_before_addr
+      desc:
+        '''
+        Coverage: ccc.sv WaitDirectRstart -> RxDirectDefByteTbit,
+        RxDirectDefByteTbit -> WaitDirectRstart.
+        Send a direct CCC with defining byte, then extra data bytes with good
+        T-bit parity before the repeated start. Then complete the CCC normally.
+        '''
+      tests: ["ccc_direct_extra_data_before_addr"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_te2_data_byte_direct_set
+      desc:
+        '''
+        Coverage: RxDataTbit -> DoneCCC (ccc.sv:1104-1108).
+        Send a direct SET CCC (SETMWL) and inject T-bit parity error on the
+        first data byte after the target ACKs the address.
+        '''
+      tests: ["ccc_te2_data_byte_direct_set"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_te3_det_en_toggle
+      desc:
+        '''
+        Coverage: Toggle te3_err_det_en_i in ccc_entdaa.
+        Inject TE3 (bad address parity during ENTDAA) with te3_err_det_en=0
+        then with te3_err_det_en=1.
+        '''
+      tests: ["ccc_entdaa_te3_det_en_toggle"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_stop_mid_transfer
+      desc:
+        '''
+        Coverage: Multiple FSM -> DoneCCC transitions via STOP override.
+        Tests STOP during RxDefByte, RxDefByteOrBusCond, WaitDirectRstart,
+        TxData, TxDataTbitCont, and TxDataTbitEnd states.
+        '''
+      tests: ["ccc_stop_mid_transfer"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_stop_in_waitstart
+      desc:
+        '''
+        Coverage: ENTDAA FSM WaitStart -> Done.
+        Issue ENTDAA CCC byte, then STOP immediately before Sr+7E/R.
+        '''
+      tests: ["ccc_entdaa_stop_in_waitstart"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_stop_in_sendidbit
+      desc:
+        '''
+        Coverage: ENTDAA FSM SendIDBit -> Done.
+        Start ENTDAA, let Sr+7E/R complete and begin ID bit transmission,
+        then issue STOP mid-ID-bit.
+        '''
+      tests: ["ccc_entdaa_stop_in_sendidbit"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_stop_in_receiveaddr
+      desc:
+        '''
+        Coverage: ENTDAA FSM ReceiveAddr -> Done.
+        Complete ID bit transmission (64 bits), then issue STOP mid-address-byte.
+        '''
+      tests: ["ccc_entdaa_stop_in_receiveaddr"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_stop_in_ackrsvdbyte
+      desc:
+        '''
+        Coverage: ENTDAA FSM AckRsvdByte -> Done.
+        Issue STOP during the reserved byte ACK phase of ENTDAA.
+        '''
+      tests: ["ccc_entdaa_stop_in_ackrsvdbyte"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_entdaa_stop_in_sendnack
+      desc:
+        '''
+        Coverage: ENTDAA FSM SendNack -> Done.
+        Inject TE4 (7E/W instead of 7E/R) so target NACKs. ENTDAA FSM enters
+        SendNack, then issue STOP.
+        '''
+      tests: ["ccc_entdaa_stop_in_sendnack"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_stop_during_target_read
+      desc:
+        '''
+        Coverage: TxData->DoneCCC, TxDataTbitCont->DoneCCC,
+        TxDataTbitEnd->DoneCCC, TxTargetAddrAck->DoneCCC.
+        Issues real bus-level STOP during target-driven read phases.
+        '''
+      tests: ["ccc_stop_during_target_read"]
+      tags: ["top"]
+    }
+    {
+      name: ccc_csr_concurrent_stress
+      desc:
+        '''
+        Stress test: concurrent random FW (AXI) and I3C CCC accesses to
+        CCC-affected CSRs. FW randomly reads/writes CCC-related CSRs via AXI
+        in the background while I3C performs 50 random supported CCC operations
+        (GET and SET). GET CCCs verify ACK; SET CCCs send random valid data.
+        Goal: expose data races, coherency bugs, or FSM hangs under concurrent
+        access from both interfaces.
+        '''
+      tests: ["ccc_csr_concurrent_stress"]
+      tags: ["top"]
+    }
+  ]
+}

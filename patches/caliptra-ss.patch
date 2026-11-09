@@ -1,0 +1,1429 @@
+diff --git a/src/fuse_ctrl/rtl/otp_ctrl.sv b/src/fuse_ctrl/rtl/otp_ctrl.sv
+index 4a13c36..2772018 100644
+--- a/src/fuse_ctrl/rtl/otp_ctrl.sv
++++ b/src/fuse_ctrl/rtl/otp_ctrl.sv
+@@ -304,6 +304,52 @@ module otp_ctrl
+     .write_pending_i            ( 1'b0               )
+   );
+ 
++`ifdef CALIGHTRA_PHASE1
++  assign tlul_gnt    = 1'b1;
++  assign tlul_rdata  = 32'h0;
++  assign tlul_rerror = 2'b00;
++  assign intg_error[2] = 1'b0;
++  always_ff @(posedge clk_i or negedge rst_ni) begin
++    if (!rst_ni) begin
++      tlul_rvalid <= 1'b0;
++    end else begin
++      tlul_rvalid <= tlul_req;
++    end
++  end
++
++  always_comb begin
++    hw2reg = '0;
++    hw2reg.direct_access_regwen.d = 1'b1;
++    hw2reg.status.dai_idle.d      = 1'b1;
++  end
++
++  assign prim_tl_o                  = '0;
++  assign prim_generic_otp_inputs_o  = '0;
++  assign intr_otp_operation_done_o  = 1'b0;
++  assign intr_otp_error_o           = 1'b0;
++  assign alerts                     = '0;
++  assign pwr_otp_o.otp_done         = pwr_otp_i.otp_init;
++  assign pwr_otp_o.otp_idle         = 1'b1;
++  assign lc_otp_vendor_test_o       = '0;
++  assign lc_otp_program_o           = '0;
++  assign cio_test_o                 = '0;
++  assign cio_test_en_o              = '0;
++
++  always_comb begin
++    otp_lc_data_o                   = '0;
++    otp_lc_data_o.valid             = pwr_otp_i.otp_init;
++    otp_lc_data_o.state             = lc_ctrl_state_pkg::LcStTestUnlocked0;
++    otp_lc_data_o.count             = lc_ctrl_state_pkg::LcCnt1;
++    otp_lc_data_o.secrets_valid     = lc_ctrl_pkg::On;
++    otp_lc_data_o.test_tokens_valid = lc_ctrl_pkg::On;
++    otp_lc_data_o.rma_token_valid   = lc_ctrl_pkg::On;
++  end
++
++  always_comb begin
++    otp_broadcast_o       = '0;
++    otp_broadcast_o.valid = lc_ctrl_pkg::On;
++  end
++`else
+   logic [NumPart-1:0] tlul_part_sel_oh;
+   for (genvar k = 0; k < NumPart; k++) begin : gen_part_sel
+     localparam logic [OtpByteAddrWidth:0] PartEnd = (OtpByteAddrWidth+1)'(PartInfo[k].offset) +
+@@ -1476,5 +1522,6 @@ end
+   `CALIPTRA_SS_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ALERT(OptCtrlScrmlPrimCountCheck_A, u_otp_ctrl_scrmbl.u_prim_count, alerts[1])
+   `CALIPTRA_SS_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(OtpCtrlScrmblStateRegsCheck_A, u_otp_ctrl_scrmbl.u_state_regs, alerts[1])
+   `CALIPTRA_SS_ASSERT_PRIM_FSM_ERROR_TRIGGER_ALERT(OtpCtrlTlulLcGateStateRegsCheck_A, u_tlul_lc_gate.u_state_regs, alerts[1])
++`endif
+ 
+ endmodule : otp_ctrl
+diff --git a/src/integration/rtl/caliptra_ss_top.sv b/src/integration/rtl/caliptra_ss_top.sv
+index 038243c..52f1694 100644
+--- a/src/integration/rtl/caliptra_ss_top.sv
++++ b/src/integration/rtl/caliptra_ss_top.sv
+@@ -270,6 +270,11 @@ module caliptra_ss_top
+     input  logic [63:0] cptra_ss_cptra_core_generic_input_wires_i,
+     output logic [63:0] cptra_ss_cptra_core_generic_output_wires_o,
+     input  logic        cptra_ss_cptra_core_scan_mode_i,
++`ifdef CALIGHTRA_PHASE1
++    output logic        cptra_ss_cptra_core_ready_for_fuses_o,
++    output logic        cptra_ss_cptra_core_ready_for_mb_processing_o,
++    output logic        cptra_ss_cptra_core_ready_for_runtime_o,
++`endif
+     output logic        cptra_error_fatal,
+     output logic        cptra_error_non_fatal 
+ );
+@@ -414,6 +419,17 @@ module caliptra_ss_top
+     ///////
+     // AXI ID assignments
+     ///////
++`ifdef CALIGHTRA_PHASE1
++    localparam int CPTRA_SS_AXI_ID_W   = `CALIPTRA_AXI_ID_WIDTH;
++    localparam int CPTRA_SS_AXI_ADDR_W = 32;
++    localparam int CPTRA_SS_AXI_USER_W = `CALIPTRA_AXI_USER_WIDTH;
++    assign cptra_ss_mcu_lsu_m_axi_if_r_mgr.arid[CPTRA_SS_AXI_ID_W-1:pt.LSU_BUS_TAG] = '0;
++    assign cptra_ss_mcu_lsu_m_axi_if_w_mgr.awid[CPTRA_SS_AXI_ID_W-1:pt.LSU_BUS_TAG] = '0;
++    assign cptra_ss_mcu_ifu_m_axi_if_r_mgr.arid[CPTRA_SS_AXI_ID_W-1:pt.IFU_BUS_TAG] = '0;
++    assign cptra_ss_mcu_ifu_m_axi_if_w_mgr.awid[CPTRA_SS_AXI_ID_W-1:pt.IFU_BUS_TAG] = '0;
++    assign cptra_ss_mcu_sb_m_axi_if_r_mgr.arid[CPTRA_SS_AXI_ID_W-1:pt.SB_BUS_TAG]   = '0;
++    assign cptra_ss_mcu_sb_m_axi_if_w_mgr.awid[CPTRA_SS_AXI_ID_W-1:pt.SB_BUS_TAG]   = '0;
++`else
+     generate
+         if ($bits(cptra_ss_mcu_lsu_m_axi_if_r_mgr.arid) > pt.LSU_BUS_TAG) begin
+             assign cptra_ss_mcu_lsu_m_axi_if_r_mgr.arid[$bits(cptra_ss_mcu_lsu_m_axi_if_r_mgr.arid)-1:pt.LSU_BUS_TAG] = '0;
+@@ -434,6 +450,7 @@ module caliptra_ss_top
+             assign cptra_ss_mcu_sb_m_axi_if_w_mgr.awid[$bits(cptra_ss_mcu_sb_m_axi_if_w_mgr.awid)-1:pt.SB_BUS_TAG] = '0;
+         end
+     endgenerate
++`endif
+ 
+     // Fuse controller output is re-organized to feed caliptra-core with its fuse values and valid signal.
+      assign uds_field_entrpy_valid = (from_otp_to_clpt_core_broadcast.valid == lc_ctrl_pkg::On) ? 1'b1 : 1'b0;
+@@ -485,9 +502,15 @@ module caliptra_ss_top
+         .el2_mem_export(cptra_ss_cptra_core_el2_mem_export),
+         .abr_memory_export(abr_memory_export_req),
+ 
++`ifdef CALIGHTRA_PHASE1
++        .ready_for_fuses(cptra_ss_cptra_core_ready_for_fuses_o),
++        .ready_for_mb_processing(cptra_ss_cptra_core_ready_for_mb_processing_o),
++        .ready_for_runtime(cptra_ss_cptra_core_ready_for_runtime_o),
++`else
+         .ready_for_fuses(),             // -- unused in caliptra ss
+         .ready_for_mb_processing(),     // -- unused in caliptra ss
+         .ready_for_runtime(),           // -- unused in caliptra ss
++`endif
+ 
+         .mbox_sram_cs(cptra_ss_cptra_core_mbox_sram_cs_o),
+         .mbox_sram_we(cptra_ss_cptra_core_mbox_sram_we_o),
+@@ -895,6 +918,48 @@ module caliptra_ss_top
+ 
+     assign disable_id_filtering_i = ~cptra_i3c_axi_user_id_filtering_enable_i;
+ 
++`ifdef CALIGHTRA_PHASE1
++    assign cptra_ss_i3c_s_axi_if_r_sub.arready = 1'b1;
++    assign cptra_ss_i3c_s_axi_if_r_sub.rdata   = 32'h0;
++    assign cptra_ss_i3c_s_axi_if_r_sub.rresp   = 2'b00;
++    assign cptra_ss_i3c_s_axi_if_r_sub.rlast   = 1'b1;
++    assign cptra_ss_i3c_s_axi_if_r_sub.ruser   = '0;
++    assign cptra_ss_i3c_s_axi_if_w_sub.awready = 1'b1;
++    assign cptra_ss_i3c_s_axi_if_w_sub.wready  = 1'b1;
++    assign cptra_ss_i3c_s_axi_if_w_sub.bresp   = 2'b00;
++    assign cptra_ss_i3c_s_axi_if_w_sub.buser   = '0;
++    always_ff @(posedge cptra_ss_clk_i or negedge cptra_ss_rst_b_o) begin
++        if (!cptra_ss_rst_b_o) begin
++            cptra_ss_i3c_s_axi_if_r_sub.rvalid <= 1'b0;
++            cptra_ss_i3c_s_axi_if_r_sub.rid    <= '0;
++            cptra_ss_i3c_s_axi_if_w_sub.bvalid <= 1'b0;
++            cptra_ss_i3c_s_axi_if_w_sub.bid    <= '0;
++        end else begin
++            if (cptra_ss_i3c_s_axi_if_r_sub.arvalid && cptra_ss_i3c_s_axi_if_r_sub.arready) begin
++                cptra_ss_i3c_s_axi_if_r_sub.rvalid <= 1'b1;
++                cptra_ss_i3c_s_axi_if_r_sub.rid    <= cptra_ss_i3c_s_axi_if_r_sub.arid;
++            end else if (cptra_ss_i3c_s_axi_if_r_sub.rready) begin
++                cptra_ss_i3c_s_axi_if_r_sub.rvalid <= 1'b0;
++            end
++            if (cptra_ss_i3c_s_axi_if_w_sub.awvalid && cptra_ss_i3c_s_axi_if_w_sub.awready) begin
++                cptra_ss_i3c_s_axi_if_w_sub.bvalid <= 1'b1;
++                cptra_ss_i3c_s_axi_if_w_sub.bid    <= cptra_ss_i3c_s_axi_if_w_sub.awid;
++            end else if (cptra_ss_i3c_s_axi_if_w_sub.bready) begin
++                cptra_ss_i3c_s_axi_if_w_sub.bvalid <= 1'b0;
++            end
++        end
++    end
++    assign cptra_ss_i3c_scl_o                        = 1'b1;
++    assign cptra_ss_i3c_sda_o                        = 1'b1;
++    assign cptra_ss_i3c_scl_oe                       = 1'b0;
++    assign cptra_ss_i3c_sda_oe                       = 1'b0;
++    assign cptra_ss_sel_od_pp_o                      = 1'b0;
++    assign cptra_ss_i3c_recovery_payload_available_o = 1'b0;
++    assign cptra_ss_i3c_recovery_image_activated_o   = 1'b0;
++    assign i3c_peripheral_reset                      = 1'b0;
++    assign i3c_escalated_reset                       = 1'b0;
++    assign i3c_irq_o                                 = 1'b0;
++`else
+     i3c_wrapper #(
+         .AxiDataWidth(`AXI_DATA_WIDTH),
+         .AxiAddrWidth(`AXI_ADDR_WIDTH),
+@@ -975,6 +1040,7 @@ module caliptra_ss_top
+         .priv_ids_i                     (priv_ids)
+     
+     );
++`endif
+ 
+     //=========================================================================
+     // MCU ROM Interface Instance (Reuses MCI)
+@@ -1005,10 +1071,17 @@ module caliptra_ss_top
+     // The following signal should be also an input coming from LC to MCI
+             //lc_hw_rev_t  hw_rev_o;
+     mci_top #(
++`ifdef CALIGHTRA_PHASE1
++        .AXI_ADDR_WIDTH  (CPTRA_SS_AXI_ADDR_W                       ),
++        .AXI_DATA_WIDTH  (32                                        ),
++        .AXI_USER_WIDTH  (CPTRA_SS_AXI_USER_W                       ),
++        .AXI_ID_WIDTH    (CPTRA_SS_AXI_ID_W                         ),
++`else
+         .AXI_ADDR_WIDTH  ($bits(cptra_ss_mci_s_axi_if_r_sub.araddr)),
+         .AXI_DATA_WIDTH  (32                                       ),
+         .AXI_USER_WIDTH  ($bits(cptra_ss_mci_s_axi_if_r_sub.aruser)),
+         .AXI_ID_WIDTH    ($bits(cptra_ss_mci_s_axi_if_r_sub.arid)  ),
++`endif
+         .MCU_SRAM_SIZE_KB(MCU_SRAM_SIZE_KB                         ),
+ 
+         .MCU_MBOX0_SIZE_KB(MCU_MBOX0_SIZE_KB),
+diff --git a/src/lc_ctrl/rtl/lc_ctrl.sv b/src/lc_ctrl/rtl/lc_ctrl.sv
+index 5950063..0c1638e 100644
+--- a/src/lc_ctrl/rtl/lc_ctrl.sv
++++ b/src/lc_ctrl/rtl/lc_ctrl.sv
+@@ -283,6 +283,45 @@ module lc_ctrl
+     .intg_err_o( fatal_bus_integ_error_csr_d )
+   );
+ 
++`ifdef CALIGHTRA_PHASE1
++  assign fatal_bus_integ_error_q     = 1'b0;
++  assign fatal_bus_integ_error_tap_d = 1'b0;
++  assign hw_rev_o = '{silicon_creator_id: SiliconCreatorId,
++                      product_id:         ProductId,
++                      revision_id:        RevisionId,
++                      reserved:           '0};
++
++  always_comb begin
++    hw2reg = '0;
++    hw2reg.status.initialized              = pwr_lc_i.lc_init;
++    hw2reg.status.ready                    = pwr_lc_i.lc_init;
++    hw2reg.lc_state                        = {DecLcStateNumRep{DecLcStTestUnlocked0}};
++    hw2reg.lc_transition_cnt               = DecLcCountWidth'(1);
++    hw2reg.lc_id_state                     = {DecLcIdStateNumRep{DecLcIdBlank}};
++    hw2reg.device_id                       = otp_device_id_i;
++    hw2reg.manuf_state                     = otp_manuf_state_i;
++    hw2reg.hw_revision0.silicon_creator_id = hw_rev_o.silicon_creator_id;
++    hw2reg.hw_revision0.product_id         = hw_rev_o.product_id;
++    hw2reg.hw_revision1.revision_id        = hw_rev_o.revision_id;
++  end
++
++  assign jtag_o                        = '0;
++  assign alerts                        = '0;
++  assign pwr_lc_o.lc_done              = pwr_lc_i.lc_init;
++  assign pwr_lc_o.lc_idle              = 1'b1;
++  assign lc_otp_vendor_test_o          = '0;
++  assign volatile_raw_unlock_success_o = 1'b0;
++  assign lc_otp_program_o              = '0;
++  assign lc_dft_en_o                   = lc_ctrl_pkg::On;
++  assign lc_hw_debug_en_o              = lc_ctrl_pkg::On;
++  assign lc_creator_seed_sw_rw_en_o    = lc_ctrl_pkg::On;
++  assign lc_owner_seed_sw_rw_en_o      = lc_ctrl_pkg::On;
++  assign lc_seed_hw_rd_en_o            = lc_ctrl_pkg::On;
++  assign lc_escalate_en_o              = lc_ctrl_pkg::Off;
++  assign lc_check_byp_en_o             = lc_ctrl_pkg::Off;
++  assign lc_clk_byp_req_o              = lc_ctrl_pkg::Off;
++  assign lc_flash_rma_req_o            = lc_ctrl_pkg::Off;
++`else
+   ////////////////////
+   // Life Cycle TAP //
+   ////////////////////
+@@ -1092,5 +1131,6 @@ module lc_ctrl
+                                                  u_reg_tap, program_alert, 0)
+ 
+ // ------------------------------------------------------------------------------------------
++`endif
+   
+ endmodule : lc_ctrl
+diff --git a/src/mci/rtl/mci_mcu_sram_ctrl.sv b/src/mci/rtl/mci_mcu_sram_ctrl.sv
+index e982826..a911de8 100644
+--- a/src/mci/rtl/mci_mcu_sram_ctrl.sv
++++ b/src/mci/rtl/mci_mcu_sram_ctrl.sv
+@@ -399,7 +399,11 @@ assign mci_mcu_sram_req_if.req.we    = sram_write_req;
+ // RMW data
+ genvar i;
+ generate 
++`ifdef CALIGHTRA_PHASE1
++    for(i=0; i < (MCU_SRAM_DATA_W / BITS_IN_BYTE); i = i + 1) begin : gen_rmw_data_mask
++`else
+     for(i=0; i < $bits(cif_resp_if.req_data.wstrb); i = i + 1) begin : gen_rmw_data_mask
++`endif
+         assign sram_rmw_wdata[i*8 +: 8] = cif_resp_if.req_data.wstrb[i] ? cif_resp_if.req_data.wdata[i*8 +: 8] : sram_rdata_cor[i*8 +: 8];
+     end
+ endgenerate
+diff --git a/src/mci/rtl/mci_reg.sv b/src/mci/rtl/mci_reg.sv
+index 93c58c5..290c194 100644
+--- a/src/mci/rtl/mci_reg.sv
++++ b/src/mci/rtl/mci_reg.sv
+@@ -10067,7 +10067,11 @@ module mci_reg (
+     end
+     assign hwif_out.MCU_RV_MTIME_L.count_l.value = field_storage.MCU_RV_MTIME_L.count_l.value;
+     assign hwif_out.MCU_RV_MTIME_L.count_l.swmod = decoded_reg_strb.MCU_RV_MTIME_L && decoded_req_is_wr;
++`ifdef CALIGHTRA_PHASE1
++    assign hwif_out.MCU_RV_MTIME_L.count_l.overflow = (field_storage.MCU_RV_MTIME_L.count_l.value == 32'hffffffff);
++`else
+     assign hwif_out.MCU_RV_MTIME_L.count_l.overflow = field_combo.MCU_RV_MTIME_L.count_l.overflow;
++`endif
+     // Field: mci_reg.MCU_RV_MTIME_H.count_h
+     always_comb begin
+         automatic logic [31:0] next_c;
+@@ -22405,9 +22409,15 @@ module mci_reg (
+     assign readback_array[22][31:0] = (decoded_reg_strb.FW_ERROR_NON_FATAL && !decoded_req_is_wr) ? field_storage.FW_ERROR_NON_FATAL.error_code.value : '0;
+     assign readback_array[23][31:0] = (decoded_reg_strb.HW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.HW_ERROR_ENC.error_code.value : '0;
+     assign readback_array[24][31:0] = (decoded_reg_strb.FW_ERROR_ENC && !decoded_req_is_wr) ? field_storage.FW_ERROR_ENC.error_code.value : '0;
++`ifdef CALIGHTRA_ICE40
++    for(genvar i0=0; i0<8; i0++) begin
++        assign readback_array[i0*1 + 25][31:0] = '0;
++    end
++`else
+     for(genvar i0=0; i0<8; i0++) begin
+         assign readback_array[i0*1 + 25][31:0] = (decoded_reg_strb.FW_EXTENDED_ERROR_INFO[i0] && !decoded_req_is_wr) ? field_storage.FW_EXTENDED_ERROR_INFO[i0].error_info.value : '0;
+     end
++`endif
+     assign readback_array[33][0:0] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_mcu_sram_ecc_unc.value : '0;
+     assign readback_array[33][1:1] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value : '0;
+     assign readback_array[33][2:2] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_mcu_sram_dmi_axi_collision.value : '0;
+@@ -22523,6 +22533,11 @@ module mci_reg (
+         assign readback_array[i0*1 + 66][0:0] = (decoded_reg_strb.MBOX0_AXI_USER_LOCK[i0] && !decoded_req_is_wr) ? field_storage.MBOX0_AXI_USER_LOCK[i0].LOCK.value : '0;
+         assign readback_array[i0*1 + 66][31:1] = '0;
+     end
++`ifdef CALIGHTRA_ICE40
++    for(genvar i0=71; i0<89; i0++) begin
++        assign readback_array[i0][31:0] = '0;
++    end
++`else
+     for(genvar i0=0; i0<5; i0++) begin
+         assign readback_array[i0*1 + 71][31:0] = (decoded_reg_strb.MBOX1_VALID_AXI_USER[i0] && !decoded_req_is_wr) ? field_storage.MBOX1_VALID_AXI_USER[i0].AXI_USER.value : '0;
+     end
+@@ -22542,12 +22557,18 @@ module mci_reg (
+     assign readback_array[87][31:0] = (decoded_reg_strb.FC_FIPS_ZEROZATION && !decoded_req_is_wr) ? field_storage.FC_FIPS_ZEROZATION.MASK.value : '0;
+     assign readback_array[88][0:0] = (decoded_reg_strb.FC_FIPS_ZEROZATION_STS && !decoded_req_is_wr) ? field_storage.FC_FIPS_ZEROZATION_STS.status.value : '0;
+     assign readback_array[88][31:1] = '0;
++`endif
+     for(genvar i0=0; i0<2; i0++) begin
+         assign readback_array[i0*1 + 89][31:0] = (decoded_reg_strb.GENERIC_INPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.GENERIC_INPUT_WIRES[i0].wires.value : '0;
+     end
+     for(genvar i0=0; i0<2; i0++) begin
+         assign readback_array[i0*1 + 91][31:0] = (decoded_reg_strb.GENERIC_OUTPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.GENERIC_OUTPUT_WIRES[i0].wires.value : '0;
+     end
++`ifdef CALIGHTRA_ICE40
++    for(genvar i0=93; i0<194; i0++) begin
++        assign readback_array[i0][31:0] = '0;
++    end
++`else
+     assign readback_array[93][31:0] = (decoded_reg_strb.DEBUG_IN && !decoded_req_is_wr) ? field_storage.DEBUG_IN.DATA.value : '0;
+     assign readback_array[94][31:0] = (decoded_reg_strb.DEBUG_OUT && !decoded_req_is_wr) ? field_storage.DEBUG_OUT.DATA.value : '0;
+     assign readback_array[95][0:0] = (decoded_reg_strb.SS_DEBUG_INTENT && !decoded_req_is_wr) ? field_storage.SS_DEBUG_INTENT.debug_intent.value : '0;
+@@ -22561,6 +22582,7 @@ module mci_reg (
+             assign readback_array[i0*12 + i1*1 + 98][31:0] = (decoded_reg_strb.PROD_DEBUG_UNLOCK_PK_HASH_REG[i0][i1] && !decoded_req_is_wr) ? field_storage.PROD_DEBUG_UNLOCK_PK_HASH_REG[i0][i1].hash.value : '0;
+         end
+     end
++`endif
+     assign readback_array[194][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
+     assign readback_array[194][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
+     assign readback_array[194][31:2] = '0;
+@@ -22744,6 +22766,11 @@ module mci_reg (
+     assign readback_array[204][29:29] = (decoded_reg_strb.intr_block_rf.notif1_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif1_internal_intr_r.notif_agg_error_non_fatal2_sts.value : '0;
+     assign readback_array[204][30:30] = (decoded_reg_strb.intr_block_rf.notif1_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif1_internal_intr_r.notif_agg_error_non_fatal1_sts.value : '0;
+     assign readback_array[204][31:31] = (decoded_reg_strb.intr_block_rf.notif1_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif1_internal_intr_r.notif_agg_error_non_fatal0_sts.value : '0;
++`ifdef CALIGHTRA_ICE40
++    for(genvar i0=205; i0<379; i0++) begin
++        assign readback_array[i0][31:0] = '0;
++    end
++`else
+     assign readback_array[205][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_trig_r.error_mcu_sram_dmi_axi_collision_trig.value : '0;
+     assign readback_array[205][1:1] = (decoded_reg_strb.intr_block_rf.error0_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_trig_r.error_internal_trig.value : '0;
+     assign readback_array[205][2:2] = (decoded_reg_strb.intr_block_rf.error0_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_trig_r.error_mbox0_ecc_unc_trig.value : '0;
+@@ -23086,6 +23113,7 @@ module mci_reg (
+     assign readback_array[377][31:1] = '0;
+     assign readback_array[378][0:0] = (decoded_reg_strb.intr_block_rf.notif_otp_operation_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_otp_operation_done_intr_count_incr_r.pulse.value : '0;
+     assign readback_array[378][31:1] = '0;
++`endif
+ 
+     // Reduce the array
+     always_comb begin
+diff --git a/src/mci/rtl/mci_top.sv b/src/mci/rtl/mci_top.sv
+index 60c4567..5ac8489 100644
+--- a/src/mci/rtl/mci_top.sv
++++ b/src/mci/rtl/mci_top.sv
+@@ -257,6 +257,10 @@ module mci_top
+ 
+ 
+ 
++`ifdef CALIGHTRA_PHASE1
++assign cptra_ss_rdc_clk_cg = clk;
++assign mcu_clk_cg = clk;
++`else
+ // Clock gating only using RDC clock gating functionality
+ clk_gate cg ( 
+     .clk(clk),
+@@ -275,6 +279,7 @@ clk_gate cg (
+     .cptra_in_debug_scan_mode('0),
+     .cptra_dmi_reg_en_preQ('0)
+ );
++`endif
+ 
+ // Caliptra internal fabric interface for MCU SRAM 
+ // Address width is set to AXI_ADDR_WIDTH and MCU SRAM
+@@ -445,6 +450,12 @@ mci_boot_seqr #(
+ );
+ 
+ 
++`ifdef CALIGHTRA_PHASE1
++assign mcu_trace_buffer_dmi_reg = '0;
++assign mcu_trace_buffer_req_if.hold = 1'b0;
++assign mcu_trace_buffer_req_if.rdata = 32'h0;
++assign mcu_trace_buffer_req_if.error = 1'b0;
++`else
+ mci_mcu_trace_buffer #(
+     .DMI_REG_TRACE_RD_PTR_ADDR(MCI_DMI_MCU_TRACE_RD_PTR)
+ ) i_mci_mcu_trace_buffer 
+@@ -475,6 +486,7 @@ mci_mcu_trace_buffer #(
+     .cif_resp_if (mcu_trace_buffer_req_if.response)
+ 
+ );
++`endif
+ 
+ // MCU SRAM
+ // Translates requests from the AXI SUB and sends them to the MCU SRAM.
+@@ -865,6 +877,7 @@ mci_lcc_st_trans LCC_state_translator (
+ // AXI SUB R - Verify ID width matches
+ `CALIPTRA_ASSERT_INIT(ERR_MCI_AXI_SUB_R_ID_SIZE_MATCH,  AXI_ID_WIDTH == s_axi_r_if.IW)
+ 
++`ifndef CALIGHTRA_PHASE1
+ // MCU SRAM ECC SB
+ `CALIPTRA_ASSERT(MCU_SRAM_ECC_SB, $rose(i_mci_mcu_sram_ctrl.ecc_decode.single_ecc_error) |=> i_mci_reg_top.i_mci_reg.field_storage.intr_block_rf.notif0_internal_intr_r.notif_mcu_sram_ecc_cor_sts.value, cptra_ss_rdc_clk_cg, !cptra_ss_rst_b_o) 
+ `CALIPTRA_ASSERT(MCU_SRAM_ECC_SB_INTR_OUT, $rose(i_mci_mcu_sram_ctrl.ecc_decode.single_ecc_error) && 
+@@ -876,5 +889,6 @@ mci_lcc_st_trans LCC_state_translator (
+ `CALIPTRA_ASSERT(MCU_SRAM_ECC_DB_ALL_ERR_OUT, $rose(i_mci_mcu_sram_ctrl.ecc_decode.double_ecc_error) && 
+                 !i_mci_reg_top.mci_reg_hwif_out.internal_hw_error_fatal_mask.mask_mcu_sram_ecc_unc.value |=> 
+                 all_error_fatal, cptra_ss_rdc_clk_cg, !cptra_ss_rst_b_o) 
++`endif
+ 
+ endmodule
+diff --git a/src/riscv_core/veer_el2/rtl/defines/css_mcu0_el2_param.vh b/src/riscv_core/veer_el2/rtl/defines/css_mcu0_el2_param.vh
+index 3260c96..99a654c 100644
+--- a/src/riscv_core/veer_el2/rtl/defines/css_mcu0_el2_param.vh
++++ b/src/riscv_core/veer_el2/rtl/defines/css_mcu0_el2_param.vh
+@@ -1,179 +1,223 @@
+-// parameter css_mcu0_el2_param_t pt = '{
+-// 	BHT_ADDR_HI            : 8'h09         ,
+-// 	BHT_ADDR_LO            : 6'h02         ,
+-// 	BHT_ARRAY_DEPTH        : 15'h0100       ,
+-// 	BHT_GHR_HASH_1         : 5'h00         ,
+-// 	BHT_GHR_SIZE           : 8'h08         ,
+-// 	BHT_SIZE               : 16'h0200       ,
+-// 	BITMANIP_ZBA           : 5'h01         ,
+-// 	BITMANIP_ZBB           : 5'h01         ,
+-// 	BITMANIP_ZBC           : 5'h01         ,
+-// 	BITMANIP_ZBE           : 5'h00         ,
+-// 	BITMANIP_ZBF           : 5'h00         ,
+-// 	BITMANIP_ZBP           : 5'h00         ,
+-// 	BITMANIP_ZBR           : 5'h00         ,
+-// 	BITMANIP_ZBS           : 5'h01         ,
+-// 	BTB_ADDR_HI            : 9'h009        ,
+-// 	BTB_ADDR_LO            : 6'h02         ,
+-// 	BTB_ARRAY_DEPTH        : 13'h0100       ,
+-// 	BTB_BTAG_FOLD          : 5'h00         ,
+-// 	BTB_BTAG_SIZE          : 9'h005        ,
+-// 	BTB_ENABLE             : 5'h01         ,
+-// 	BTB_FOLD2_INDEX_HASH   : 5'h00         ,
+-// 	BTB_FULLYA             : 5'h00         ,
+-// 	BTB_INDEX1_HI          : 9'h009        ,
+-// 	BTB_INDEX1_LO          : 9'h002        ,
+-// 	BTB_INDEX2_HI          : 9'h011        ,
+-// 	BTB_INDEX2_LO          : 9'h00A        ,
+-// 	BTB_INDEX3_HI          : 9'h019        ,
+-// 	BTB_INDEX3_LO          : 9'h012        ,
+-// 	BTB_SIZE               : 14'h0200       ,
+-// 	BTB_TOFFSET_SIZE       : 9'h00C        ,
+-// 	BUILD_AHB_LITE         : 4'h0          ,
+-// 	BUILD_AXI4             : 5'h01         ,
+-// 	BUILD_AXI_NATIVE       : 5'h01         ,
+-// 	BUS_PRTY_DEFAULT       : 6'h03         ,
+-// 	DATA_ACCESS_ADDR0      : 36'h000000000  ,
+-// 	DATA_ACCESS_ADDR1      : 36'h000000000  ,
+-// 	DATA_ACCESS_ADDR2      : 36'h000000000  ,
+-// 	DATA_ACCESS_ADDR3      : 36'h000000000  ,
+-// 	DATA_ACCESS_ADDR4      : 36'h000000000  ,
+-// 	DATA_ACCESS_ADDR5      : 36'h000000000  ,
+-// 	DATA_ACCESS_ADDR6      : 36'h000000000  ,
+-// 	DATA_ACCESS_ADDR7      : 36'h000000000  ,
+-// 	DATA_ACCESS_ENABLE0    : 5'h00         ,
+-// 	DATA_ACCESS_ENABLE1    : 5'h00         ,
+-// 	DATA_ACCESS_ENABLE2    : 5'h00         ,
+-// 	DATA_ACCESS_ENABLE3    : 5'h00         ,
+-// 	DATA_ACCESS_ENABLE4    : 5'h00         ,
+-// 	DATA_ACCESS_ENABLE5    : 5'h00         ,
+-// 	DATA_ACCESS_ENABLE6    : 5'h00         ,
+-// 	DATA_ACCESS_ENABLE7    : 5'h00         ,
+-// 	DATA_ACCESS_MASK0      : 36'h0FFFFFFFF  ,
+-// 	DATA_ACCESS_MASK1      : 36'h0FFFFFFFF  ,
+-// 	DATA_ACCESS_MASK2      : 36'h0FFFFFFFF  ,
+-// 	DATA_ACCESS_MASK3      : 36'h0FFFFFFFF  ,
+-// 	DATA_ACCESS_MASK4      : 36'h0FFFFFFFF  ,
+-// 	DATA_ACCESS_MASK5      : 36'h0FFFFFFFF  ,
+-// 	DATA_ACCESS_MASK6      : 36'h0FFFFFFFF  ,
+-// 	DATA_ACCESS_MASK7      : 36'h0FFFFFFFF  ,
+-// 	DCCM_BANK_BITS         : 7'h02         ,
+-// 	DCCM_BITS              : 9'h00E        ,
+-// 	DCCM_BYTE_WIDTH        : 7'h04         ,
+-// 	DCCM_DATA_WIDTH        : 10'h020        ,
+-// 	DCCM_ECC_WIDTH         : 7'h07         ,
+-// 	DCCM_ENABLE            : 5'h01         ,
+-// 	DCCM_FDATA_WIDTH       : 10'h027        ,
+-// 	DCCM_INDEX_BITS        : 8'h0A         ,
+-// 	DCCM_NUM_BANKS         : 9'h004        ,
+-// 	DCCM_REGION            : 8'h05         ,
+-// 	DCCM_SADR              : 36'h050000000  ,
+-// 	DCCM_SIZE              : 14'h0010       ,
+-// 	DCCM_WIDTH_BITS        : 6'h02         ,
+-// 	DIV_BIT                : 7'h04         ,
+-// 	DIV_NEW                : 5'h01         ,
+-// 	DMA_BUF_DEPTH          : 7'h05         ,
+-// 	DMA_BUS_ID             : 9'h001        ,
+-// 	DMA_BUS_PRTY           : 6'h02         ,
+-// 	DMA_BUS_TAG            : 8'h01         ,
+-// 	FAST_INTERRUPT_REDIRECT : 5'h01         ,
+-// 	ICACHE_2BANKS          : 5'h01         ,
+-// 	ICACHE_BANK_BITS       : 7'h01         ,
+-// 	ICACHE_BANK_HI         : 7'h03         ,
+-// 	ICACHE_BANK_LO         : 6'h03         ,
+-// 	ICACHE_BANK_WIDTH      : 8'h08         ,
+-// 	ICACHE_BANKS_WAY       : 7'h02         ,
+-// 	ICACHE_BEAT_ADDR_HI    : 8'h05         ,
+-// 	ICACHE_BEAT_BITS       : 8'h03         ,
+-// 	ICACHE_BYPASS_ENABLE   : 5'h01         ,
+-// 	ICACHE_DATA_DEPTH      : 18'h00200      ,
+-// 	ICACHE_DATA_INDEX_LO   : 7'h04         ,
+-// 	ICACHE_DATA_WIDTH      : 11'h040        ,
+-// 	ICACHE_ECC             : 5'h01         ,
+-// 	ICACHE_ENABLE          : 5'h01         ,
+-// 	ICACHE_FDATA_WIDTH     : 11'h047        ,
+-// 	ICACHE_INDEX_HI        : 9'h00C        ,
+-// 	ICACHE_LN_SZ           : 11'h040        ,
+-// 	ICACHE_NUM_BEATS       : 8'h08         ,
+-// 	ICACHE_NUM_BYPASS      : 8'h02         ,
+-// 	ICACHE_NUM_BYPASS_WIDTH : 8'h02         ,
+-// 	ICACHE_NUM_WAYS        : 7'h02         ,
+-// 	ICACHE_ONLY            : 5'h01         ,
+-// 	ICACHE_SCND_LAST       : 8'h06         ,
+-// 	ICACHE_SIZE            : 13'h0010       ,
+-// 	ICACHE_STATUS_BITS     : 7'h01         ,
+-// 	ICACHE_TAG_BYPASS_ENABLE : 5'h01         ,
+-// 	ICACHE_TAG_DEPTH       : 17'h00080      ,
+-// 	ICACHE_TAG_INDEX_LO    : 7'h06         ,
+-// 	ICACHE_TAG_LO          : 9'h00D        ,
+-// 	ICACHE_TAG_NUM_BYPASS  : 8'h02         ,
+-// 	ICACHE_TAG_NUM_BYPASS_WIDTH : 8'h02         ,
+-// 	ICACHE_WAYPACK         : 5'h01         ,
+-// 	ICCM_BANK_BITS         : 7'h02         ,
+-// 	ICCM_BANK_HI           : 9'h003        ,
+-// 	ICCM_BANK_INDEX_LO     : 9'h004        ,
+-// 	ICCM_BITS              : 9'h011        ,
+-// 	ICCM_ECC_WIDTH         : 7'h07         ,
+-// 	ICCM_ENABLE            : 5'h00         ,
+-// 	ICCM_ICACHE            : 5'h00         ,
+-// 	ICCM_INDEX_BITS        : 8'h0D         ,
+-// 	ICCM_NUM_BANKS         : 9'h004        ,
+-// 	ICCM_ONLY              : 5'h00         ,
+-// 	ICCM_REGION            : 8'h04         ,
+-// 	ICCM_SADR              : 36'h040000000  ,
+-// 	ICCM_SIZE              : 14'h0080       ,
+-// 	IFU_BUS_ID             : 5'h01         ,
+-// 	IFU_BUS_PRTY           : 6'h02         ,
+-// 	IFU_BUS_TAG            : 8'h03         ,
+-// 	INST_ACCESS_ADDR0      : 36'h000000000  ,
+-// 	INST_ACCESS_ADDR1      : 36'h000000000  ,
+-// 	INST_ACCESS_ADDR2      : 36'h000000000  ,
+-// 	INST_ACCESS_ADDR3      : 36'h000000000  ,
+-// 	INST_ACCESS_ADDR4      : 36'h000000000  ,
+-// 	INST_ACCESS_ADDR5      : 36'h000000000  ,
+-// 	INST_ACCESS_ADDR6      : 36'h000000000  ,
+-// 	INST_ACCESS_ADDR7      : 36'h000000000  ,
+-// 	INST_ACCESS_ENABLE0    : 5'h00         ,
+-// 	INST_ACCESS_ENABLE1    : 5'h00         ,
+-// 	INST_ACCESS_ENABLE2    : 5'h00         ,
+-// 	INST_ACCESS_ENABLE3    : 5'h00         ,
+-// 	INST_ACCESS_ENABLE4    : 5'h00         ,
+-// 	INST_ACCESS_ENABLE5    : 5'h00         ,
+-// 	INST_ACCESS_ENABLE6    : 5'h00         ,
+-// 	INST_ACCESS_ENABLE7    : 5'h00         ,
+-// 	INST_ACCESS_MASK0      : 36'h0FFFFFFFF  ,
+-// 	INST_ACCESS_MASK1      : 36'h0FFFFFFFF  ,
+-// 	INST_ACCESS_MASK2      : 36'h0FFFFFFFF  ,
+-// 	INST_ACCESS_MASK3      : 36'h0FFFFFFFF  ,
+-// 	INST_ACCESS_MASK4      : 36'h0FFFFFFFF  ,
+-// 	INST_ACCESS_MASK5      : 36'h0FFFFFFFF  ,
+-// 	INST_ACCESS_MASK6      : 36'h0FFFFFFFF  ,
+-// 	INST_ACCESS_MASK7      : 36'h0FFFFFFFF  ,
+-// 	LOAD_TO_USE_PLUS1      : 5'h00         ,
+-// 	LSU2DMA                : 5'h00         ,
+-// 	LSU_BUS_ID             : 5'h01         ,
+-// 	LSU_BUS_PRTY           : 6'h02         ,
+-// 	LSU_BUS_TAG            : 8'h03         ,
+-// 	LSU_NUM_NBLOAD         : 9'h004        ,
+-// 	LSU_NUM_NBLOAD_WIDTH   : 7'h02         ,
+-// 	LSU_SB_BITS            : 9'h00E        ,
+-// 	LSU_STBUF_DEPTH        : 8'h04         ,
+-// 	NO_ICCM_NO_ICACHE      : 5'h00         ,
+-// 	PIC_2CYCLE             : 5'h00         ,
+-// 	PIC_BASE_ADDR          : 36'h060000000  ,
+-// 	PIC_BITS               : 9'h00F        ,
+-// 	PIC_INT_WORDS          : 8'h08         ,
+-// 	PIC_REGION             : 8'h06         ,
+-// 	PIC_SIZE               : 13'h0020       ,
+-// 	PIC_TOTAL_INT          : 12'h0FF        ,
+-// 	PIC_TOTAL_INT_PLUS1    : 13'h0100       ,
+-// 	PMP_ENTRIES            : 11'h040        ,
+-// 	RET_STACK_SIZE         : 8'h08         ,
+-// 	SB_BUS_ID              : 5'h01         ,
+-// 	SB_BUS_PRTY            : 6'h02         ,
+-// 	SB_BUS_TAG             : 8'h01         ,
+-// 	SMEPMP                 : 1'h1          ,
+-// 	TIMER_LEGAL_EN         : 5'h01         ,
+-// 	USER_MODE              : 1'h1          
+-// }
+-parameter css_mcu0_el2_param_t pt = 2291'h04840400010040010840000020908200002840004808220A0C848200060210C00000000000000000000000000000000000000000000000000000000000000000000000000000000003FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC3FFFFFFFC103820401C21385010141400000000100820428042010840830C2010281840200081002108E0C0801004040820C01002100400606810104100C08110E00068100080800000000400420300000000000000000000000000000000000000000000000000000000000000000000000000000000000FFFFFFFF0FFFFFFFF0FFFFFFFF0FFFFFFFF0FFFFFFFF0FFFFFFFF0FFFFFFFF0FFFFFFFF00021018101038100006000000007840300803FC200100202100C3
++parameter css_mcu0_el2_param_t pt = '{
++	BHT_ADDR_HI            : 8'h09         ,
++	BHT_ADDR_LO            : 6'h02         ,
++	BHT_ARRAY_DEPTH        : 15'h0100       ,
++	BHT_GHR_HASH_1         : 5'h00         ,
++	BHT_GHR_SIZE           : 8'h08         ,
++	BHT_SIZE               : 16'h0200       ,
++	BITMANIP_ZBA           : 5'h01         ,
++	BITMANIP_ZBB           : 5'h01         ,
++`ifdef CALIGHTRA_NO_BP
++	BITMANIP_ZBC           : 5'h00         ,
++`else
++	BITMANIP_ZBC           : 5'h01         ,
++`endif
++	BITMANIP_ZBE           : 5'h00         ,
++	BITMANIP_ZBF           : 5'h00         ,
++	BITMANIP_ZBP           : 5'h00         ,
++	BITMANIP_ZBR           : 5'h00         ,
++	BITMANIP_ZBS           : 5'h01         ,
++	BTB_ADDR_HI            : 9'h009        ,
++	BTB_ADDR_LO            : 6'h02         ,
++	BTB_ARRAY_DEPTH        : 13'h0100       ,
++	BTB_BTAG_FOLD          : 5'h00         ,
++	BTB_BTAG_SIZE          : 9'h005        ,
++`ifdef CALIGHTRA_NO_BP
++	BTB_ENABLE             : 5'h00         ,
++`else
++	BTB_ENABLE             : 5'h01         ,
++`endif
++	BTB_FOLD2_INDEX_HASH   : 5'h00         ,
++	BTB_FULLYA             : 5'h00         ,
++	BTB_INDEX1_HI          : 9'h009        ,
++	BTB_INDEX1_LO          : 9'h002        ,
++	BTB_INDEX2_HI          : 9'h011        ,
++	BTB_INDEX2_LO          : 9'h00A        ,
++	BTB_INDEX3_HI          : 9'h019        ,
++	BTB_INDEX3_LO          : 9'h012        ,
++	BTB_SIZE               : 14'h0200       ,
++	BTB_TOFFSET_SIZE       : 9'h00C        ,
++	BUILD_AHB_LITE         : 1'h0          ,
++	BUILD_AXI4             : 5'h01         ,
++	BUILD_AXI_NATIVE       : 5'h01         ,
++	BUS_PRTY_DEFAULT       : 6'h03         ,
++	DATA_ACCESS_ADDR0      : 36'h000000000  ,
++	DATA_ACCESS_ADDR1      : 36'h000000000  ,
++	DATA_ACCESS_ADDR2      : 36'h000000000  ,
++	DATA_ACCESS_ADDR3      : 36'h000000000  ,
++	DATA_ACCESS_ADDR4      : 36'h000000000  ,
++	DATA_ACCESS_ADDR5      : 36'h000000000  ,
++	DATA_ACCESS_ADDR6      : 36'h000000000  ,
++	DATA_ACCESS_ADDR7      : 36'h000000000  ,
++	DATA_ACCESS_ENABLE0    : 5'h00         ,
++	DATA_ACCESS_ENABLE1    : 5'h00         ,
++	DATA_ACCESS_ENABLE2    : 5'h00         ,
++	DATA_ACCESS_ENABLE3    : 5'h00         ,
++	DATA_ACCESS_ENABLE4    : 5'h00         ,
++	DATA_ACCESS_ENABLE5    : 5'h00         ,
++	DATA_ACCESS_ENABLE6    : 5'h00         ,
++	DATA_ACCESS_ENABLE7    : 5'h00         ,
++	DATA_ACCESS_MASK0      : 36'h0FFFFFFFF  ,
++	DATA_ACCESS_MASK1      : 36'h0FFFFFFFF  ,
++	DATA_ACCESS_MASK2      : 36'h0FFFFFFFF  ,
++	DATA_ACCESS_MASK3      : 36'h0FFFFFFFF  ,
++	DATA_ACCESS_MASK4      : 36'h0FFFFFFFF  ,
++	DATA_ACCESS_MASK5      : 36'h0FFFFFFFF  ,
++	DATA_ACCESS_MASK6      : 36'h0FFFFFFFF  ,
++	DATA_ACCESS_MASK7      : 36'h0FFFFFFFF  ,
++	DCCM_BANK_BITS         : 7'h02         ,
++	DCCM_BITS              : 9'h00E        ,
++	DCCM_BYTE_WIDTH        : 7'h04         ,
++	DCCM_DATA_WIDTH        : 10'h020        ,
++	DCCM_ECC_WIDTH         : 7'h07         ,
++	DCCM_ENABLE            : 5'h01         ,
++	DCCM_FDATA_WIDTH       : 10'h027        ,
++	DCCM_INDEX_BITS        : 8'h0A         ,
++	DCCM_NUM_BANKS         : 9'h004        ,
++	DCCM_REGION            : 8'h05         ,
++	DCCM_SADR              : 36'h050000000  ,
++	DCCM_SIZE              : 14'h0010       ,
++	DCCM_WIDTH_BITS        : 6'h02         ,
++`ifdef CALIGHTRA_NO_BP
++	DIV_BIT                : 7'h01         ,
++	DIV_NEW                : 5'h01         ,
++	DMA_BUF_DEPTH          : 7'h02         ,
++`else
++	DIV_BIT                : 7'h04         ,
++	DIV_NEW                : 5'h01         ,
++	DMA_BUF_DEPTH          : 7'h05         ,
++`endif
++	DMA_BUS_ID             : 9'h001        ,
++	DMA_BUS_PRTY           : 6'h02         ,
++	DMA_BUS_TAG            : 8'h01         ,
++	FAST_INTERRUPT_REDIRECT : 5'h01         ,
++	ICACHE_2BANKS          : 5'h01         ,
++	ICACHE_BANK_BITS       : 7'h01         ,
++	ICACHE_BANK_HI         : 7'h03         ,
++	ICACHE_BANK_LO         : 6'h03         ,
++	ICACHE_BANK_WIDTH      : 8'h08         ,
++	ICACHE_BANKS_WAY       : 7'h02         ,
++	ICACHE_BEAT_ADDR_HI    : 8'h05         ,
++	ICACHE_BEAT_BITS       : 8'h03         ,
++	ICACHE_BYPASS_ENABLE   : 5'h01         ,
++	ICACHE_DATA_DEPTH      : 18'h00200      ,
++	ICACHE_DATA_INDEX_LO   : 7'h04         ,
++	ICACHE_DATA_WIDTH      : 11'h040        ,
++	ICACHE_ECC             : 5'h01         ,
++`ifdef CALIGHTRA_PHASE1
++	ICACHE_ENABLE          : 5'h00         ,
++`else
++	ICACHE_ENABLE          : 5'h01         ,
++`endif
++	ICACHE_FDATA_WIDTH     : 11'h047        ,
++	ICACHE_INDEX_HI        : 9'h00C        ,
++	ICACHE_LN_SZ           : 11'h040        ,
++	ICACHE_NUM_BEATS       : 8'h08         ,
++	ICACHE_NUM_BYPASS      : 8'h02         ,
++	ICACHE_NUM_BYPASS_WIDTH : 8'h02         ,
++	ICACHE_NUM_WAYS        : 7'h02         ,
++`ifdef CALIGHTRA_PHASE1
++	ICACHE_ONLY            : 5'h00         ,
++`else
++	ICACHE_ONLY            : 5'h01         ,
++`endif
++	ICACHE_SCND_LAST       : 8'h06         ,
++	ICACHE_SIZE            : 13'h0010       ,
++	ICACHE_STATUS_BITS     : 7'h01         ,
++	ICACHE_TAG_BYPASS_ENABLE : 5'h01         ,
++	ICACHE_TAG_DEPTH       : 17'h00080      ,
++	ICACHE_TAG_INDEX_LO    : 7'h06         ,
++	ICACHE_TAG_LO          : 9'h00D        ,
++	ICACHE_TAG_NUM_BYPASS  : 8'h02         ,
++	ICACHE_TAG_NUM_BYPASS_WIDTH : 8'h02         ,
++	ICACHE_WAYPACK         : 5'h01         ,
++	ICCM_BANK_BITS         : 7'h02         ,
++	ICCM_BANK_HI           : 9'h003        ,
++	ICCM_BANK_INDEX_LO     : 9'h004        ,
++	ICCM_BITS              : 9'h011        ,
++	ICCM_ECC_WIDTH         : 7'h07         ,
++	ICCM_ENABLE            : 5'h00         ,
++	ICCM_ICACHE            : 5'h00         ,
++	ICCM_INDEX_BITS        : 8'h0D         ,
++	ICCM_NUM_BANKS         : 9'h004        ,
++	ICCM_ONLY              : 5'h00         ,
++	ICCM_REGION            : 8'h04         ,
++	ICCM_SADR              : 36'h040000000  ,
++	ICCM_SIZE              : 14'h0080       ,
++	IFU_BUS_ID             : 5'h01         ,
++	IFU_BUS_PRTY           : 6'h02         ,
++	IFU_BUS_TAG            : 8'h03         ,
++	INST_ACCESS_ADDR0      : 36'h000000000  ,
++	INST_ACCESS_ADDR1      : 36'h000000000  ,
++	INST_ACCESS_ADDR2      : 36'h000000000  ,
++	INST_ACCESS_ADDR3      : 36'h000000000  ,
++	INST_ACCESS_ADDR4      : 36'h000000000  ,
++	INST_ACCESS_ADDR5      : 36'h000000000  ,
++	INST_ACCESS_ADDR6      : 36'h000000000  ,
++	INST_ACCESS_ADDR7      : 36'h000000000  ,
++	INST_ACCESS_ENABLE0    : 5'h00         ,
++	INST_ACCESS_ENABLE1    : 5'h00         ,
++	INST_ACCESS_ENABLE2    : 5'h00         ,
++	INST_ACCESS_ENABLE3    : 5'h00         ,
++	INST_ACCESS_ENABLE4    : 5'h00         ,
++	INST_ACCESS_ENABLE5    : 5'h00         ,
++	INST_ACCESS_ENABLE6    : 5'h00         ,
++	INST_ACCESS_ENABLE7    : 5'h00         ,
++	INST_ACCESS_MASK0      : 36'h0FFFFFFFF  ,
++	INST_ACCESS_MASK1      : 36'h0FFFFFFFF  ,
++	INST_ACCESS_MASK2      : 36'h0FFFFFFFF  ,
++	INST_ACCESS_MASK3      : 36'h0FFFFFFFF  ,
++	INST_ACCESS_MASK4      : 36'h0FFFFFFFF  ,
++	INST_ACCESS_MASK5      : 36'h0FFFFFFFF  ,
++	INST_ACCESS_MASK6      : 36'h0FFFFFFFF  ,
++	INST_ACCESS_MASK7      : 36'h0FFFFFFFF  ,
++	LOAD_TO_USE_PLUS1      : 5'h00         ,
++	LSU2DMA                : 5'h00         ,
++	LSU_BUS_ID             : 5'h01         ,
++	LSU_BUS_PRTY           : 6'h02         ,
++	LSU_BUS_TAG            : 8'h03         ,
++`ifdef CALIGHTRA_NO_BP
++	LSU_NUM_NBLOAD         : 9'h002        ,
++	LSU_NUM_NBLOAD_WIDTH   : 7'h01         ,
++	LSU_SB_BITS            : 9'h00E        ,
++	LSU_STBUF_DEPTH        : 8'h02         ,
++`else
++	LSU_NUM_NBLOAD         : 9'h004        ,
++	LSU_NUM_NBLOAD_WIDTH   : 7'h02         ,
++	LSU_SB_BITS            : 9'h00E        ,
++	LSU_STBUF_DEPTH        : 8'h04         ,
++`endif
++`ifdef CALIGHTRA_PHASE1
++	NO_ICCM_NO_ICACHE      : 5'h01         ,
++`else
++	NO_ICCM_NO_ICACHE      : 5'h00         ,
++`endif
++	PIC_2CYCLE             : 5'h00         ,
++	PIC_BASE_ADDR          : 36'h060000000  ,
++	PIC_BITS               : 9'h00F        ,
++`ifdef CALIGHTRA_PHASE1
++	PIC_INT_WORDS          : 8'h01         ,
++	PIC_REGION             : 8'h06         ,
++	PIC_SIZE               : 13'h0020       ,
++	PIC_TOTAL_INT          : 12'h01F        ,
++	PIC_TOTAL_INT_PLUS1    : 13'h0020       ,
++`else
++	PIC_INT_WORDS          : 8'h08         ,
++	PIC_REGION             : 8'h06         ,
++	PIC_SIZE               : 13'h0020       ,
++	PIC_TOTAL_INT          : 12'h0FF        ,
++	PIC_TOTAL_INT_PLUS1    : 13'h0100       ,
++`endif
++	PMP_ENTRIES            : 11'h040        ,
++`ifdef CALIGHTRA_NO_BP
++	RET_STACK_SIZE         : 8'h02         ,
++`else
++	RET_STACK_SIZE         : 8'h08         ,
++`endif
++	SB_BUS_ID              : 5'h01         ,
++	SB_BUS_PRTY            : 6'h02         ,
++	SB_BUS_TAG             : 8'h01         ,
++	SMEPMP                 : 1'h1          ,
++	TIMER_LEGAL_EN         : 5'h01         ,
++	USER_MODE              : 1'h1
++}
+diff --git a/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_mem.sv b/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_mem.sv
+index ff316f4..e466c07 100644
+--- a/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_mem.sv
++++ b/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_mem.sv
+@@ -161,6 +161,18 @@ else  begin
+    assign   ictag_debug_rd_data  = '0 ;
+    assign   ic_debug_rd_data  = '0 ;
+    assign   ic_eccerr      = '0;
++   assign   ic_parerr      = '0;
++   assign   mem_export_local.ic_b_sb_wren = '0;
++   assign   mem_export_local.ic_b_sb_bit_en_vec = '0;
++   assign   mem_export_local.ic_sb_wr_data = '0;
++   assign   mem_export_local.ic_rw_addr_bank_q = '0;
++   assign   mem_export_local.ic_bank_way_clken_final = '0;
++   assign   mem_export_local.ic_bank_way_clken_final_up = '0;
++   assign   mem_export_local.ic_tag_clken_final = '0;
++   assign   mem_export_local.ic_tag_wren_q = '0;
++   assign   mem_export_local.ic_tag_wren_biten_vec = '0;
++   assign   mem_export_local.ic_tag_wr_data = '0;
++   assign   mem_export_local.ic_rw_addr_q = '0;
+ end // else: !if( pt.ICACHE_ENABLE )
+ 
+ 
+diff --git a/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pic_ctrl.sv b/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pic_ctrl.sv
+index 47141d1..0b04859 100644
+--- a/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pic_ctrl.sv
++++ b/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pic_ctrl.sv
+@@ -402,8 +402,13 @@ if (pt.PIC_2CYCLE == 1) begin : genblock
+ end
+ else begin : genblock
+ 
++`ifdef CALIGHTRA_PHASE1
++        logic [pt.PIC_TOTAL_INT_PLUS1+1:0] [INTPRIORITY_BITS-1:0] level_intpend_w_prior_en [NUM_LEVELS:0] /* verilator split_var */;
++        logic [pt.PIC_TOTAL_INT_PLUS1+1:0] [ID_BITS-1:0]          level_intpend_id [NUM_LEVELS:0] /* verilator split_var */;
++`else
+         logic [NUM_LEVELS:0] [pt.PIC_TOTAL_INT_PLUS1+1:0] [INTPRIORITY_BITS-1:0] level_intpend_w_prior_en;
+         logic [NUM_LEVELS:0] [pt.PIC_TOTAL_INT_PLUS1+1:0] [ID_BITS-1:0]          level_intpend_id;
++`endif
+ 
+         assign level_intpend_w_prior_en[0][pt.PIC_TOTAL_INT_PLUS1+1:0] = {{2*INTPRIORITY_BITS{1'b0}},intpend_w_prior_en[pt.PIC_TOTAL_INT_PLUS1-1:0]} ;
+         assign level_intpend_id[0][pt.PIC_TOTAL_INT_PLUS1+1:0] = {{2*ID_BITS{1'b1}},intpend_id[pt.PIC_TOTAL_INT_PLUS1-1:0]} ;
+diff --git a/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pmp.sv b/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pmp.sv
+index 5843b41..d857d64 100644
+--- a/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pmp.sv
++++ b/src/riscv_core/veer_el2/rtl/design/css_mcu0_el2_pmp.sv
+@@ -46,6 +46,11 @@ module css_mcu0_el2_pmp
+     output logic                     pmp_chan_err [PMP_CHANNELS]
+ );
+ 
++`ifdef CALIGHTRA_PHASE1
++  for (genvar c = 0; c < PMP_CHANNELS; c++) begin : g_no_pmp
++    assign pmp_chan_err[c] = 1'b0;
++  end
++`else
+   logic [                33:0]                     csr_pmp_addr_i          [pt.PMP_ENTRIES];
+   logic [                33:0]                     pmp_req_addr_i          [  PMP_CHANNELS];
+ 
+@@ -309,5 +314,6 @@ module css_mcu0_el2_pmp
+         region_perm_check[c]);
+ 
+   end
++`endif
+ 
+ endmodule  // css_mcu0_el2_pmp
+diff --git a/src/riscv_core/veer_el2/rtl/design/dbg/css_mcu0_el2_dbg.sv b/src/riscv_core/veer_el2/rtl/design/dbg/css_mcu0_el2_dbg.sv
+index b4479e6..e187c4f 100644
+--- a/src/riscv_core/veer_el2/rtl/design/dbg/css_mcu0_el2_dbg.sv
++++ b/src/riscv_core/veer_el2/rtl/design/dbg/css_mcu0_el2_dbg.sv
+@@ -139,7 +139,47 @@ import css_mcu0_el2_pkg::*;
+    /*pragma coverage on*/
+ );
+ 
+-
++`ifdef CALIGHTRA_PHASE1
++   assign dbg_cmd_addr   = 32'h0;
++   assign dbg_cmd_wrdata = 32'h0;
++   assign dbg_cmd_valid  = 1'b0;
++   assign dbg_cmd_write  = 1'b0;
++   assign dbg_cmd_type   = 2'b0;
++   assign dbg_cmd_size   = 2'b0;
++   assign dbg_core_rst_l = 1'b1;
++   assign dbg_dma_bubble = 1'b0;
++   assign dbg_halt_req   = 1'b0;
++   assign dbg_resume_req = 1'b0;
++   assign dmi_reg_rdata  = 32'h0;
++   assign sb_axi_awvalid = 1'b0;
++   assign sb_axi_awid    = '0;
++   assign sb_axi_awaddr  = 32'h0;
++   assign sb_axi_awregion= 4'h0;
++   assign sb_axi_awlen   = 8'h0;
++   assign sb_axi_awsize  = 3'h0;
++   assign sb_axi_awburst = 2'h0;
++   assign sb_axi_awlock  = 1'b0;
++   assign sb_axi_awcache = 4'h0;
++   assign sb_axi_awprot  = 3'h0;
++   assign sb_axi_awqos   = 4'h0;
++   assign sb_axi_wvalid  = 1'b0;
++   assign sb_axi_wdata   = 64'h0;
++   assign sb_axi_wstrb   = 8'h0;
++   assign sb_axi_wlast   = 1'b1;
++   assign sb_axi_bready  = 1'b1;
++   assign sb_axi_arvalid = 1'b0;
++   assign sb_axi_arid    = '0;
++   assign sb_axi_araddr  = 32'h0;
++   assign sb_axi_arregion= 4'h0;
++   assign sb_axi_arlen   = 8'h0;
++   assign sb_axi_arsize  = 3'h0;
++   assign sb_axi_arburst = 2'h0;
++   assign sb_axi_arlock  = 1'b0;
++   assign sb_axi_arcache = 4'h0;
++   assign sb_axi_arprot  = 3'h0;
++   assign sb_axi_arqos   = 4'h0;
++   assign sb_axi_rready  = 1'b1;
++`else
+    typedef enum logic [3:0] {IDLE=4'h0, HALTING=4'h1, HALTED=4'h2, CORE_CMD_START=4'h3, CORE_CMD_WAIT=4'h4, SB_CMD_START=4'h5, SB_CMD_SEND=4'h6, SB_CMD_RESP=4'h7, CMD_DONE=4'h8, RESUMING=4'h9} state_t;
+    typedef enum logic [3:0] {SBIDLE=4'h0, WAIT_RD=4'h1, WAIT_WR=4'h2, CMD_RD=4'h3, CMD_WR=4'h4, CMD_WR_ADDR=4'h5, CMD_WR_DATA=4'h6, RSP_RD=4'h7, RSP_WR=4'h8, DONE=4'h9} sb_state_t;
+ 
+@@ -785,4 +825,5 @@ import css_mcu0_el2_pkg::*;
+    assert_b2b_haltreq: assert property (@(posedge clk) disable iff (~(rst_l)) (##1 dbg_halt_req |=> ~dbg_halt_req));  // One cycle delay to fix weird issue around reset
+    assert_halt_resume_onehot: assert #0 ($onehot0({dbg_halt_req, dbg_resume_req}));
+ `endif
++`endif
+ endmodule
+diff --git a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_decode_ctl.sv b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_decode_ctl.sv
+index 65084f0..bd018f2 100644
+--- a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_decode_ctl.sv
++++ b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_decode_ctl.sv
+@@ -707,8 +707,12 @@ end : cam_array
+ 
+       for (int i=0; i<NBLOAD_SIZE; i++) begin
+          dec_nonblock_load_waddr[4:0] |= ({5{nonblock_load_write[i]}} & cam[i].rd[4:0]);
++`ifdef CALIGHTRA_NO_BP
++         i0_nonblock_load_stall |= cam[i].valid | lsu_nonblock_load_valid_m;
++`else
+          i0_nonblock_load_stall |= dec_i0_rs1_en_d & cam[i].valid & (cam[i].rd[4:0] == i0r.rs1[4:0]);
+          i0_nonblock_load_stall |= dec_i0_rs2_en_d & cam[i].valid & (cam[i].rd[4:0] == i0r.rs2[4:0]);
++`endif
+       end
+ 
+    end
+@@ -1379,8 +1383,12 @@ end : cam_array
+ 
+    // nonblocking div scheme
+ 
++`ifdef CALIGHTRA_NO_BP
++   assign i0_nonblock_div_stall  = div_active;
++`else
+    assign i0_nonblock_div_stall  = (dec_i0_rs1_en_d & div_active & (div_waddr_wb[4:0] == i0r.rs1[4:0])) |
+                                    (dec_i0_rs2_en_d & div_active & (div_waddr_wb[4:0] == i0r.rs2[4:0]));
++`endif
+ 
+ 
+    assign div_flush              = (x_d.i0div & x_d.i0valid & (x_d.i0rd[4:0]==5'b0)                           ) |
+diff --git a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_gpr_ctl.sv b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_gpr_ctl.sv
+index a643729..0d51f8c 100644
+--- a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_gpr_ctl.sv
++++ b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_gpr_ctl.sv
+@@ -72,6 +72,16 @@ import css_mcu0_el2_pkg::*;
+       end
+ 
+      // GPR Write logic
++`ifdef CALIGHTRA_NO_BP
++     for (int j=1; j<32; j++ )  begin
++         w0v[j]     = wen0  & (waddr0[4:0]== 5'(j) );
++         w1v[j]     = wen1  & (waddr1[4:0]== 5'(j) );
++         w2v[j]     = wen2  & (waddr2[4:0]== 5'(j) );
++         gpr_in[j]  = ({32{wen0}} & wd0[31:0]) |
++                      ({32{wen1}} & wd1[31:0]) |
++                      ({32{wen2}} & wd2[31:0]);
++     end
++`else
+      for (int j=1; j<32; j++ )  begin
+          w0v[j]     = wen0  & (waddr0[4:0]== 5'(j) );
+          w1v[j]     = wen1  & (waddr1[4:0]== 5'(j) );
+@@ -80,6 +90,7 @@ import css_mcu0_el2_pkg::*;
+                          ({32{w1v[j]}} & wd1[31:0]) |
+                          ({32{w2v[j]}} & wd2[31:0]);
+      end
++`endif
+    end // always_comb begin
+ 
+ `ifdef RV_ASSERT_ON
+diff --git a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_pmp_ctl.sv b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_pmp_ctl.sv
+index d8df19b..7a8e71a 100644
+--- a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_pmp_ctl.sv
++++ b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_pmp_ctl.sv
+@@ -64,6 +64,14 @@ module css_mcu0_el2_dec_pmp_ctl
+    /*pragma coverage on*/
+    );
+ 
++`ifdef CALIGHTRA_PHASE1
++   assign dec_pmp_read_d = csr_pmpcfg | csr_pmpaddr0 | csr_pmpaddr16 | csr_pmpaddr32 | csr_pmpaddr48;
++   assign dec_pmp_rddata_d = 32'h0;
++   for (genvar entry_idx = 0; entry_idx < pt.PMP_ENTRIES; entry_idx++) begin : g_no_pmp_csr
++      assign pmp_pmpcfg[entry_idx] = '0;
++      assign pmp_pmpaddr[entry_idx] = 32'h0;
++   end
++`else
+    logic wr_pmpcfg_r;
+    logic [3:0] wr_pmpcfg_group;
+ 
+@@ -183,4 +191,5 @@ module css_mcu0_el2_dec_pmp_ctl
+                                      ({32{csr_pmpaddr32}} & pmp_pmpaddr[dec_pmp_rdata_selector[2][PMP_ENTRIES_WIDTH-1:0]]) |
+                                      ({32{csr_pmpaddr48}} & pmp_pmpaddr[dec_pmp_rdata_selector[3][PMP_ENTRIES_WIDTH-1:0]])
+                                      );
++`endif
+ endmodule // dec_pmp_ctl
+diff --git a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_tlu_ctl.sv b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_tlu_ctl.sv
+index d06b7b3..789d2f9 100644
+--- a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_tlu_ctl.sv
++++ b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_tlu_ctl.sv
+@@ -2064,7 +2064,11 @@ end
+ 
+    assign mdseac_en = (lsu_imprecise_error_store_any | lsu_imprecise_error_load_any) & ~nmi_int_detected_f & ~mdseac_locked_f;
+ 
++`ifdef CALIGHTRA_NO_BP
++   assign mdseac[31:0] = '0;
++`else
+    css_mcu0_rvdffe #(32)  mdseac_ff (.*, .en(mdseac_en), .din(lsu_imprecise_error_addr_any[31:0]), .dout(mdseac[31:0]));
++`endif
+ 
+    // ----------------------------------------------------------------------
+    // MPMC (R0W1)
+@@ -2093,6 +2097,29 @@ end
+    assign micect_inc[26:0] = micect[26:0] + {26'b0, ic_perr_r};
+    assign micect_ns =  wr_micect_r ? {csr_sat[31:27], dec_csr_wrdata_r[26:0]} : {micect[31:27], micect_inc[26:0]};
+ 
++`ifdef CALIGHTRA_NO_BP
++   assign micect[31:0] = '0;
++   assign mice_ce_req = 1'b0;
++   assign wr_miccmect_r = 1'b0;
++   assign miccmect_inc[26:0] = '0;
++   assign miccmect_ns = '0;
++   assign miccmect[31:0] = '0;
++   assign miccme_ce_req = 1'b0;
++   assign wr_mdccmect_r = 1'b0;
++   assign mdccmect_inc[26:0] = '0;
++   assign mdccmect_ns = '0;
++   assign mdccmect[31:0] = '0;
++   assign mdccme_ce_req = 1'b0;
++   assign wr_mfdht_r = 1'b0;
++   assign mfdht_ns[5:0] = '0;
++   assign mfdht[5:0] = '0;
++   assign wr_mfdhs_r = 1'b0;
++   assign mfdhs_ns[1:0] = '0;
++   assign mfdhs[1:0] = '0;
++   assign force_halt_ctr[31:0] = '0;
++   assign force_halt_ctr_f[31:0] = '0;
++   assign force_halt = 1'b0;
++`else
+    css_mcu0_rvdffe #(32)  micect_ff (.*, .en(wr_micect_r | ic_perr_r), .din(micect_ns[31:0]), .dout(micect[31:0]));
+ 
+    assign mice_ce_req = |({32'hffffffff << micect[31:27]} & {5'b0, micect[26:0]});
+@@ -2151,6 +2178,7 @@ end
+    css_mcu0_rvdffe #(32)  forcehaltctr_ff (.*, .en(mfdht[0]), .din(force_halt_ctr[31:0]), .dout(force_halt_ctr_f[31:0]));
+ 
+    assign force_halt = mfdht[0] & |(force_halt_ctr_f[31:0] & (32'hffffffff << mfdht[5:1]));
++`endif
+ 
+ 
+    // ----------------------------------------------------------------------
+@@ -2258,6 +2286,30 @@ end
+                           (wr_dcsr_r ? {dec_csr_wrdata_r[15], 3'b0, dec_csr_wrdata_r[11:10], 1'b0, dcsr[8:6], 2'b00, nmi_in_debug_mode | dcsr[3], dec_csr_wrdata_r[2]} :
+                            {dcsr[15:4], nmi_in_debug_mode, dcsr[2]});
+ 
++`ifdef CALIGHTRA_NO_BP
++   assign dcsr[15:2] = '0;
++   assign wr_dpc_r = 1'b0;
++   assign dpc_capture_npc = 1'b0;
++   assign dpc_capture_pc = 1'b0;
++   assign dpc_ns[31:1] = '0;
++   assign dpc[31:1] = '0;
++   assign dicawics_ns[16:0] = '0;
++   assign wr_dicawics_r = 1'b0;
++   assign dicawics[16:0] = '0;
++   assign dicad0_ns[31:0] = '0;
++   assign wr_dicad0_r = 1'b0;
++   assign dicad0[31:0] = '0;
++   assign dicad0h_ns[31:0] = '0;
++   assign wr_dicad0h_r = 1'b0;
++   assign dicad0h[31:0] = '0;
++   assign dicad1[31:0] = '0;
++   assign dec_tlu_ic_diag_pkt = '0;
++   assign icache_rd_valid = 1'b0;
++   assign icache_wr_valid = 1'b0;
++   assign wr_mtsel_r = 1'b0;
++   assign mtsel_ns[1:0] = '0;
++   assign mtsel[1:0] = '0;
++`else
+    css_mcu0_rvdffe #(14)  dcsr_ff (.*, .clk(free_l2clk), .en(enter_debug_halt_req_le | wr_dcsr_r | internal_dbg_halt_mode | take_nmi), .din(dcsr_ns[15:2]), .dout(dcsr[15:2]));
+ 
+    // ----------------------------------------------------------------------
+@@ -2378,6 +2430,7 @@ else
+    assign mtsel_ns[1:0] = wr_mtsel_r ? {dec_csr_wrdata_r[1:0]} : mtsel[1:0];
+ 
+    css_mcu0_rvdff #(2)  mtsel_ff (.*, .clk(csr_wr_clk), .din(mtsel_ns[1:0]), .dout(mtsel[1:0]));
++`endif
+ 
+    // ----------------------------------------------------------------------
+    // MTDATA1 (R/W)
+@@ -2456,6 +2509,23 @@ else
+                                 {mtdata1_t3[9], update_hit_bit_r[3] | mtdata1_t3[8], mtdata1_t3[7:0]};
+ 
+ 
++`ifdef CALIGHTRA_NO_BP
++   assign mtdata1_t0[9:0] = '0;
++   assign mtdata1_t1[9:0] = '0;
++   assign mtdata1_t2[9:0] = '0;
++   assign mtdata1_t3[9:0] = '0;
++   assign mtdata1_tsel_out[31:0] = '0;
++   assign mtdata2_t0[31:0] = '0;
++   assign mtdata2_t1[31:0] = '0;
++   assign mtdata2_t2[31:0] = '0;
++   assign mtdata2_t3[31:0] = '0;
++   assign mtdata2_tsel_out[31:0] = '0;
++   assign trigger_pkt_any = '0;
++   assign wr_mtdata2_t0_r = 1'b0;
++   assign wr_mtdata2_t1_r = 1'b0;
++   assign wr_mtdata2_t2_r = 1'b0;
++   assign wr_mtdata2_t3_r = 1'b0;
++`else
+    css_mcu0_rvdffe #(10)  mtdata1_t0_ff (.*, .en(trigger_enabled[0] | wr_mtdata1_t0_r), .din(mtdata1_t0_ns[9:0]), .dout(mtdata1_t0[9:0]));
+    css_mcu0_rvdffe #(10)  mtdata1_t1_ff (.*, .en(trigger_enabled[1] | wr_mtdata1_t1_r), .din(mtdata1_t1_ns[9:0]), .dout(mtdata1_t1[9:0]));
+    css_mcu0_rvdffe #(10)  mtdata1_t2_ff (.*, .en(trigger_enabled[2] | wr_mtdata1_t2_r), .din(mtdata1_t2_ns[9:0]), .dout(mtdata1_t2[9:0]));
+@@ -2522,6 +2592,7 @@ else
+    assign trigger_pkt_any[1].tdata2[31:0] = mtdata2_t1[31:0];
+    assign trigger_pkt_any[2].tdata2[31:0] = mtdata2_t2[31:0];
+    assign trigger_pkt_any[3].tdata2[31:0] = mtdata2_t3[31:0];
++`endif
+ 
+ 
+    //----------------------------------------------------------------------
+@@ -2734,6 +2805,58 @@ else
+    assign dec_tlu_perfcnt2 = mhpmc_inc_r_d1[2] & ~(perfcnt_halted_d1 & ~perfcnt_during_sleep[2]);
+    assign dec_tlu_perfcnt3 = mhpmc_inc_r_d1[3] & ~(perfcnt_halted_d1 & ~perfcnt_during_sleep[3]);
+ 
++`ifdef CALIGHTRA_NO_BP
++   assign mhpmc3_wr_en0 = 1'b0;
++   assign mhpmc3_wr_en1 = 1'b0;
++   assign mhpmc3_wr_en = 1'b0;
++   assign mhpmc3_incr = '0;
++   assign mhpmc3_ns = '0;
++   assign mhpmc3 = '0;
++   assign mhpmc3h_wr_en0 = 1'b0;
++   assign mhpmc3h_wr_en = 1'b0;
++   assign mhpmc3h_ns = '0;
++   assign mhpmc3h = '0;
++   assign mhpmc4_wr_en0 = 1'b0;
++   assign mhpmc4_wr_en1 = 1'b0;
++   assign mhpmc4_wr_en = 1'b0;
++   assign mhpmc4_incr = '0;
++   assign mhpmc4_ns = '0;
++   assign mhpmc4 = '0;
++   assign mhpmc4h_wr_en0 = 1'b0;
++   assign mhpmc4h_wr_en = 1'b0;
++   assign mhpmc4h_ns = '0;
++   assign mhpmc4h = '0;
++   assign mhpmc5_wr_en0 = 1'b0;
++   assign mhpmc5_wr_en1 = 1'b0;
++   assign mhpmc5_wr_en = 1'b0;
++   assign mhpmc5_incr = '0;
++   assign mhpmc5_ns = '0;
++   assign mhpmc5 = '0;
++   assign mhpmc5h_wr_en0 = 1'b0;
++   assign mhpmc5h_wr_en = 1'b0;
++   assign mhpmc5h_ns = '0;
++   assign mhpmc5h = '0;
++   assign mhpmc6_wr_en0 = 1'b0;
++   assign mhpmc6_wr_en1 = 1'b0;
++   assign mhpmc6_wr_en = 1'b0;
++   assign mhpmc6_incr = '0;
++   assign mhpmc6_ns = '0;
++   assign mhpmc6 = '0;
++   assign mhpmc6h_wr_en0 = 1'b0;
++   assign mhpmc6h_wr_en = 1'b0;
++   assign mhpmc6h_ns = '0;
++   assign mhpmc6h = '0;
++   assign zero_event_r = 1'b0;
++   assign event_r = '0;
++   assign wr_mhpme3_r = 1'b0;
++   assign wr_mhpme4_r = 1'b0;
++   assign wr_mhpme5_r = 1'b0;
++   assign wr_mhpme6_r = 1'b0;
++   assign mhpme3 = '0;
++   assign mhpme4 = '0;
++   assign mhpme5 = '0;
++   assign mhpme6 = '0;
++`else
+    // ----------------------------------------------------------------------
+    // MHPMC3H(RW), MHPMC3(RW)
+    // [63:32][31:0] : Hardware Performance Monitor Counter 3
+@@ -2833,6 +2956,7 @@ else
+ 
+    assign wr_mhpme6_r = dec_csr_wen_r_mod & (dec_csr_wraddr_r[11:0] == MHPME6);
+    css_mcu0_rvdffe #(10)  mhpme6_ff (.*, .en(wr_mhpme6_r), .din(event_r[9:0]), .dout(mhpme6[9:0]));
++`endif
+ 
+    //----------------------------------------------------------------------
+    // Performance Monitor Counters section ends
+diff --git a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_trigger.sv b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_trigger.sv
+index 2120f87..2238260 100644
+--- a/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_trigger.sv
++++ b/src/riscv_core/veer_el2/rtl/design/dec/css_mcu0_el2_dec_trigger.sv
+@@ -34,6 +34,9 @@ import css_mcu0_el2_pkg::*;
+    output logic [3:0] dec_i0_trigger_match_d                 // Trigger match
+ );
+ 
++`ifdef CALIGHTRA_PHASE1
++   assign dec_i0_trigger_match_d = 4'b0;
++`else
+    logic [3:0][31:0]  dec_i0_match_data;
+    logic [3:0]        dec_i0_trigger_data_match;
+ 
+@@ -44,6 +47,7 @@ import css_mcu0_el2_pkg::*;
+ 
+       assign dec_i0_trigger_match_d[i] = trigger_pkt_any[i].execute & trigger_pkt_any[i].m & dec_i0_trigger_data_match[i];
+    end
++`endif
+ 
+ endmodule // css_mcu0_el2_dec_trigger
+ 
+diff --git a/src/riscv_core/veer_el2/rtl/design/dmi/css_mcu0_dmi_wrapper.v b/src/riscv_core/veer_el2/rtl/design/dmi/css_mcu0_dmi_wrapper.v
+index bd2ea8c..46be1f4 100644
+--- a/src/riscv_core/veer_el2/rtl/design/dmi/css_mcu0_dmi_wrapper.v
++++ b/src/riscv_core/veer_el2/rtl/design/dmi/css_mcu0_dmi_wrapper.v
+@@ -42,10 +42,15 @@ module css_mcu0_dmi_wrapper(
+   output             dmi_hard_reset  
+ );
+ 
+-
+-  
+-
+-
++`ifdef CALIGHTRA_PHASE1
++  assign tdo = 1'b0;
++  assign tdoEnable = 1'b0;
++  assign reg_wr_data = 32'b0;
++  assign reg_wr_addr = 7'b0;
++  assign reg_en = 1'b0;
++  assign reg_wr_en = 1'b0;
++  assign dmi_hard_reset = 1'b0;
++`else
+   //Wire Declaration
+   wire                     rd_en;
+   wire                     wr_en;
+@@ -84,5 +89,6 @@ module css_mcu0_dmi_wrapper(
+     .reg_en(reg_en),                          // 1 bit  Write interface bit
+     .reg_wr_en(reg_wr_en)                          // 1 bit  Write enable
+   );
++`endif
+ 
+ endmodule
+diff --git a/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu.sv b/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu.sv
+index 3f518d7..8cad06f 100644
+--- a/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu.sv
++++ b/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu.sv
+@@ -292,6 +292,16 @@ import css_mcu0_el2_pkg::*;
+    end
+    else begin : bpred
+       assign ifu_bp_hit_taken_f = '0;
++      assign ifu_bp_btb_target_f = '0;
++      assign ifu_bp_fghr_f = '0;
++      assign ifu_bp_way_f = '0;
++      assign ifu_bp_ret_f = '0;
++      assign ifu_bp_hist1_f = '0;
++      assign ifu_bp_hist0_f = '0;
++      assign ifu_bp_pc4_f = '0;
++      assign ifu_bp_valid_f = '0;
++      assign ifu_bp_poffset_f = '0;
++      assign ifu_bp_fa_index_f = '0;
+       // verif wires
+       logic btb_wr_en_way0, btb_wr_en_way1,dec_tlu_error_wb;
+       logic [16+pt.BTB_BTAG_SIZE:0] btb_wr_data;
+diff --git a/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_aln_ctl.sv b/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_aln_ctl.sv
+index e35bf4b..230eae5 100644
+--- a/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_aln_ctl.sv
++++ b/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_aln_ctl.sv
+@@ -667,6 +667,7 @@ else begin
+    assign ifu_i0_bp_index = '0;
+    assign ifu_i0_bp_fghr = '0;
+    assign ifu_i0_bp_btag = '0;
++   assign ifu_i0_fa_index = '0;
+ end // else: !if(pt.BTB_ENABLE==1)
+ 
+    // decompress
+diff --git a/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_ifc_ctl.sv b/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_ifc_ctl.sv
+index 695d3e1..5a26568 100644
+--- a/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_ifc_ctl.sv
++++ b/src/riscv_core/veer_el2/rtl/design/ifu/css_mcu0_el2_ifu_ifc_ctl.sv
+@@ -243,7 +243,11 @@ end
+    assign ifc_region_acc_fault_bf  = 1'b0 ;
+  end
+ 
++`ifdef CALIGHTRA_PHASE1
++   assign ifc_fetch_uncacheable_bf = 1'b1;
++`else
+    assign ifc_fetch_uncacheable_bf =  ~dec_tlu_mrac_ff[{ifc_fetch_addr_bf[31:28] , 1'b0 }]  ; // bit 0 of each region description is the cacheable bit
++`endif
+ 
+ endmodule // css_mcu0_el2_ifu_ifc_ctl
+ 
+diff --git a/src/riscv_core/veer_el2/rtl/design/lib/css_mcu0_beh_lib.sv b/src/riscv_core/veer_el2/rtl/design/lib/css_mcu0_beh_lib.sv
+index ff22ee1..f5c1da1 100644
+--- a/src/riscv_core/veer_el2/rtl/design/lib/css_mcu0_beh_lib.sv
++++ b/src/riscv_core/veer_el2/rtl/design/lib/css_mcu0_beh_lib.sv
+@@ -660,6 +660,9 @@ module css_mcu0_rvecc_encode  (
+                       input [31:0] din,
+                       output [6:0] ecc_out
+                       );
++`ifdef CALIGHTRA_PHASE1
++   assign ecc_out = 7'b0;
++`else
+ logic [5:0] ecc_out_temp;
+ 
+    assign ecc_out_temp[0] = din[0]^din[1]^din[3]^din[4]^din[6]^din[8]^din[10]^din[11]^din[13]^din[15]^din[17]^din[19]^din[21]^din[23]^din[25]^din[26]^din[28]^din[30];
+@@ -670,6 +673,7 @@ logic [5:0] ecc_out_temp;
+    assign ecc_out_temp[5] = din[26]^din[27]^din[28]^din[29]^din[30]^din[31];
+ 
+    assign ecc_out[6:0] = {(^din[31:0])^(^ecc_out_temp[5:0]),ecc_out_temp[5:0]};
++`endif
+ 
+ endmodule // css_mcu0_rvecc_encode
+ 
+@@ -685,6 +689,12 @@ module css_mcu0_rvecc_decode  (
+ 
+                       );
+ 
++`ifdef CALIGHTRA_PHASE1
++   assign dout = din;
++   assign ecc_out = 7'b0;
++   assign single_ecc_error = 1'b0;
++   assign double_ecc_error = 1'b0;
++`else
+    logic [6:0]                      ecc_check;
+    logic [38:0]                     error_mask;
+    logic [38:0]                     din_plus_parity, dout_plus_parity;
+@@ -714,6 +724,7 @@ module css_mcu0_rvecc_decode  (
+    assign dout_plus_parity[38:0] = single_ecc_error ? (error_mask[38:0] ^ din_plus_parity[38:0]) : din_plus_parity[38:0];
+    assign dout[31:0]             = {dout_plus_parity[37:32], dout_plus_parity[30:16], dout_plus_parity[14:8], dout_plus_parity[6:4], dout_plus_parity[2]};
+    assign ecc_out[6:0]           = {(dout_plus_parity[38] ^ (ecc_check[6:0] == 7'b1000000)), dout_plus_parity[31], dout_plus_parity[15], dout_plus_parity[7], dout_plus_parity[3], dout_plus_parity[1:0]};
++`endif
+ 
+ endmodule // css_mcu0_rvecc_decode
+ 
+@@ -721,6 +732,9 @@ module css_mcu0_rvecc_encode_64  (
+                       input [63:0] din,
+                       output [6:0] ecc_out
+                       );
++`ifdef CALIGHTRA_PHASE1
++   assign ecc_out = 7'b0;
++`else
+   assign ecc_out[0] = din[0]^din[1]^din[3]^din[4]^din[6]^din[8]^din[10]^din[11]^din[13]^din[15]^din[17]^din[19]^din[21]^din[23]^din[25]^din[26]^din[28]^din[30]^din[32]^din[34]^din[36]^din[38]^din[40]^din[42]^din[44]^din[46]^din[48]^din[50]^din[52]^din[54]^din[56]^din[57]^din[59]^din[61]^din[63];
+ 
+    assign ecc_out[1] = din[0]^din[2]^din[3]^din[5]^din[6]^din[9]^din[10]^din[12]^din[13]^din[16]^din[17]^din[20]^din[21]^din[24]^din[25]^din[27]^din[28]^din[31]^din[32]^din[35]^din[36]^din[39]^din[40]^din[43]^din[44]^din[47]^din[48]^din[51]^din[52]^din[55]^din[56]^din[58]^din[59]^din[62]^din[63];
+@@ -734,6 +748,7 @@ module css_mcu0_rvecc_encode_64  (
+    assign ecc_out[5] = din[26]^din[27]^din[28]^din[29]^din[30]^din[31]^din[32]^din[33]^din[34]^din[35]^din[36]^din[37]^din[38]^din[39]^din[40]^din[41]^din[42]^din[43]^din[44]^din[45]^din[46]^din[47]^din[48]^din[49]^din[50]^din[51]^din[52]^din[53]^din[54]^din[55]^din[56];
+ 
+    assign ecc_out[6] = din[57]^din[58]^din[59]^din[60]^din[61]^din[62]^din[63];
++`endif
+ 
+ endmodule // css_mcu0_rvecc_encode_64
+ 
+@@ -745,6 +760,9 @@ module css_mcu0_rvecc_decode_64  (
+                       output        ecc_error
+                       );
+ 
++`ifdef CALIGHTRA_PHASE1
++   assign ecc_error = 1'b0;
++`else
+    logic [6:0]                      ecc_check;
+ 
+    // Generate the ecc bits
+@@ -763,6 +781,7 @@ module css_mcu0_rvecc_decode_64  (
+    assign ecc_check[6] = ecc_in[6]^din[57]^din[58]^din[59]^din[60]^din[61]^din[62]^din[63];
+ 
+    assign ecc_error = en & (ecc_check[6:0] != 0);  // all errors in the sed_ded case will be recorded as DE
++`endif
+ 
+  endmodule // css_mcu0_rvecc_decode_64
+ 
+diff --git a/src/riscv_core/veer_el2/rtl/design/lsu/css_mcu0_el2_lsu_trigger.sv b/src/riscv_core/veer_el2/rtl/design/lsu/css_mcu0_el2_lsu_trigger.sv
+index 41594fe..5c808f1 100644
+--- a/src/riscv_core/veer_el2/rtl/design/lsu/css_mcu0_el2_lsu_trigger.sv
++++ b/src/riscv_core/veer_el2/rtl/design/lsu/css_mcu0_el2_lsu_trigger.sv
+@@ -35,6 +35,9 @@ import css_mcu0_el2_pkg::*;
+    output logic [3:0]             lsu_trigger_match_m         // match result
+ );
+ 
++`ifdef CALIGHTRA_PHASE1
++   assign lsu_trigger_match_m = 4'b0;
++`else
+    logic               trigger_enable;
+    logic [3:0][31:0]  lsu_match_data;
+    logic [3:0]        lsu_trigger_data_match;
+@@ -63,6 +66,7 @@ import css_mcu0_el2_pkg::*;
+                                         ((trigger_pkt_any[i].store & lsu_pkt_m.store) | (trigger_pkt_any[i].load & lsu_pkt_m.load & ~trigger_pkt_any[i].select)) &
+                                         lsu_trigger_data_match[i];
+    end
++`endif
+ 
+ 
+ endmodule // css_mcu0_el2_lsu_trigger

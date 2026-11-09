@@ -1,6 +1,7 @@
 # Verilator build outputs
 sim/out/
 sim/out_*/
+ss/sim/obj_dir_ss/
 
 # FPGA intermediate synthesis & PnR outputs
 fpga/*.v
@@ -11,6 +12,9 @@ fpga/*.asc
 fpga/*.log
 fpga/*.stat
 !fpga/logs/
+ss/fpga/*.v
+ss/fpga/*.json
+ss/fpga/*.config
 
 # Large unpacked firmware release archive & ELFs (keep .bin images & libcaliptra)
 fw/*.zip
