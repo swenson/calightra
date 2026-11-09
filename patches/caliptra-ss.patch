@@ -120,64 +120,7 @@ index 038243c..52f1694 100644
  
          .mbox_sram_cs(cptra_ss_cptra_core_mbox_sram_cs_o),
          .mbox_sram_we(cptra_ss_cptra_core_mbox_sram_we_o),
-@@ -895,6 +918,48 @@ module caliptra_ss_top
- 
-     assign disable_id_filtering_i = ~cptra_i3c_axi_user_id_filtering_enable_i;
- 
-+`ifdef CALIGHTRA_PHASE1
-+    assign cptra_ss_i3c_s_axi_if_r_sub.arready = 1'b1;
-+    assign cptra_ss_i3c_s_axi_if_r_sub.rdata   = 32'h0;
-+    assign cptra_ss_i3c_s_axi_if_r_sub.rresp   = 2'b00;
-+    assign cptra_ss_i3c_s_axi_if_r_sub.rlast   = 1'b1;
-+    assign cptra_ss_i3c_s_axi_if_r_sub.ruser   = '0;
-+    assign cptra_ss_i3c_s_axi_if_w_sub.awready = 1'b1;
-+    assign cptra_ss_i3c_s_axi_if_w_sub.wready  = 1'b1;
-+    assign cptra_ss_i3c_s_axi_if_w_sub.bresp   = 2'b00;
-+    assign cptra_ss_i3c_s_axi_if_w_sub.buser   = '0;
-+    always_ff @(posedge cptra_ss_clk_i or negedge cptra_ss_rst_b_o) begin
-+        if (!cptra_ss_rst_b_o) begin
-+            cptra_ss_i3c_s_axi_if_r_sub.rvalid <= 1'b0;
-+            cptra_ss_i3c_s_axi_if_r_sub.rid    <= '0;
-+            cptra_ss_i3c_s_axi_if_w_sub.bvalid <= 1'b0;
-+            cptra_ss_i3c_s_axi_if_w_sub.bid    <= '0;
-+        end else begin
-+            if (cptra_ss_i3c_s_axi_if_r_sub.arvalid && cptra_ss_i3c_s_axi_if_r_sub.arready) begin
-+                cptra_ss_i3c_s_axi_if_r_sub.rvalid <= 1'b1;
-+                cptra_ss_i3c_s_axi_if_r_sub.rid    <= cptra_ss_i3c_s_axi_if_r_sub.arid;
-+            end else if (cptra_ss_i3c_s_axi_if_r_sub.rready) begin
-+                cptra_ss_i3c_s_axi_if_r_sub.rvalid <= 1'b0;
-+            end
-+            if (cptra_ss_i3c_s_axi_if_w_sub.awvalid && cptra_ss_i3c_s_axi_if_w_sub.awready) begin
-+                cptra_ss_i3c_s_axi_if_w_sub.bvalid <= 1'b1;
-+                cptra_ss_i3c_s_axi_if_w_sub.bid    <= cptra_ss_i3c_s_axi_if_w_sub.awid;
-+            end else if (cptra_ss_i3c_s_axi_if_w_sub.bready) begin
-+                cptra_ss_i3c_s_axi_if_w_sub.bvalid <= 1'b0;
-+            end
-+        end
-+    end
-+    assign cptra_ss_i3c_scl_o                        = 1'b1;
-+    assign cptra_ss_i3c_sda_o                        = 1'b1;
-+    assign cptra_ss_i3c_scl_oe                       = 1'b0;
-+    assign cptra_ss_i3c_sda_oe                       = 1'b0;
-+    assign cptra_ss_sel_od_pp_o                      = 1'b0;
-+    assign cptra_ss_i3c_recovery_payload_available_o = 1'b0;
-+    assign cptra_ss_i3c_recovery_image_activated_o   = 1'b0;
-+    assign i3c_peripheral_reset                      = 1'b0;
-+    assign i3c_escalated_reset                       = 1'b0;
-+    assign i3c_irq_o                                 = 1'b0;
-+`else
-     i3c_wrapper #(
-         .AxiDataWidth(`AXI_DATA_WIDTH),
-         .AxiAddrWidth(`AXI_ADDR_WIDTH),
-@@ -975,6 +1040,7 @@ module caliptra_ss_top
-         .priv_ids_i                     (priv_ids)
-     
-     );
-+`endif
- 
-     //=========================================================================
-     // MCU ROM Interface Instance (Reuses MCI)
-@@ -1005,10 +1071,17 @@ module caliptra_ss_top
+@@ -1005,10 +1028,17 @@ module caliptra_ss_top
      // The following signal should be also an input coming from LC to MCI
              //lc_hw_rev_t  hw_rev_o;
      mci_top #(

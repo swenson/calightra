@@ -21,6 +21,18 @@
 #include <stdint.h>
 
 // Subsystem AXI Memory Map (soc_address_map_defines.svh)
+#define I3C_BASE_ADDR                       0x20004000UL
+#define I3C_REG_HCI_VERSION                 (I3C_BASE_ADDR + 0x0000UL)
+#define I3C_REG_HC_CONTROL                  (I3C_BASE_ADDR + 0x0004UL)
+#define I3C_REG_REC_PROT_CAP_0              (I3C_BASE_ADDR + 0x0104UL)
+#define I3C_REG_REC_PROT_CAP_1              (I3C_BASE_ADDR + 0x0108UL)
+#define I3C_REG_REC_PROT_CAP_2              (I3C_BASE_ADDR + 0x010CUL)
+#define I3C_REG_REC_DEVICE_STATUS_0         (I3C_BASE_ADDR + 0x0130UL)
+#define I3C_REG_REC_RECOVERY_STATUS         (I3C_BASE_ADDR + 0x0140UL)
+#define I3C_REG_STBY_CR_CONTROL             (I3C_BASE_ADDR + 0x0184UL)
+#define I3C_REG_STBY_CR_DEVICE_ADDR         (I3C_BASE_ADDR + 0x0188UL)
+#define I3C_REG_STBY_CR_VIRT_DEVICE_ADDR    (I3C_BASE_ADDR + 0x01B8UL)
+
 #define MCI_BASE_ADDR                       0x21000000UL
 #define MCI_REG_HW_FLOW_STATUS              (MCI_BASE_ADDR + 0x0034UL)
 #define MCI_REG_SECURITY_STATE              (MCI_BASE_ADDR + 0x0040UL)
@@ -140,6 +152,24 @@ int main(void) {
         return 3;
     }
     mci_puts("[MCU] MCU_SRAM, MCU_MBOX0, and SOC_SRAM verified over AXI4 crossbar\n");
+
+    // Step 2b: Verify & initialize MIPI I3C / OCP Recovery Target (0x2000_4000)
+    uint32_t i3c_ver  = mmio_read32(I3C_REG_HCI_VERSION);
+    uint32_t i3c_cap0 = mmio_read32(I3C_REG_REC_PROT_CAP_0);
+    uint32_t i3c_cap1 = mmio_read32(I3C_REG_REC_PROT_CAP_1);
+    mmio_write32(I3C_REG_STBY_CR_CONTROL,          0x80000000UL); // STBY_CR_ENABLE_INIT = 2
+    mmio_write32(I3C_REG_STBY_CR_DEVICE_ADDR,      0x805A805AUL); // Main target addr = 0x5A
+    mmio_write32(I3C_REG_STBY_CR_VIRT_DEVICE_ADDR, 0x805B805BUL); // Recovery target addr = 0x5B
+    mmio_write32(I3C_REG_REC_DEVICE_STATUS_0,      0x00000003UL); // DEV_STATUS = 0x3 (Recovery Ready)
+    mmio_write32(I3C_REG_REC_RECOVERY_STATUS,      0x00000001UL); // DEV_REC_STATUS = 0x1 (Awaiting Image)
+    mmio_write32(I3C_REG_HC_CONTROL,               0x80000000UL); // BUS_ENABLE = 1
+    mci_puts("[MCU] I3C_VER=");
+    mci_puthex32(i3c_ver);
+    mci_puts(" PROT_CAP=");
+    mci_puthex32(i3c_cap0);
+    mci_putc('/');
+    mci_puthex32(i3c_cap1);
+    mci_puts(" ADDR=0x5a/0x5b BUS_EN=1\n");
     mmio_write32(MCI_REG_GENERIC_OUTPUT_WIRES_0, 0x00000003UL);
 
     // Step 3: Release Caliptra Core from reset by writing 1 to MCI CPTRA_BOOT_GO

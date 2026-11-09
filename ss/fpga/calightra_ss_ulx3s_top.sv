@@ -66,7 +66,17 @@ module calightra_ss_ulx3s_top
     // External QSPI PSRAM / Flash Interface (Header GP/GN)
     output logic       qspi_sck,
     output logic       qspi_ce_n,
-    inout  wire  [3:0] qspi_io
+    inout  wire  [3:0] qspi_io,
+
+    // MIPI I3C / I2C Recovery Target Interface
+    //   - i3c_scl / i3c_sda (SITE F4 / E3): connected on ULX3S PCB to both
+    //     onboard ESP32 (wifi_gpio26 / wifi_gpio25) and header (gp[11] / gn[11]).
+    //   - ext_i3c_scl / ext_i3c_sda (SITE A7 / A8): dedicated external GPIO
+    //     header pins (gp[4] / gn[4]) for external BMC/RoT host or analyzer.
+    inout  wire        i3c_scl,
+    inout  wire        i3c_sda,
+    inout  wire        ext_i3c_scl,
+    inout  wire        ext_i3c_sda
 );
 
     localparam int MCU_SRAM_SIZE_KB  = 4;
@@ -168,8 +178,10 @@ module calightra_ss_ulx3s_top
                     if (spi_bit_cnt == 6'd63) begin
                         spi_cmd_valid <= spi_rx_shreg[62];
                         spi_cmd_write <= spi_rx_shreg[61];
-                        esp_rst_n     <= spi_rx_shreg[60];
-                        spi_cmd_addr  <= {spi_rx_shreg[59:31], 3'b000};
+                        if (!spi_rx_shreg[62] && spi_rx_shreg[61]) begin
+                            esp_rst_n <= spi_rx_shreg[60];
+                        end
+                        spi_cmd_addr  <= {spi_rx_shreg[60:31], 2'b00};
                         spi_cmd_wdata <= {spi_rx_shreg[30:0], mosi_sync[1]};
                     end
                 end
@@ -541,6 +553,13 @@ module calightra_ss_ulx3s_top
     otp_ctrl_pkg::prim_generic_otp_inputs_t cptra_ss_fuse_macro_inputs_o;
     logic        cptra_ss_i3c_recovery_payload_available_o;
     logic        cptra_ss_i3c_recovery_image_activated_o;
+    logic        cptra_ss_i3c_scl_i;
+    logic        cptra_ss_i3c_sda_i;
+    logic        cptra_ss_i3c_scl_o;
+    logic        cptra_ss_i3c_sda_o;
+    logic        cptra_ss_i3c_scl_oe;
+    logic        cptra_ss_i3c_sda_oe;
+    logic        cptra_ss_sel_od_pp_o;
 
     caliptra_ss_top #(
         .MCU_SRAM_SIZE_KB            (MCU_SRAM_SIZE_KB),
@@ -734,13 +753,13 @@ module calightra_ss_ulx3s_top
         .cptra_ss_fuse_macro_outputs_i        ('0),
         .cptra_ss_fuse_macro_inputs_o         (cptra_ss_fuse_macro_inputs_o),
 
-        .cptra_ss_i3c_scl_i                   (1'b1),
-        .cptra_ss_i3c_sda_i                   (1'b1),
-        .cptra_ss_i3c_scl_o                   (),
-        .cptra_ss_i3c_sda_o                   (),
-        .cptra_ss_i3c_scl_oe                  (),
-        .cptra_ss_i3c_sda_oe                  (),
-        .cptra_ss_sel_od_pp_o                 (),
+        .cptra_ss_i3c_scl_i                   (cptra_ss_i3c_scl_i),
+        .cptra_ss_i3c_sda_i                   (cptra_ss_i3c_sda_i),
+        .cptra_ss_i3c_scl_o                   (cptra_ss_i3c_scl_o),
+        .cptra_ss_i3c_sda_o                   (cptra_ss_i3c_sda_o),
+        .cptra_ss_i3c_scl_oe                  (cptra_ss_i3c_scl_oe),
+        .cptra_ss_i3c_sda_oe                  (cptra_ss_i3c_sda_oe),
+        .cptra_ss_sel_od_pp_o                 (cptra_ss_sel_od_pp_o),
         .cptra_ss_i3c_recovery_payload_available_o(cptra_ss_i3c_recovery_payload_available_o),
         .cptra_ss_i3c_recovery_payload_available_i(cptra_ss_i3c_recovery_payload_available_o),
         .cptra_ss_i3c_recovery_image_activated_o  (cptra_ss_i3c_recovery_image_activated_o),
@@ -756,6 +775,24 @@ module calightra_ss_ulx3s_top
         .cptra_error_fatal                    (cptra_error_fatal),
         .cptra_error_non_fatal                (cptra_error_non_fatal)
     );
+
+    // -------------------------------------------------------------------------
+    // Bidirectional I3C / I2C Pad Drivers (ESP32 GPIO26/25 + Header GP11/GN11 & GP4/GN4)
+    // -------------------------------------------------------------------------
+    // SCL pad drive: open-drain low when scl_o==0, or active when scl_oe==1
+    wire i3c_scl_drive_en = cptra_ss_i3c_scl_oe | ~cptra_ss_i3c_scl_o;
+    // SDA pad drive: sda_oe from i3c_wrapper encodes open-drain (drive 0, high-Z 1)
+    // and push-pull (drive 0 and 1 when sel_od_pp_o==1)
+    wire i3c_sda_drive_en = cptra_ss_i3c_sda_oe | (cptra_ss_sel_od_pp_o & cptra_ss_i3c_sda_oe);
+
+    assign i3c_scl     = i3c_scl_drive_en ? cptra_ss_i3c_scl_o : 1'bz;
+    assign i3c_sda     = i3c_sda_drive_en ? cptra_ss_i3c_sda_o : 1'bz;
+    assign ext_i3c_scl = i3c_scl_drive_en ? cptra_ss_i3c_scl_o : 1'bz;
+    assign ext_i3c_sda = i3c_sda_drive_en ? cptra_ss_i3c_sda_o : 1'bz;
+
+    // Wired-AND input across ESP32/GP11-GN11 and GP4-GN4 (both pulled up via PULLMODE=UP)
+    assign cptra_ss_i3c_scl_i = i3c_scl & ext_i3c_scl;
+    assign cptra_ss_i3c_sda_i = i3c_sda & ext_i3c_sda;
 
     // -------------------------------------------------------------------------
     // Status LEDs & FTDI 115200-Baud UART Serializer

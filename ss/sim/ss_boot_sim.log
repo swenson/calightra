@@ -1,4 +1,4 @@
-[SIM] Loaded MCU ROM (1616 bytes, 202 64-bit words) from ../fw/mcu_rom.bin
+[SIM] Loaded MCU ROM (1792 bytes, 224 64-bit words) from ../fw/mcu_rom.bin
 [SIM] Loaded Caliptra Core ROM (98304 bytes, 12288 64-bit words) from ../../fw/caliptra-rom.bin
 [SIM] Starting Calightra-SS simulation (max_cycles = 10000000)...
 [SIM @      15] Asserted cptra_ss_pwrgood_i = 1
@@ -10,40 +10,41 @@
 [MCU] OTP_STATUS=0x40000000 LC_STATUS=0x00000003 LC_STATE=0x02108421 LC_CNT=0x00000001
 [SIM @    9967] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000002
 [MCU] MCU_SRAM, MCU_MBOX0, and SOC_SRAM verified over AXI4 crossbar
-[SIM @   13929] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000003
+[MCU] I3C_VER=0x00000120 PROT_CAP=0x2050434f/0x56434552 ADDR=0x5a/0x5b BUS_EN=1
+[SIM @   19773] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000003
 [MCU] Asserting MCI CPTRA_BOOT_GO (0x21000108) = 1
-[SIM @   16721] MCI released Caliptra Core reset (cptra_ss_mci_cptra_rst_b_o = 1)
-[SIM @   16730] Caliptra Core asserted ready_for_fuses = 1
-[SIM @   16741] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000004
+[SIM @   22552] MCI released Caliptra Core reset (cptra_ss_mci_cptra_rst_b_o = 1)
+[SIM @   22561] Caliptra Core asserted ready_for_fuses = 1
+[SIM @   22572] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000004
 [MCU] Waiting for Caliptra Core READY_FOR_FUSES...
 [MCU] Caliptra Core READY_FOR_FUSES=1! Programming WDT, FUSE_WR_DONE & BOOTFSM_GO
-[SIM @   24133] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000005
+[SIM @   29979] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000005
 [MCU] CPTRA_BOOT_STATUS=0x00000000 FLOW=0x08000000 ETRNG=0x00000000
-[SIM @  500000] Progress: 240.08 s elapsed (2.08 kHz), mci_out=0x00000005
+[SIM @  500000] Progress: 237.30 s elapsed (2.11 kHz), mci_out=0x00000005
 [MCU] CPTRA_BOOT_STATUS=0x00000181 FLOW=0x08000000 ETRNG=0x00000003
 [MCU] CPTRA_BOOT_STATUS=0x00000182 FLOW=0x08000000 ETRNG=0x00000006
-[SIM @ 1000000] Progress: 467.00 s elapsed (2.14 kHz), mci_out=0x00000005
-[SIM @ 1500000] Progress: 696.78 s elapsed (2.15 kHz), mci_out=0x00000005
-[SIM @ 2000000] Progress: 926.03 s elapsed (2.16 kHz), mci_out=0x00000005
-[SIM @ 2500000] Progress: 1155.12 s elapsed (2.16 kHz), mci_out=0x00000005
-[SIM @ 3000000] Progress: 1385.54 s elapsed (2.17 kHz), mci_out=0x00000005
-[SIM @ 3500000] Progress: 1614.99 s elapsed (2.17 kHz), mci_out=0x00000005
-[SIM @ 4000000] Progress: 1836.25 s elapsed (2.18 kHz), mci_out=0x00000005
-[SIM @ 4500000] Progress: 2054.93 s elapsed (2.19 kHz), mci_out=0x00000005
-[SIM @ 5000000] Progress: 2275.25 s elapsed (2.20 kHz), mci_out=0x00000005
+[SIM @ 1000000] Progress: 466.69 s elapsed (2.14 kHz), mci_out=0x00000005
+[SIM @ 1500000] Progress: 698.62 s elapsed (2.15 kHz), mci_out=0x00000005
+[SIM @ 2000000] Progress: 933.17 s elapsed (2.14 kHz), mci_out=0x00000005
+[SIM @ 2500000] Progress: 1164.73 s elapsed (2.15 kHz), mci_out=0x00000005
+[SIM @ 3000000] Progress: 1396.78 s elapsed (2.15 kHz), mci_out=0x00000005
+[SIM @ 3500000] Progress: 1627.74 s elapsed (2.15 kHz), mci_out=0x00000005
+[SIM @ 4000000] Progress: 1849.32 s elapsed (2.16 kHz), mci_out=0x00000005
+[SIM @ 4500000] Progress: 2068.03 s elapsed (2.18 kHz), mci_out=0x00000005
+[SIM @ 5000000] Progress: 2291.26 s elapsed (2.18 kHz), mci_out=0x00000005
 [MCU] CPTRA_BOOT_STATUS=0x00000183 FLOW=0x08000000 ETRNG=0x00000015
 [MCU] CPTRA_BOOT_STATUS=0x00000101 FLOW=0x08000000 ETRNG=0x00000015
 
-[SIM @ 5124565] Caliptra Core asserted ready_for_mb_processing = 1!
+[SIM @ 5129871] Caliptra Core asserted ready_for_mb_processing = 1!
 [MCU] Total ETRNG requests serviced: 0x00000015
 [MCU] Caliptra-SS Full Boot Complete (READY_FOR_MB_PROCESSING=1)!
-[SIM @ 5131301] MCI GENERIC_OUTPUT_WIRES_0 = 0xca1100aa
+[SIM @ 5136586] MCI GENERIC_OUTPUT_WIRES_0 = 0xca1100aa
 
-[SIM @ 5131428] MCU signaled TEST PASS (0xFF) via MCI DEBUG_OUT!
+[SIM @ 5136713] MCU signaled TEST PASS (0xFF) via MCI DEBUG_OUT!
 ================================================================
 Calightra-SS Simulation Summary:
-  Total Cycles            : 5131428
-  Wall-Clock Time         : 2332.36 s (2.20 kHz)
+  Total Cycles            : 5136713
+  Wall-Clock Time         : 2351.17 s (2.18 kHz)
   MCU Reset Released      : YES
   Caliptra Reset Released : YES
   ready_for_fuses         : YES

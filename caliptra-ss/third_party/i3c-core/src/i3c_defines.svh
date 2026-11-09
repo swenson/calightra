@@ -5,6 +5,15 @@
 `ifndef I3C_CONFIG
 `define I3C_CONFIG
 
+`ifdef CALIGHTRA_ICE40
+  `define CMD_FIFO_DEPTH   4
+  `define RX_FIFO_DEPTH    8
+  `define TX_FIFO_DEPTH    8
+  `define RESP_FIFO_DEPTH  4
+  `define IBI_FIFO_DEPTH   4
+  `define DAT_DEPTH        4
+  `define DCT_DEPTH        4
+`else
   `define CMD_FIFO_DEPTH   64
   `define RX_FIFO_DEPTH    64
   `define TX_FIFO_DEPTH    64
@@ -12,6 +21,7 @@
   `define IBI_FIFO_DEPTH   64
   `define DAT_DEPTH        128
   `define DCT_DEPTH        128
+`endif
   `define I3C_USE_AXI      1
   `define AXI_ADDR_WIDTH   12
   `define AXI_DATA_WIDTH   32

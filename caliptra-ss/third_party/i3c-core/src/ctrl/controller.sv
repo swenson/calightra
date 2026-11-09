@@ -461,6 +461,31 @@ module controller
   assign recovery_mode = (hwif_rec_i.DEVICE_STATUS_0.DEV_STATUS.value == RecoveryMode);
 
   // Active controller
+`ifdef CALIGHTRA_ICE40
+  assign ctrl_scl_o[0]          = 1'b1;
+  assign ctrl_scl_o[1]          = 1'b1;
+  assign ctrl_sda_o[0]          = 1'b1;
+  assign ctrl_sda_o[1]          = 1'b1;
+  assign ctrl_sel_od_pp_i[0]    = 1'b0;
+  assign ctrl_sel_od_pp_i[1]    = 1'b0;
+  assign hci_cmd_queue_rready_o = 1'b0;
+  assign hci_rx_queue_wvalid_o  = 1'b0;
+  assign hci_rx_queue_wdata_o   = '0;
+  assign hci_tx_queue_rready_o  = 1'b0;
+  assign hci_resp_queue_wvalid_o = 1'b0;
+  assign hci_resp_queue_wdata_o = '0;
+  assign hci_ibi_queue_wvalid_o = 1'b0;
+  assign hci_ibi_queue_wdata_o  = '0;
+  assign dat_read_valid_hw_o    = 1'b0;
+  assign dat_index_hw_o         = '0;
+  assign dct_write_valid_hw_o   = 1'b0;
+  assign dct_read_valid_hw_o    = 1'b0;
+  assign dct_index_hw_o         = '0;
+  assign dct_wdata_hw_o         = '0;
+  assign i3c_fsm_idle_o         = 1'b1;
+  assign err                    = '0;
+  assign irq                    = '0;
+`else
   controller_active xcontroller_active (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
@@ -537,6 +562,7 @@ module controller
     .t_bus_idle_i(t_bus_idle),
     .t_bus_available_i(t_bus_available)
   );
+`endif
 
   // Standby (Secondary) Controller
   controller_standby xcontroller_standby (

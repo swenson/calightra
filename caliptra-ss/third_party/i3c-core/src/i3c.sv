@@ -95,7 +95,11 @@ module i3c
     parameter int unsigned TtiTxThldWidth = 3,
     parameter int unsigned TtiIbiThldWidth = 8,
 
+`ifdef CALIGHTRA_ICE40
+    parameter int unsigned IndirectFifoDepth = 8
+`else
     parameter int unsigned IndirectFifoDepth = 64
+`endif
 ) (
     input clk_i,  // clock
     input rst_ni, // active low reset

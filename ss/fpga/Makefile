@@ -6,7 +6,7 @@
 
 TOP_ULX3S ?= calightra_ss_ulx3s_top
 VF        ?= calightra_ss_fpga.vf
-LPF       ?= ../../fpga/ulx3s_v20.lpf
+LPF       ?= ulx3s_v20.lpf
 
 DEFINES   := --define CALIGHTRA_PHASE1 \
              --define CALIGHTRA_NO_COUNTERMEASURES \

@@ -390,6 +390,95 @@ module hci
       .hwif_out(hwif_out_o)
   );
 
+`ifdef CALIGHTRA_ICE40
+  assign dat_rdata_hw_o   = '0;
+  assign dct_rdata_hw_o   = '0;
+  assign dat_mem_sink_o   = '0;
+  assign dct_mem_sink_o   = '0;
+  assign dat_i.rd_data    = '0;
+  assign dat_i.rd_ack     = dat_o.req & ~dat_o.req_is_wr;
+  assign dat_i.wr_ack     = dat_o.req & dat_o.req_is_wr;
+  assign dct_i.rd_data    = '0;
+  assign dct_i.rd_ack     = dct_o.req & ~dct_o.req_is_wr;
+  assign dct_i.wr_ack     = dct_o.req & dct_o.req_is_wr;
+
+  assign hci_resp_full_o            = 1'b0;
+  assign hci_resp_depth_o           = '0;
+  assign hci_resp_ready_thld_trig_o = 1'b0;
+  assign hci_resp_empty_o           = 1'b1;
+  assign hci_resp_wready_o          = 1'b0;
+  assign resp_rd_ack                = resp_req;
+  assign resp_rd_data               = '0;
+  assign hci_resp_ready_thld_o      = '0;
+  assign resp_reset_ctrl_we         = 1'b0;
+  assign resp_reset_ctrl_next       = 1'b0;
+
+  assign hci_cmd_full_o             = 1'b0;
+  assign hci_cmd_depth_o            = '0;
+  assign hci_cmd_ready_thld_trig_o  = 1'b0;
+  assign hci_cmd_empty_o            = 1'b1;
+  assign hci_cmd_rvalid_o           = 1'b0;
+  assign hci_cmd_rdata_o            = '0;
+  assign cmd_wr_ack                 = cmd_req;
+  assign hci_cmd_ready_thld_o       = '0;
+  assign cmd_reset_ctrl_we          = 1'b0;
+  assign cmd_reset_ctrl_next        = 1'b0;
+
+  assign hci_rx_full_o              = 1'b0;
+  assign hci_rx_depth_o             = '0;
+  assign hci_rx_start_thld_trig_o   = 1'b0;
+  assign hci_rx_ready_thld_trig_o   = 1'b0;
+  assign hci_rx_empty_o             = 1'b1;
+  assign hci_rx_wready_o            = 1'b0;
+  assign rx_rd_ack                  = rx_req;
+  assign rx_rd_data                 = '0;
+  assign hci_rx_ready_thld_o        = '0;
+  assign rx_reset_ctrl_we           = 1'b0;
+  assign rx_reset_ctrl_next         = 1'b0;
+
+  assign hci_tx_full_o              = 1'b0;
+  assign hci_tx_depth_o             = '0;
+  assign hci_tx_start_thld_trig_o   = 1'b0;
+  assign hci_tx_ready_thld_trig_o   = 1'b0;
+  assign hci_tx_empty_o             = 1'b1;
+  assign hci_tx_rvalid_o            = 1'b0;
+  assign hci_tx_rdata_o             = '0;
+  assign tx_wr_ack                  = tx_req;
+  assign hci_tx_ready_thld_o        = '0;
+  assign tx_reset_ctrl_we           = 1'b0;
+  assign tx_reset_ctrl_next         = 1'b0;
+
+  logic hci_ibi_rst;
+  logic hci_ibi_rst_we;
+  logic hci_ibi_rst_next;
+  logic hci_ibi_req;
+  logic hci_ibi_rd_ack;
+  logic [HciIbiThldWidth-1:0] hci_ibi_thld;
+  logic [HciIbiDataWidth-1:0] hci_ibi_rd_data;
+
+  always_comb begin
+    hci_ibi_rst = hwif_out_o.I3CBase.RESET_CONTROL.IBI_QUEUE_RST.value;
+    hwif_in.I3CBase.RESET_CONTROL.IBI_QUEUE_RST.we = hci_ibi_rst_we;
+    hwif_in.I3CBase.RESET_CONTROL.IBI_QUEUE_RST.next = hci_ibi_rst_next;
+
+    hci_ibi_thld = hwif_out_o.PIOControl.QUEUE_THLD_CTRL.IBI_STATUS_THLD.value;
+
+    hci_ibi_req = hwif_out_o.PIOControl.IBI_PORT.req;
+    hwif_in.PIOControl.IBI_PORT.rd_ack = hci_ibi_rd_ack;
+    hwif_in.PIOControl.IBI_PORT.rd_data = hci_ibi_rd_data;
+  end
+
+  assign hci_ibi_full_o            = 1'b0;
+  assign hci_ibi_depth_o           = '0;
+  assign hci_ibi_ready_thld_trig_o = 1'b0;
+  assign hci_ibi_empty_o           = 1'b1;
+  assign hci_ibi_wready_o          = 1'b0;
+  assign hci_ibi_rd_ack            = hci_ibi_req;
+  assign hci_ibi_rd_data           = '0;
+  assign hci_ibi_ready_thld_o      = '0;
+  assign hci_ibi_rst_we            = 1'b0;
+  assign hci_ibi_rst_next          = 1'b0;
+`else
   dxt #(
       .DatAw(DatAw),
       .DctAw(DctAw)
@@ -569,6 +658,7 @@ module hci
       .reg_rst_we_o(hci_ibi_rst_we),
       .reg_rst_data_o(hci_ibi_rst_next)
   );
+`endif
 
   always_comb begin : wire_unconnected_regs
     hwif_in.I3C_EC.StdbyCtrlMode.STBY_CR_VIRT_DEVICE_ADDR.VIRT_STATIC_ADDR_VALID.next = '0;
