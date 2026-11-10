@@ -73,21 +73,28 @@ The crossbar connects **5 AXI4 Managers** (`M0: MCU IFU 64b`, `M1: MCU LSU 64b`,
 | **`u_qspi_ram_bridge`** | `36` | `84` | `0` | `0` | External QSPI RAM bridge for Caliptra Core SRAMs |
 | **Total Placed & Routed (`calightra_ss_ulx3s_top`)** | **`66,735`** (`71,479 COMB`) | **`20,317`** | **`16`** | **`14`** | **85% LUT4, 24% FF, 7% BRAM, 8% DSP, `Fmax = 15.54 MHz`** |
 
-### 1.4 Full Dual-Core `caliptra-ss` Verilator Boot Trace (`ss/sim/ss_boot_sim.log`)
+### 1.4 Real `caliptra-mcu-sw` (`main-2.1`) ROM & Full 3-Stage I3C Recovery Flow (`ss/mcu-rom/` & `ss/sim/`)
 
-Building and running the full dual-VeeR-EL2 subsystem in Verilator ([`ss/sim/Makefile`](ss/sim/Makefile), full log in [`ss/sim/ss_boot_sim.log`](ss/sim/ss_boot_sim.log)):
-- **Verilator Build Time (`Vcalightra_ss_verilated`)**: **`67.12 s`** (8 threads)
-- **Simulation Speed**: **`2.18 kHz`** (running **both** the MCU VeeR EL2 core and the Caliptra Core VeeR EL2 + crypto engines + `i3c_wrapper` concurrently over [`calightra_ss_axi_xbar.sv`](ss/rtl/calightra_ss_axi_xbar.sv))
+[`ss/mcu-rom/`](ss/mcu-rom/) defines a custom Rust platform (`caliptra-mcu-config-calightra` + `caliptra-mcu-rom-calightra`) for upstream [`chipsalliance/caliptra-mcu-sw`](https://github.com/chipsalliance/caliptra-mcu-sw) (`main-2.1` branch) matching the Calightra-SS memory map (`ROM @ 0x8000_0000`, `DCCM @ 0x5000_0000`, `I3C @ 0x2000_4000`, `MCI @ 0x2100_0000`, `MCU_MBOX0 @ 0x2140_0000`, `MCU_SRAM @ 0x21C0_0000`, `SOC_IFC @ 0x3003_0000`, `MBOX @ 0x3002_0000`, `OTP @ 0x7000_0000`, `LC @ 0x7000_0400`).
 
-| Subsystem Boot Milestone | Cycle Count | Elapsed Wall Time | Description |
+It also includes [`ss/mcu-rom/gen-manifest/`](ss/mcu-rom/gen-manifest/), which uses `caliptra-auth-man-gen` with the exact ML-DSA-87 + ECC-384 vendor/owner keypairs from `caliptra-sw` to generate a signed SoC Authorization Manifest ([`ss/mcu-rom/soc_manifest.bin`](ss/mcu-rom/soc_manifest.bin), `30,696` bytes) authorizing [`ss/mcu-rom/mcu_rt.bin`](ss/mcu-rom/mcu_rt.bin) (`256` bytes, `ComponentId = 2`, `exec_bit = 2` for `FW_EXEC_CTRL[2]`, load address `0x21C0_0000`, SHA-384 digest `d0171a19...`).
+
+In [`ss/sim/ss_boot_sim.cpp`](ss/sim/ss_boot_sim.cpp), a non-blocking BMC / I3C Recovery agent drives the full 3-stage streaming boot protocol over the `i3c_wrapper` recovery registers (full log in [`ss/sim/ss_i3c_recovery_sim.log`](ss/sim/ss_i3c_recovery_sim.log)):
+
+| Boot / I3C Recovery Milestone | Cycle Count | Elapsed Wall Time | Description |
 | :--- | :---: | :---: | :--- |
-| **`cptra_ss_mcu_rst_b_o = 1`** | `51` | `0.02 s` | MCI Boot Sequencer releases Subsystem MCU VeeR EL2 from reset |
-| **MCU Boot & `OTP_CTRL`/`LC_CTRL` Readback (`0x2`)** | `9,967` | `4.5 s` | MCU boots from `0x8000_0000`, verifies `OTP_STATUS=0x40000000`, `LC_STATUS=0x00000003`, `LC_STATE=0x02108421`, `LC_CNT=1` |
-| **AXI4 Crossbar SRAM & `I3C` Init (`0x3`)** | `19,773` | `9.0 s` | MCU verifies `MCU_SRAM`, `MCU_MBOX0`, `SOC_SRAM`, reads `I3C_VER=0x120` & `PROT_CAP="OCP RECV"`, configures `0x5A`/`0x5B` & `BUS_EN=1` |
-| **`MCI CPTRA_BOOT_GO` & `ready_for_fuses` (`0x4`)** | `22,561` | `10.3 s` | MCU writes `MCI CPTRA_BOOT_GO=1`; MCI releases Caliptra Core reset (`22,552`); Caliptra Core asserts `ready_for_fuses=1` (`22,561`) |
-| **MCU Programs Caliptra Fuses & `BOOTFSM_GO` (`0x5`)** | `29,979` | `13.7 s` | MCU writes `CPTRA_WDT_CFG_0`, `CPTRA_FUSE_WR_DONE=1`, and `CPTRA_BOOTFSM_GO=1` over AXI4 crossbar (`0xA003_0000`) |
-| **`ready_for_mb_processing = 1` (`BOOT_STATUS=0x101`)** | **`5,129,871`** | **`2,348.0 s`** | MCU services all `21` (`0x15`) 384-bit ETRNG requests over AXI4 crossbar while Caliptra Core completes all ROM KATs & `IDevId` |
-| **MCU Signals `0xCA1100AA` (`TEST PASS`)** | **`5,136,713`** | **`2,351.17 s` (`2.18 kHz`)** | MCU detects `READY_FOR_MB_PROCESSING=1`, writes `0xCA1100AA` to `MCI GENERIC_OUTPUT_WIRES_0`, and exits cleanly |
+| **`cptra_ss_mcu_rst_b_o = 1` (`ColdBoot` entry)** | `51` | `0.02 s` | MCI releases MCU from reset; real `caliptra-mcu-sw` ROM starts `ColdBoot::run()` (`RESET_REASON = 0x0`) |
+| **`CPTRA_BOOT_GO` & `ready_for_fuses = 1`** | `47,470` | `20.0 s` | MCU ROM asserts `CPTRA_BOOT_GO`; MCI releases Caliptra Core (`47,461`); Caliptra Core asserts `ready_for_fuses=1` |
+| **MCU Initializes `LCC`, `OTP`, `I3C` & Populates Fuses** | `679,961` | `286.0 s` | MCU ROM initializes `LCC`/`OTP`/`I3C` (`0x3A`/`0x3B`), reads vendor PK hashes & PQC type over OTP DAI, writes handoff table (`0x5000_3C00`), locks `SS_CONFIG_DONE`, sets `CPTRA_FUSE_WR_DONE=1` |
+| **`ready_for_mb_processing = 1`** | `1,367,817` (`7,448,186` w/ full ROM) | `591.0 s` | Caliptra Core ROM completes cold-reset initialization; MCU ROM prints `[mcu-rom] Caliptra is ready for mailbox commands` |
+| **`RI_DOWNLOAD_FIRMWARE` (`0x5249_4644`)** | `1,714,909` | `775.0 s` | MCU ROM sends `RI_DOWNLOAD_FIRMWARE` mailbox command and enters `wait_for_firmware_ready()` polling `FW_EXEC_CTRL[2]` |
+| **I3C Recovery Stage 0 (`Image 0`: Caliptra FW Bundle)** | `1,729,529` $\to$ `2,324,816` | `782.0 s` $\to$ `1,068.0 s` | BMC streams `56,960` DWORDs (`227,840` bytes) via I3C Indirect FIFO (`64`-DWORD bursts) into Caliptra Mailbox via AXI DMA and activates image (`0xF`) |
+| **Caliptra FMC $\to$ Runtime Boot (`Caliptra RT`)** | `2,859,528` $\to$ `9,500,000` | `1,310.0 s` $\to$ `4,343.6 s` | Caliptra Core ROM verifies `Image 0`, initializes 128-entry DPE hash chain, boots FMC (`0x4000_0000`) and Runtime (`0x4000_8000`), and passes RT AES + ML-KEM-1024 KATs |
+| **I3C Recovery Stage 1 (`Image 1`: SoC Auth Manifest)** | `9,500,000` $\to$ `10,030,214` | `4,343.6 s` $\to$ `4,580.0 s` | Caliptra RT requests `Image 1`; BMC streams `7,674` DWORDs (`30,696` bytes) of `soc_manifest.bin` over I3C into Caliptra AHB FIFO; Caliptra RT verifies ML-DSA-87 + ECC-384 signatures |
+| **I3C Recovery Stage 2 (`Image 2`: MCU Runtime FW)** | `14,347,533` $\to$ `14,353,619` | `6,650.0 s` $\to$ `6,653.0 s` | Caliptra RT requests `Image 2`; BMC streams `64` DWORDs (`256` bytes) of `mcu_rt.bin` over I3C; Caliptra DMA writes it directly to `MCU_SRAM` (`0x21C0_0000`) |
+| **MCU Digest Verified, `FW_EXEC_CTRL[2]=1` & `ready_for_runtime=1`** | `14,384,879` $\to$ `14,387,993` | `6,668.0 s` | Caliptra RT reads back `MCU_SRAM` over AXI DMA, verifies SHA-384 (`D0171A19...`), sets `RESET_REASON = FW_BOOT_UPD_RESET (0x2)`, asserts `FW_EXEC_CTRL[2]=1` and `ready_for_runtime=1` |
+| **MCU ROM `CM_SHA384` Integrity & `STASH_MEASUREMENT`** | `14,389,847` $\to$ `22,269,960` | `6,670.0 s` $\to$ `10,469.0 s` | MCU ROM locks vendor PK hash slots, hashes all `64 KB` of MCU ROM via `17` `CM_SHA_INIT`/`UPDATE`/`FINAL` mailbox commands (`7F440BF9...`), stashes field entropy (`MEAS`), disables I3C recovery, and triggers MCI warm reset |
+| **MCI Warm Reset $\to$ `FwBoot` $\to$ `mcu_rt.bin` Execution (`TEST PASS`)** | **`22,270,045` $\to$ `22,314,856`** | **`10,490.75 s` (`2.13 kHz`)** | MCI pulses `cptra_ss_mcu_rst_b_o`; MCU ROM detects `RESET_REASON = 0x2` (`FwBoot`), prints `[mcu-rom] Jumping to firmware`, and jumps to `0x21C0_0000` where `mcu_rt.bin` prints completion banner and signals `0xFF` (`TEST PASS`)! |
 
 ---
 
@@ -193,8 +200,9 @@ Using the Phase 2 build (`sim/out_phase2/boot_sim` with `+full_boot`, full log i
 - [`DETAILS.md`](DETAILS.md): This document — detailed architecture, stripping phases, hierarchical area tables, and boot logs.
 - [`ss/`](ss/): **Calightra-SS** subsystem AXI4 crossbar, MCU firmware, Verilator testbench, and ULX3S-85F FPGA build flow:
   - [`ss/rtl/calightra_ss_axi_xbar.sv`](ss/rtl/calightra_ss_axi_xbar.sv): Open-source Apache-2.0 5-Manager $\times$ 7-Subordinate AXI4 crossbar interconnect (`391 LUT4` / `264 FF`).
-  - [`ss/fw/`](ss/fw/): Bare-metal RISC-V MCU boot ROM firmware (`mcu_boot.c`, `start.S`, `link.ld`) that boots the MCU VeeR EL2 core, verifies `OTP_CTRL`, `LC_CTRL`, `MCU_SRAM`, `MCU_MBOX0`, and `SOC_SRAM`, initializes `i3c_wrapper` (`0x5A`/`0x5B`, `OCP RECV`), brings Caliptra Core out of reset via `MCI CPTRA_BOOT_GO`, programs fuses, and services ETRNG requests through `READY_FOR_MB_PROCESSING=1`.
-  - [`ss/sim/`](ss/sim/): Verilator wrapper (`calightra_ss_verilated.sv`), filelist (`calightra_ss_top.vf`), C++ simulation harness (`ss_boot_sim.cpp`), and boot log (`ss_boot_sim.log`).
+  - [`ss/mcu-rom/`](ss/mcu-rom/): Real [`chipsalliance/caliptra-mcu-sw`](https://github.com/chipsalliance/caliptra-mcu-sw) (`main-2.1`) Rust MCU ROM platform (`config/`, `rom/`, `caliptra-mcu-rom-calightra.bin`), MLDSA-87/ECC-384 SoC Authorization Manifest generator (`gen-manifest/`, `soc_manifest.bin`), and MCU Runtime test firmware (`mcu_rt.S`, `mcu_rt.bin`).
+  - [`ss/fw/`](ss/fw/): Standalone C/assembly MCU boot ROM (`mcu_boot.c`, `start.S`, `link.ld`) used to pre-initialize the FPGA BRAM (`mcu_rom.hex`).
+  - [`ss/sim/`](ss/sim/): Verilator wrapper (`calightra_ss_verilated.sv`), filelist (`calightra_ss_top.vf`), C++ simulation + BMC/I3C recovery harness (`ss_boot_sim.cpp`), and boot logs (`ss_boot_sim.log`, `ss_i3c_recovery_sim.log`).
   - [`ss/fpga/`](ss/fpga/): Radiona ULX3S-85F top-level wrapper (`calightra_ss_ulx3s_top.sv`), constraints (`ulx3s_v20.lpf`), filelist (`calightra_ss_fpga.vf`), `sv2v` runner (`run_sv2v.py`), and synthesis/place-and-route `Makefile` producing [`ss/fpga/calightra_ss_ulx3s_85f.bit`](ss/fpga/calightra_ss_ulx3s_85f.bit).
 - [`caliptra-ss/`](caliptra-ss/): Full Caliptra 2.1 Subsystem (`chipsalliance/caliptra-ss` `patch_ss_v2.1` branch `8b4add30` + `third_party/i3c-core` `db4a6f34`) with `CALIGHTRA_PHASE1`, `CALIGHTRA_NO_BP`, and `CALIGHTRA_ICE40` `ifdef` guards applied.
 - [`caliptra-rtl/`](caliptra-rtl/): Full Caliptra 2.1 Core RTL (`chipsalliance/caliptra-rtl` `patch_v2.1` branch `188b0b0e` + `adams-bridge` `b77e3d89`) with `CALIGHTRA_PHASE1`, `CALIGHTRA_NO_COUNTERMEASURES`, `CALIGHTRA_NO_BP`, and `CALIGHTRA_ICE40` `ifdef` guards applied.

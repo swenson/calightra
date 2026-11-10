@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+# Licensed under the Apache-2.0 license
+
+[package]
+name = "caliptra-mcu-rom-calightra"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[dependencies]
+caliptra-mcu-config.workspace = true
+caliptra-mcu-config-calightra = { path = "../config" }
+caliptra-mcu-rom-common.workspace = true
+caliptra-mcu-registers-generated.workspace = true
+caliptra-mcu-romtime.workspace = true
+tock-registers.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(target_arch = "riscv32")'.dependencies]
+riscv-csr.workspace = true
+rv32i.workspace = true
+
+[features]
+default = ["hw-2-1"]
+core_test = ["caliptra-mcu-rom-common/core_test"]
+hw-2-1 = ["caliptra-mcu-rom-common/hw-2-1"]
+test-rom-hooks = []

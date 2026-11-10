@@ -29,7 +29,7 @@ module calightra_ss_verilated
     import soc_ifc_pkg::*;
 #(
     `include "css_mcu0_el2_param.vh"
-    ,parameter int MCU_SRAM_SIZE_KB  = 16
+    ,parameter int MCU_SRAM_SIZE_KB  = 512
     ,parameter int MCU_MBOX0_SIZE_KB = 4
     ,parameter int MCU_MBOX1_SIZE_KB = 0
 ) (
@@ -59,12 +59,22 @@ module calightra_ss_verilated
     output logic [31:0] soc_rdata,
     output logic [1:0]  soc_rresp,
 
+    // Physical I3C Target Bus Pins
+    input  logic        i3c_scl_i,
+    input  logic        i3c_sda_i,
+    output logic        i3c_scl_o,
+    output logic        i3c_sda_o,
+    output logic        i3c_scl_oe,
+    output logic        i3c_sda_oe,
+
     // Status & Console Outputs
     output logic        cptra_ss_mci_cptra_rst_b_o,
     output logic        cptra_ss_mcu_rst_b_o,
     output logic        cptra_ss_ready_for_fuses_o,
     output logic        cptra_ss_ready_for_mb_processing_o,
     output logic        cptra_ss_ready_for_runtime_o,
+    output logic        cptra_ss_etrng_req_o,
+    output logic        cptra_ss_fw_exec_ctrl_2_mcu_o,
     output logic [63:0] cptra_ss_mci_generic_output_wires_o,
     output logic [63:0] cptra_ss_cptra_core_generic_output_wires_o,
     output logic        mci_debug_char_valid_o,
@@ -296,18 +306,18 @@ module calightra_ss_verilated
         end
     end
 
-    // 3. MCU ROM (16 KB = 2048 x 64-bit, loaded by C++ testbench)
-    logic [63:0] mcu_rom [0:2047] /* verilator public_flat_rd */;
+    // 3. MCU ROM (64 KB = 8192 x 64-bit, loaded by C++ testbench)
+    logic [63:0] mcu_rom [0:8191] /* verilator public_flat_rd */;
     always_ff @(posedge core_clk) begin
         if (mcu_rom_mem_export_if.req.cs) begin
             if (mcu_rom_mem_export_if.req.we) begin
-                mcu_rom[mcu_rom_mem_export_if.req.addr[10:0]] <= mcu_rom_mem_export_if.req.wdata.data;
+                mcu_rom[mcu_rom_mem_export_if.req.addr[12:0]] <= mcu_rom_mem_export_if.req.wdata.data;
             end
-            mcu_rom_mem_export_if.resp.rdata.data <= mcu_rom[mcu_rom_mem_export_if.req.addr[10:0]];
+            mcu_rom_mem_export_if.resp.rdata.data <= mcu_rom[mcu_rom_mem_export_if.req.addr[12:0]];
         end
     end
 
-    // 4. MCI MCU SRAM (16 KB = 4096 x 32-bit; ECC bypassed in CALIGHTRA_PHASE1)
+    // 4. MCI MCU SRAM (512 KB = 131072 x 32-bit; ECC bypassed in CALIGHTRA_PHASE1)
     logic [31:0] mcu_sram [0:MCU_SRAM_DEPTH-1] /* verilator public_flat_rd */;
     logic [31:0] mcu_sram_rdata_q;
     assign cptra_ss_mci_mcu_sram_req_if.resp.rdata.ecc  = 7'h00;
@@ -337,8 +347,8 @@ module calightra_ss_verilated
         end
     end
 
-    // 6. SoC SRAM on S6_SRAM AXI Subordinate (4 KB = 1024 x 32-bit)
-    logic [31:0] soc_sram [0:1023] /* verilator public_flat_rd */;
+    // 6. SoC SRAM on S6_SRAM AXI Subordinate (256 KB = 65536 x 32-bit)
+    logic [31:0] soc_sram [0:65535] /* verilator public_flat_rd */;
     assign cptra_ss_soc_sram_s_axi_if.awready = 1'b1;
     assign cptra_ss_soc_sram_s_axi_if.wready  = 1'b1;
     assign cptra_ss_soc_sram_s_axi_if.bresp   = 2'b00;
@@ -347,7 +357,7 @@ module calightra_ss_verilated
     assign cptra_ss_soc_sram_s_axi_if.rresp   = 2'b00;
     assign cptra_ss_soc_sram_s_axi_if.rlast   = 1'b1;
     assign cptra_ss_soc_sram_s_axi_if.ruser   = '0;
-    logic [9:0] soc_sram_awaddr_lat;
+    logic [15:0] soc_sram_awaddr_lat;
     always_ff @(posedge core_clk or negedge cptra_ss_rst_b_i) begin
         if (!cptra_ss_rst_b_i) begin
             cptra_ss_soc_sram_s_axi_if.bvalid <= 1'b0;
@@ -355,15 +365,15 @@ module calightra_ss_verilated
             cptra_ss_soc_sram_s_axi_if.rvalid <= 1'b0;
             cptra_ss_soc_sram_s_axi_if.rid    <= '0;
             cptra_ss_soc_sram_s_axi_if.rdata  <= 32'h0;
-            soc_sram_awaddr_lat               <= 10'h0;
+            soc_sram_awaddr_lat               <= 16'h0;
         end else begin
             if (cptra_ss_soc_sram_s_axi_if.awvalid) begin
-                soc_sram_awaddr_lat            <= cptra_ss_soc_sram_s_axi_if.awaddr[11:2];
+                soc_sram_awaddr_lat            <= cptra_ss_soc_sram_s_axi_if.awaddr[17:2];
                 cptra_ss_soc_sram_s_axi_if.bid <= cptra_ss_soc_sram_s_axi_if.awid;
             end
             if (cptra_ss_soc_sram_s_axi_if.wvalid) begin
-                logic [9:0] wr_idx;
-                wr_idx = cptra_ss_soc_sram_s_axi_if.awvalid ? cptra_ss_soc_sram_s_axi_if.awaddr[11:2] : soc_sram_awaddr_lat;
+                logic [15:0] wr_idx;
+                wr_idx = cptra_ss_soc_sram_s_axi_if.awvalid ? cptra_ss_soc_sram_s_axi_if.awaddr[17:2] : soc_sram_awaddr_lat;
                 if (cptra_ss_soc_sram_s_axi_if.wstrb[0]) soc_sram[wr_idx][7:0]   <= cptra_ss_soc_sram_s_axi_if.wdata[7:0];
                 if (cptra_ss_soc_sram_s_axi_if.wstrb[1]) soc_sram[wr_idx][15:8]  <= cptra_ss_soc_sram_s_axi_if.wdata[15:8];
                 if (cptra_ss_soc_sram_s_axi_if.wstrb[2]) soc_sram[wr_idx][23:16] <= cptra_ss_soc_sram_s_axi_if.wdata[23:16];
@@ -376,7 +386,7 @@ module calightra_ss_verilated
             if (cptra_ss_soc_sram_s_axi_if.arvalid) begin
                 cptra_ss_soc_sram_s_axi_if.rvalid <= 1'b1;
                 cptra_ss_soc_sram_s_axi_if.rid    <= cptra_ss_soc_sram_s_axi_if.arid;
-                cptra_ss_soc_sram_s_axi_if.rdata  <= soc_sram[cptra_ss_soc_sram_s_axi_if.araddr[11:2]];
+                cptra_ss_soc_sram_s_axi_if.rdata  <= soc_sram[cptra_ss_soc_sram_s_axi_if.araddr[17:2]];
             end else if (cptra_ss_soc_sram_s_axi_if.rready) begin
                 cptra_ss_soc_sram_s_axi_if.rvalid <= 1'b0;
             end
@@ -396,7 +406,6 @@ module calightra_ss_verilated
     end
 
     // 8. Caliptra Core Mailbox SRAM (256 KB = 65536 x 39-bit)
-    localparam int CPTRA_MBOX_DEPTH = (256 * 1024) / 4;
     logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] mbox_ram [0:CPTRA_MBOX_DEPTH-1] /* verilator public_flat_rd */;
     logic                                 cptra_ss_cptra_core_mbox_sram_cs_o;
     logic                                 cptra_ss_cptra_core_mbox_sram_we_o;
@@ -543,14 +552,14 @@ module calightra_ss_verilated
         .cptra_ss_cptra_core_bootfsm_bp_i     (1'b0),
 
 `ifdef CALIPTRA_INTERNAL_TRNG
-        .cptra_ss_cptra_core_etrng_req_o      (),
+        .cptra_ss_cptra_core_etrng_req_o      (cptra_ss_etrng_req_o),
         .cptra_ss_cptra_core_itrng_data_i     (4'h5),
         .cptra_ss_cptra_core_itrng_valid_i    (1'b1),
 `endif
 
         .cptra_ss_strap_mcu_lsu_axi_user_i    (32'h0000_0001),
         .cptra_ss_strap_mcu_ifu_axi_user_i    (32'h0000_0002),
-        .cptra_ss_strap_mcu_sram_config_axi_user_i(32'h0000_0003),
+        .cptra_ss_strap_mcu_sram_config_axi_user_i(32'h0000_0001),
         .cptra_ss_strap_mci_soc_config_axi_user_i (32'h0000_0001),
         .cptra_ss_mcu_halt_status_o           (cptra_ss_mcu_halt_status_o),
         .cptra_ss_mcu_halt_status_i           (cptra_ss_mcu_halt_status_o),
@@ -583,15 +592,15 @@ module calightra_ss_verilated
         .cptra_ss_mcu_jtag_tdo_o              (),
         .cptra_ss_mcu_jtag_tdoEn_o            (),
 
-        .cptra_ss_strap_caliptra_base_addr_i  (64'h0000_0000_A000_0000),
+        .cptra_ss_strap_caliptra_base_addr_i  (64'h0000_0000_3000_0000),
         .cptra_ss_strap_mci_base_addr_i       (64'h0000_0000_2100_0000),
-        .cptra_ss_strap_recovery_ifc_base_addr_i(64'h0000_0000_2000_4000),
-        .cptra_ss_strap_external_staging_area_base_addr_i(64'h0000_0000_2140_0000),
+        .cptra_ss_strap_recovery_ifc_base_addr_i(64'h0000_0000_2000_4100),
+        .cptra_ss_strap_external_staging_area_base_addr_i(64'h0000_0000_B000_0000),
         .cptra_ss_strap_otp_fc_base_addr_i    (64'h0000_0000_7000_0000),
         .cptra_ss_strap_uds_seed_base_addr_i  (64'h0000_0000_0000_0048),
         .cptra_ss_strap_prod_debug_unlock_auth_pk_hash_reg_bank_offset_i(32'h0),
         .cptra_ss_strap_num_of_prod_debug_unlock_auth_pk_hashes_i(32'h0),
-        .cptra_ss_strap_caliptra_dma_axi_user_i(32'h0000_0003),
+        .cptra_ss_strap_caliptra_dma_axi_user_i(32'h0000_0001),
         .cptra_ss_strap_key_release_key_size_i(16'h0040),
         .cptra_ss_strap_key_release_base_addr_i(64'h0000_0000_B000_0000),
         .cptra_ss_strap_ocp_lock_en_i         (1'b0),
@@ -620,12 +629,12 @@ module calightra_ss_verilated
         .cptra_ss_fuse_macro_outputs_i        ('0),
         .cptra_ss_fuse_macro_inputs_o         (cptra_ss_fuse_macro_inputs_o),
 
-        .cptra_ss_i3c_scl_i                   (1'b1),
-        .cptra_ss_i3c_sda_i                   (1'b1),
-        .cptra_ss_i3c_scl_o                   (),
-        .cptra_ss_i3c_sda_o                   (),
-        .cptra_ss_i3c_scl_oe                  (),
-        .cptra_ss_i3c_sda_oe                  (),
+        .cptra_ss_i3c_scl_i                   (i3c_scl_i),
+        .cptra_ss_i3c_sda_i                   (i3c_sda_i),
+        .cptra_ss_i3c_scl_o                   (i3c_scl_o),
+        .cptra_ss_i3c_sda_o                   (i3c_sda_o),
+        .cptra_ss_i3c_scl_oe                  (i3c_scl_oe),
+        .cptra_ss_i3c_sda_oe                  (i3c_sda_oe),
         .cptra_ss_sel_od_pp_o                 (),
         .cptra_ss_i3c_recovery_payload_available_o(cptra_ss_i3c_recovery_payload_available_o),
         .cptra_ss_i3c_recovery_payload_available_i(cptra_ss_i3c_recovery_payload_available_o),
@@ -642,5 +651,10 @@ module calightra_ss_verilated
         .cptra_error_fatal                    (),
         .cptra_error_non_fatal                ()
     );
+
+    assign cptra_ss_fw_exec_ctrl_2_mcu_o = cptra_ss_cptra_generic_fw_exec_ctrl_2_mcu_o;
+`ifndef CALIPTRA_INTERNAL_TRNG
+    assign cptra_ss_etrng_req_o = caliptra_ss_dut.caliptra_top_dut.etrng_req;
+`endif
 
 endmodule

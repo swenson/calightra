@@ -21,6 +21,8 @@ fw/*.zip
 fw/*.elf
 fw/caliptra-rtl/
 fw/fpga/
+ss/mcu-rom/*.elf
+caliptra-mcu-sw/
 
 # Temporary duplicate walkthrough file (README.md is canonical)
 WALKTHROUGH.md

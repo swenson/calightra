@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0
+
+[package]
+name = "calightra-gen-manifest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+caliptra-auth-man-gen.workspace = true
+caliptra-auth-man-types.workspace = true
+caliptra-image-crypto.workspace = true
+caliptra-image-fake-keys.workspace = true
+caliptra-image-gen.workspace = true
+caliptra-image-types = { workspace = true, features = ["std"] }
+zerocopy.workspace = true

@@ -1,8 +1,8 @@
 diff --git a/src/fuse_ctrl/rtl/otp_ctrl.sv b/src/fuse_ctrl/rtl/otp_ctrl.sv
-index 4a13c36..2772018 100644
+index 4a13c36..a2753bb 100644
 --- a/src/fuse_ctrl/rtl/otp_ctrl.sv
 +++ b/src/fuse_ctrl/rtl/otp_ctrl.sv
-@@ -304,6 +304,52 @@ module otp_ctrl
+@@ -304,6 +304,68 @@ module otp_ctrl
      .write_pending_i            ( 1'b0               )
    );
  
@@ -23,6 +23,22 @@ index 4a13c36..2772018 100644
 +    hw2reg = '0;
 +    hw2reg.direct_access_regwen.d = 1'b1;
 +    hw2reg.status.dai_idle.d      = 1'b1;
++    unique case (reg2hw.direct_access_address.q)
++      12'h420: hw2reg.direct_access_rdata[0].d = 32'h3039_9676;
++      12'h424: hw2reg.direct_access_rdata[0].d = 32'ha17e_3e97;
++      12'h428: hw2reg.direct_access_rdata[0].d = 32'h3677_b3ff;
++      12'h42c: hw2reg.direct_access_rdata[0].d = 32'h862f_4bf2;
++      12'h430: hw2reg.direct_access_rdata[0].d = 32'hd193_2d88;
++      12'h434: hw2reg.direct_access_rdata[0].d = 32'h4778_453c;
++      12'h438: hw2reg.direct_access_rdata[0].d = 32'h376f_e00d;
++      12'h43c: hw2reg.direct_access_rdata[0].d = 32'hc93f_b8aa;
++      12'h440: hw2reg.direct_access_rdata[0].d = 32'h0770_f3eb;
++      12'h444: hw2reg.direct_access_rdata[0].d = 32'hf341_1a08;
++      12'h448: hw2reg.direct_access_rdata[0].d = 32'h53e9_c57e;
++      12'h44c: hw2reg.direct_access_rdata[0].d = 32'hce8a_2980;
++      12'h450: hw2reg.direct_access_rdata[0].d = 32'h0000_0001;
++      default: hw2reg.direct_access_rdata[0].d = 32'h0000_0000;
++    endcase
 +  end
 +
 +  assign prim_tl_o                  = '0;

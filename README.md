@@ -4,7 +4,7 @@
 
 **Calightra-SS** (`caliptra-ss` branch) is a stripped-down, 100% binary-compatible implementation of the full **Caliptra 2.1 Subsystem** ([`chipsalliance/caliptra-ss`](https://github.com/chipsalliance/caliptra-ss) `patch_ss_v2.1` + [`caliptra-rtl`](https://github.com/chipsalliance/caliptra-rtl) `patch_v2.1` + [`adams-bridge`](https://github.com/chipsalliance/adams-bridge) `v2.0.3` + [`i3c-core`](https://github.com/chipsalliance/i3c-core)) engineered to:
 1. **Synthesize, place, and route on a single open-source Lattice ECP5-85F FPGA** (**Radiona ULX3S-85F**, `LFE5U-85F-6BG381C`) using `sv2v` + `yosys` + `nextpnr-ecp5` + `ecppack`.
-2. **Simulate the full dual-VeeR-EL2 subsystem at high speed in Verilator**, booting the unmodified [`chipsalliance/caliptra-sw`](https://github.com/chipsalliance/caliptra-sw) 2.1 ROM (`caliptra-rom.bin`) and firmware (`image-bundle-mldsa.bin`).
+2. **Simulate the full dual-VeeR-EL2 subsystem in Verilator**, booting the real [`chipsalliance/caliptra-mcu-sw`](https://github.com/chipsalliance/caliptra-mcu-sw) (`main-2.1`) Rust MCU ROM ([`ss/mcu-rom/`](ss/mcu-rom/)) alongside the unmodified [`chipsalliance/caliptra-sw`](https://github.com/chipsalliance/caliptra-sw) 2.1 Core ROM (`caliptra-rom.bin`) and firmware (`image-bundle-mldsa.bin`) through the complete **3-stage MIPI I3C / OCP Recovery streaming boot flow** (`ColdBoot` $\to$ `RI_DOWNLOAD_FIRMWARE` $\to$ `Image 0` Caliptra FMC+RT $\to$ `Image 1` MLDSA-87/ECC-384 SoC Authorization Manifest $\to$ `Image 2` MCU Runtime Firmware $\to$ `CM_SHA384` ROM digest check $\to$ `STASH_MEASUREMENT` $\to$ warm reset $\to$ `FwBoot` $\to$ MCU Runtime execution in SRAM @ `0x21C0_0000`).
 
 For the standalone Caliptra Core (`caliptra-rtl` without the subsystem MCU/MCI/I3C/OTP/LC), see [`sim/`](sim/), [`fpga/`](fpga/), or the `main` branch. For granular architectural details, phase-by-phase stripping tables, and full boot traces, see **[`DETAILS.md`](DETAILS.md)**.
 
@@ -33,7 +33,8 @@ For the standalone Caliptra Core (`caliptra-rtl` without the subsystem MCU/MCI/I
 
 | Benchmark | Build Time | Model Size | Sim Speed | Cycles | Wall-Clock Time | Key Result |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **`caliptra-ss` Full Subsystem Boot** ([`ss/sim/`](ss/sim/)) | **`67.12 s`** | `10.1 MB` | **`2.18 kHz`** | **`5,136,713`** | **`2,351.2 s`** | MCU boots $\to$ verifies `OTP`/`LC`/SRAMs $\to$ configures `I3C` (`0x5A`/`0x5B`, `OCP RECV`) $\to$ asserts `CPTRA_BOOT_GO` $\to$ services 21 ETRNG requests $\to$ Caliptra Core reaches `READY_FOR_MB_PROCESSING=1` (`TEST PASS`) |
+| **`caliptra-ss` Real `caliptra-mcu-sw` ROM + Full 3-Stage I3C Recovery** ([`ss/sim/`](ss/sim/)) | **`62.88 s`** | `10.1 MB` | **`2.15 kHz`** | **`22,314,856`** | **`10,490.8 s`** | Real `caliptra-mcu-sw` (`main-2.1`) ROM (`ColdBoot`) + Caliptra Core reach `READY_FOR_MB_PROCESSING=1` $\to$ `RI_DOWNLOAD_FIRMWARE` streams **3 images over I3C** (`Image 0` Caliptra FMC+RT, `Image 1` MLDSA-87/ECC-384 SoC Manifest, `Image 2` MCU RT) $\to$ `FW_EXEC_CTRL[2]=1` & `ready_for_runtime=1` $\to$ `CM_SHA384` ROM digest & `STASH_MEASUREMENT` $\to$ warm reset $\to$ `FwBoot` jumps to `mcu_rt.bin` @ `0x21C0_0000` (`TEST PASS`) |
+| **`caliptra-ss` Real `caliptra-mcu-sw` ROM + Production Core ROM (`READY_FOR_MB_PROCESSING`)** ([`ss/sim/`](ss/sim/)) | **`62.88 s`** | `10.1 MB` | **`2.22 kHz`** | **`7,448,186`** | **`3,354.1 s`** | Real `caliptra-mcu-sw` ROM initializes `LCC`/`OTP`/`I3C`, populates fuses over DAI, verifies PK hashes & mailbox users, boots unmodified `caliptra-rom.bin` through `READY_FOR_MB_PROCESSING=1`, and issues `RI_DOWNLOAD_FIRMWARE` |
 | **`caliptra-rtl` Core ROM Boot** ([`sim/`](sim/), vs. unstripped baseline) | **`53.69 s`** *(was `404.2s`, **7.53x faster**)* | **`5.6 MB`** *(was `108 MB`, **19.3x smaller**)* | **`2.54 kHz`** *(was `1.53 kHz`, **1.66x faster**)* | **`4,626,321`** *(was `5,548,472`, **`-16.6%`**)* | **`1,821.2 s`** *(was `3,636.3s`, **2.00x faster**)* | Unmodified `caliptra-rom.bin` (`rom-2.1.3`) passes all ROM KATs and reaches `ready_for_mb_processing=1` |
 | **`caliptra-rtl` Full End-to-End Boot** (`ROM` $\to$ `FMC` $\to$ `Runtime` $\to$ `FW_INFO`) | **`53.69 s`** | **`5.6 MB`** | **`2.48 kHz`** | **`31,502,733`** | **`12,713.6 s`** | Unmodified `caliptra-rom.bin` + `image-bundle-mldsa.bin` (`fw-2.1.4`) completes 3 DICE layers, P-384 + ML-DSA-87 `FW_LOAD`, `ready_for_runtime=1`, and `FW_INFO` (`fips_status=0`) |
 
@@ -60,11 +61,14 @@ sudo apt-get install -y verilator yosys nextpnr-ice40 nextpnr-ecp5 fpga-icestorm
 
 ### 1. Calightra-SS Dual-Core Subsystem (`ss/`)
 ```bash
-# Build MCU boot ROM (ss/fw/mcu_rom.bin and mcu_rom.hex)
-make -C ss/fw clean all
+# Build real caliptra-mcu-sw (main-2.1) ROM + signed SoC Manifest + MCU Runtime (ss/mcu-rom/)
+make -C ss/mcu-rom
 
-# Build and run full Calightra-SS Verilator simulation (MCU + AXI4 Crossbar + I3C + Caliptra Core ROM boot)
-make -C ss/sim clean run
+# Run Calightra-SS Verilator simulation through READY_FOR_MB_PROCESSING=1 + RI_DOWNLOAD_FIRMWARE
+make -C ss/sim run
+
+# Run full 3-stage I3C Recovery flow (Image 0 FMC+RT + Image 1 SoC Manifest + Image 2 MCU RT -> FwBoot)
+make -C ss/sim run-recovery
 
 # Synthesize, place-and-route, and pack the Radiona ULX3S-85F bitstream (ss/fpga/calightra_ss_ulx3s_85f.bit)
 make -C ss/fpga clean all
