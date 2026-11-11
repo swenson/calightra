@@ -1,13 +1,12 @@
 [SIM] Loaded MCU ROM (65536 bytes, 8192 64-bit words) from ../mcu-rom/caliptra-mcu-rom-calightra.bin
 [SIM] Loaded Caliptra Core ROM (98304 bytes, 12288 64-bit words) from ../../fw/fake-caliptra-rom.bin
-[SIM] Loaded Recovery Image 0 (Caliptra FW Bundle) (227840 bytes, 56960 DWORDs) from ../../fw/fake-image-bundle-mldsa.bin
-[SIM] Loaded Recovery Image 1 (SoC Manifest) (30696 bytes, 7674 DWORDs) from ../mcu-rom/soc_manifest.bin
-[SIM] Loaded Recovery Image 2 (MCU Runtime) (256 bytes, 64 DWORDs) from ../mcu-rom/mcu_rt.bin
-[SIM] Starting Calightra-SS simulation (max_cycles = 30000000)...
+[SIM] Loaded Recovery Image 0 (Caliptra FW Bundle) (227840 bytes, 56960 DWORDs, padded to 227840 bytes) from ../../fw/fake-image-bundle-mldsa.bin
+[SIM] Loaded Recovery Image 1 (SoC Manifest) (30696 bytes, 7674 DWORDs, padded to 30720 bytes) from ../mcu-rom/soc_manifest.bin
+[SIM] Loaded Recovery Image 2 (MCU Runtime) (256 bytes, 64 DWORDs, padded to 256 bytes) from ../mcu-rom/mcu_rt.bin
+[SIM] Starting Calightra-SS simulation (max_cycles = 60000000)...
 [SIM @      15] Asserted cptra_ss_pwrgood_i = 1
 [SIM @      40] Deasserted cptra_ss_rst_b_i = 1
 [SIM @      51] MCI Boot Sequencer released MCU reset (cptra_ss_mcu_rst_b_o = 1)
-[BMC @     104] Enabled I3C Recovery Bypass Mode (REC_INTF_CFG = 0x1)
 
 Calightra MCU ROM (caliptra-mcu-sw main-2.1)
 [mcu-rom] Starting Calightra MCU ROM
@@ -54,7 +53,11 @@ Lifecycle controller initialization done
 [mcu-rom-i3c] Reset indirect fifo ctrl
 [mcu-rom-i3c] Enable PHY to the bus
 [mcu-rom] Waiting for Caliptra to be ready for fuses: true
-[mcu-rom] Writing fuses to Caliptra
+
+[BMC-I3C @  154110] Initializing calightra_i3c_ctrl (VERSION = 0x00010100)
+[mcu-rom] Wri[BMC-I3C @  155042] Dynamic Address Assignment over I3C wire: RSTDAA=ACK, SETDASA(0x3a->0x08)=ACK, SETDASA(0x3b->0x09)=ACK
+ting fuses to Caliptra
+[BMC-I3C @  157331] Read PROT_CAP from I3C target 0x09: magic="OCP RECV", version=0x0000, agent_caps=0x0000
 [mcu-rom] Setting Caliptra mailbox user 0 to 00000001
 [mcu-rom] Locking Caliptra mailbox user 0
 [mcu-rom] Setting fuse user
@@ -71,7 +74,7 @@ Lifecycle controller initialization done
 [mcu-fuse-write] Setting prod debug unlock PK hash bank offset to 480, count 8
 [mcu-rom] Writing handoff table (size 260) to DCCM at 0x50003c00
 [mcu-rom] Configuring MCU mailbox AXI users
-[mcu-rom] Setting MCI mailbox 0 user [SIM @  500000] Progress: 208.53 s elapsed (2.40 kHz)
+[mcu-rom] Setting MCI mailbox 0 user [SIM @  500000] Progress: 202.63 s elapsed (2.47 kHz)
 0 to 00000001
 [mcu-rom] Setting SS_CONFIG_DONE_STICKY to lock configuration
 [mcu-rom] Setting SS_CONFIG_DONE
@@ -84,7 +87,7 @@ Lifecycle controller initialization done
 [SIM @  679961] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000d01
 [mcu-rom] Waiting for Caliptra Core boot FSM to be DONE
 [mcu-rom] Waiting for Caliptra to be ready for mbox
-[SIM @ 1000000] Progress: 431.65 s elapsed (2.32 kHz)
+[SIM @ 1000000] Progress: 423.58 s elapsed (2.36 kHz)
 
 Runing Caliptra ROM .
 [state] WD Timer not started. Device not locked for debuging
@@ -95,53 +98,112 @@ Runing Caliptra ROM .
 
 [SIM @ 1367817] Caliptra Core asserted ready_for_mb_processing = 1!
 [mcu-rom-hook] post_caliptra_boot
-[SIM @ 1369659] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000f01
+[SIM @ 1369653] MCI GENERIC_OUTPUT_WIRES_0 = 0x00000f01
 [mcu-rom] Caliptra is ready for mailbox commands
-[SIM @ 1500000] Progress: 643.05 s elapsed (2.33 kHz)
+[SIM @ 1500000] Progress: 636.04 s elapsed (2.36 kHz)
 [fwproc] Wait for Comands.
 [fwproc] Recv comand 0x434d5247
 [fwproc] Recv comand 0x434d5247
 [fwproc] Recv comand 0x434d5247
 [mcu-rom] Sending RI_DOWNLOAD_FIRMWARE command
 [mcu-rom-hook] pre_load_firmware
-[SIM @ 1715025] MCI GENERIC_OUTPUT_WIRES_0 = 0x00001f01
+[SIM @ 1714838] MCI GENERIC_OUTPUT_WIRES_0 = 0x00001f01
 [fwproc] Recv comand 0x5249464
 [fwproc] Completing RI_DOWNLOAD_FIRMWARE comand
-[fwproc] Do[wmnlcoua-drionmg]  iWmaaigtei nfrgo mf oRr IM CtUo  fMiCrU mSwRaArMe
- to [dbmea -rreeacdoyv
+[fwproc] Do[wmncloua-drionmg]  iWmaaigtei nfgro mf oRr IM CtUo  fMiCrUm wSRaArMe
+ to [bdem a-rreeacdoyv
 ery] Requesting recovery image 0
 [dma-recovery] Set device status 3
 
-[BMC @ 1729538] Recovery request detected for Image 0: 56960 DWORDs (227840 bytes)
+[BMC-I3C @ 1733123] I3C Recovery request for Image 0 (prot_err=0x00): 56960 DWORDs (227840 bytes, padded to 227840 bytes)
 [dma-recovery] Payload available, 27840 bytes
-[SIM @ 2000000] Progress: 853.29 s elapsed (2.34 kHz)
+[SIM @ 2000000] Progress: 846.03 s elapsed (2.36 kHz)
+[SIM @ 2500000] Progress: 1063.23 s elapsed (2.35 kHz)
+[SIM @ 3000000] Progress: 1285.52 s elapsed (2.33 kHz)
+[BMC-I3C @ 3398531] Image 0 progress: 16384 / 227840 bytes
+[SIM @ 3500000] Progress: 1540.39 s elapsed (2.27 kHz)
+[SIM @ 4000000] Progress: 1790.49 s elapsed (2.23 kHz)
+[SIM @ 4500000] Progress: 2048.72 s elapsed (2.20 kHz)
+[SIM @ 5000000] Progress: 2314.94 s elapsed (2.16 kHz)
+[BMC-I3C @ 5063939] Image 0 progress: 32768 / 227840 bytes
+[SIM @ 5500000] Progress: 2574.42 s elapsed (2.14 kHz)
+[SIM @ 6000000] Progress: 2836.73 s elapsed (2.12 kHz)
+[SIM @ 6500000] Progress: 3104.40 s elapsed (2.09 kHz)
+[BMC-I3C @ 6729347] Image 0 progress: 49152 / 227840 bytes
+[SIM @ 7000000] Progress: 3368.74 s elapsed (2.08 kHz)
+[SIM @ 7500000] Progress: 3637.89 s elapsed (2.06 kHz)
+[SIM @ 8000000] Progress: 3904.54 s elapsed (2.05 kHz)
+[BMC-I3C @ 8394755] Image 0 progress: 65536 / 227840 bytes
+[SIM @ 8500000] Progress: 4168.86 s elapsed (2.04 kHz)
+[SIM @ 9000000] Progress: 4431.23 s elapsed (2.03 kHz)
+[SIM @ 9500000] Progress: 4653.24 s elapsed (2.04 kHz)
+[SIM @ 10000000] Progress: 4875.95 s elapsed (2.05 kHz)
+[BMC-I3C @ 10060163] Image 0 progress: 81920 / 227840 bytes
+[SIM @ 10500000] Progress: 5098.13 s elapsed (2.06 kHz)
+[SIM @ 11000000] Progress: 5332.54 s elapsed (2.06 kHz)
+[SIM @ 11500000] Progress: 5561.80 s elapsed (2.07 kHz)
+[BMC-I3C @ 11725571] Image 0 progress: 98304 / 227840 bytes
+[SIM @ 12000000] Progress: 5782.87 s elapsed (2.08 kHz)
+[SIM @ 12500000] Progress: 5998.01 s elapsed (2.08 kHz)
+[SIM @ 13000000] Progress: 6214.04 s elapsed (2.09 kHz)
+[BMC-I3C @ 13390979] Image 0 progress: 114688 / 227840 bytes
+[SIM @ 13500000] Progress: 6429.09 s elapsed (2.10 kHz)
+[SIM @ 14000000] Progress: 6646.42 s elapsed (2.11 kHz)
+[SIM @ 14500000] Progress: 6862.36 s elapsed (2.11 kHz)
+[SIM @ 15000000] Progress: 7078.37 s elapsed (2.12 kHz)
+[BMC-I3C @ 15056387] Image 0 progress: 131072 / 227840 bytes
+[SIM @ 15500000] Progress: 7295.48 s elapsed (2.12 kHz)
+[SIM @ 16000000] Progress: 7509.95 s elapsed (2.13 kHz)
+[SIM @ 16500000] Progress: 7727.63 s elapsed (2.14 kHz)
+[BMC-I3C @ 16721795] Image 0 progress: 147456 / 227840 bytes
+[SIM @ 17000000] Progress: 7942.90 s elapsed (2.14 kHz)
+[SIM @ 17500000] Progress: 8160.03 s elapsed (2.14 kHz)
+[SIM @ 18000000] Progress: 8376.53 s elapsed (2.15 kHz)
+[BMC-I3C @ 18387203] Image 0 progress: 163840 / 227840 bytes
+[SIM @ 18500000] Progress: 8592.18 s elapsed (2.15 kHz)
+[SIM @ 19000000] Progress: 8807.77 s elapsed (2.16 kHz)
+[SIM @ 19500000] Progress: 9022.05 s elapsed (2.16 kHz)
+[SIM @ 20000000] Progress: 9237.88 s elapsed (2.16 kHz)
+[BMC-I3C @ 20052611] Image 0 progress: 180224 / 227840 bytes
+[SIM @ 20500000] Progress: 9453.32 s elapsed (2.17 kHz)
+[SIM @ 21000000] Progress: 9670.57 s elapsed (2.17 kHz)
+[SIM @ 21500000] Progress: 9887.82 s elapsed (2.17 kHz)
+[BMC-I3C @ 21718019] Image 0 progress: 196608 / 227840 bytes
+[SIM @ 22000000] Progress: 10103.55 s elapsed (2.18 kHz)
+[SIM @ 22500000] Progress: 10319.75 s elapsed (2.18 kHz)
+[SIM @ 23000000] Progress: 10534.79 s elapsed (2.18 kHz)
+[BMC-I3C @ 23383427] Image 0 progress: 212992 / 227840 bytes
+[SIM @ 23500000] Progress: 10750.07 s elapsed (2.19 kHz)
+[SIM @ 24000000] Progress: 10965.16 s elapsed (2.19 kHz)
+[SIM @ 24500000] Progress: 11181.99 s elapsed (2.19 kHz)
+[BMC-I3C @ 24892703] Image 0 progress: 227840 / 227840 bytes
 
-[BMC @ 2322022] Finished streaming Image 0 (56960/56960 DWORDs), waiting for DEVICE_STATUS_PENDING...
+[BMC-I3C @ 24892703] Finished streaming Image 0 over I3C (227840/227840 bytes), waiting for DEVICE_STATUS_PENDING...
 
-[BMC @ 2322811] Activated Recovery Image 0 (RECOVERY_CTRL.ACTIVATE_REC_IMG = 0xF)!
+[BMC-I3C @ 24895893] Activated Recovery Image 0 over I3C (RECOVERY_CTRL = {0x00, 0x00, 0x0F})!
 [fwproc] Received image from the Recovery Interface of size 27840 bytes
-[SIM @ 2500000] Progress: 1068.32 s elapsed (2.34 kHz)
+[SIM @ 25000000] Progress: 11399.31 s elapsed (2.19 kHz)
 [fwproc] Seting device recovery status to 0x1, image index 0x1, device status 0x3
-[fwpr
-[BMC @ 2857522] Recovery request detected for Image 1: 7674 DWORDs (30696 bytes)
-oc] Img verified ec=0 MLDSA=0 svn=0 fuse_svn=0
+[fwproc] Img verified ec=0 MLDSA=0 svn=0 fuse_svn=0
+
+[BMC-I3C @ 25433623] I3C Recovery request for Image 1 (prot_err=0x00): 7674 DWORDs (30696 bytes, padded to 30720 bytes)
+[SIM @ 25500000] Progress: 11609.65 s elapsed (2.20 kHz)
 [fwproc] Load FMC at adres 0x40 len 530
 [fwproc] Load Runtime at adres 0x4080 len 20516
-[SIM @ 3000000] Progress: 1277.37 s elapsed (2.35 kHz)
-[SIM @ 3500000] Progress: 1501.03 s elapsed (2.33 kHz)
-[SIM @ 4000000] Progress: 1735.26 s elapsed (2.31 kHz)
-[SIM @ 4500000] Progress: 1980.30 s elapsed (2.27 kHz)
-[SIM @ 5000000] Progress: 2214.75 s elapsed (2.26 kHz)
-[SIM @ 5500000] Progress: 2447.39 s elapsed (2.25 kHz)
-[SIM @ 6000000] Progress: 2688.91 s elapsed (2.23 kHz)
-[SIM @ 6500000] Progress: 2911.68 s elapsed (2.23 kHz)
-[SIM @ 7000000] Progress: 3172.84 s elapsed (2.21 kHz)
-[SIM @ 7500000] Progress: 3429.87 s elapsed (2.19 kHz)
+[SIM @ 26000000] Progress: 11834.19 s elapsed (2.20 kHz)
+[SIM @ 26500000] Progress: 12058.87 s elapsed (2.20 kHz)
+[SIM @ 27000000] Progress: 12282.89 s elapsed (2.20 kHz)
+[SIM @ 27500000] Progress: 12499.69 s elapsed (2.20 kHz)
+[SIM @ 28000000] Progress: 12714.00 s elapsed (2.20 kHz)
+[SIM @ 28500000] Progress: 12930.02 s elapsed (2.20 kHz)
+[SIM @ 29000000] Progress: 13146.69 s elapsed (2.21 kHz)
+[SIM @ 29500000] Progress: 13360.47 s elapsed (2.21 kHz)
+[SIM @ 30000000] Progress: 13574.36 s elapsed (2.21 kHz)
 [fwproc] Initializing chain, length 128 (max 128)
-[SIM @ 8000000] Progress: 3687.44 s elapsed (2.17 kHz)
-[SIM @ 8500000] Progress: 3922.48 s elapsed (2.17 kHz)
+[SIM @ 30500000] Progress: 13789.42 s elapsed (2.21 kHz)
+[SIM @ 31000000] Progress: 14000.59 s elapsed (2.21 kHz)
 [fwproc] Chain initialized
-[SIM @ 9000000] Progress: 4160.38 s elapsed (2.16 kHz)
+[SIM @ 31500000] Progress: 14211.73 s elapsed (2.22 kHz)
 [fake-rom-cold-reset] -
 [state] Locking Datavault
 [exit] Launching FMC @ 0x40
@@ -154,91 +216,100 @@ Caliptra RT
 [kat] AES-CMAC
 [kat] MLKEM1024
 [rt] OCP LOCK Unsuported
-[SIM @ 9500000] Progress: 4415.28 s elapsed (2.15 kHz)
+[SIM @ 32000000] Progress: 14426.58 s elapsed (2.22 kHz)
 [dma-recovery] Requesting recovery image 1
 [dma-recovery] Set device status 3
 [dma-recovery] Payload available, 30696 bytes
-[SIM @ 10000000] Progress: 4682.27 s elapsed (2.14 kHz)
+[SIM @ 32500000] Progress: 14638.75 s elapsed (2.22 kHz)
+[SIM @ 33000000] Progress: 14865.43 s elapsed (2.22 kHz)
+[SIM @ 33500000] Progress: 15090.52 s elapsed (2.22 kHz)
+[SIM @ 34000000] Progress: 15317.17 s elapsed (2.22 kHz)
+[BMC-I3C @ 34060232] Image 1 progress: 16384 / 30720 bytes
+[SIM @ 34500000] Progress: 15544.27 s elapsed (2.22 kHz)
+[SIM @ 35000000] Progress: 15770.52 s elapsed (2.22 kHz)
+[SIM @ 35500000] Progress: 15997.17 s elapsed (2.22 kHz)
+[BMC-I3C @ 35517464] Image 1 progress: 30720 / 30720 bytes
 
-[BMC @ 10026946] Finished streaming Image 1 (7674/7674 DWORDs), waiting for DEVICE_STATUS_PENDING...
+[BMC-I3C @ 35517464] Finished streaming Image 1 over I3C (30720/30720 bytes), waiting for DEVICE_STATUS_PENDING...
 [dma-recovery] Waiting for activation
 
-[BMC @ 10030018] Activated Recovery Image 1 (RECOVERY_CTRL.ACTIVATE_REC_IMG = 0xF)!
-[SIM @ 10500000] Progress: 4950.64 s elapsed (2.12 kHz)
-[SIM @ 11000000] Progress: 5213.78 s elapsed (2.11 kHz)
-[SIM @ 11500000] Progress: 5479.77 s elapsed (2.10 kHz)
-[SIM @ 12000000] Progress: 5752.56 s elapsed (2.09 kHz)
-[SIM @ 12500000] Progress: 6026.44 s elapsed (2.07 kHz)
-[SIM @ 13000000] Progress: 6292.00 s elapsed (2.07 kHz)
-[SIM @ 13500000] Progress: 6561.15 s elapsed (2.06 kHz)
-[SIM @ 14000000] Progress: 6836.12 s elapsed (2.05 kHz)
-[
-[BMC @ 14347530] Recovery request detected for Image 2: 64 DWORDs (256 bytes)
-dma-recovery]
-[BMC @ 14347939] Finished streaming Image 2 (64/64 DWORDs), waiting for DEVICE_STATUS_PENDING...
- Requesting recovery image 2
+[BMC-I3C @ 35523093] Activated Recovery Image 1 over I3C (RECOVERY_CTRL = {0x00, 0x00, 0x0F})!
+[SIM @ 36000000] Progress: 16225.93 s elapsed (2.22 kHz)
+[SIM @ 36500000] Progress: 16455.45 s elapsed (2.22 kHz)
+[SIM @ 37000000] Progress: 16683.40 s elapsed (2.22 kHz)
+[SIM @ 37500000] Progress: 16910.41 s elapsed (2.22 kHz)
+[SIM @ 38000000] Progress: 17136.36 s elapsed (2.22 kHz)
+[SIM @ 38500000] Progress: 17362.81 s elapsed (2.22 kHz)
+[SIM @ 39000000] Progress: 17590.72 s elapsed (2.22 kHz)
+[SIM @ 39500000] Progress: 17818.32 s elapsed (2.22 kHz)
+[dma-recovery] Requesting recovery image 2
 [dma-recovery] Set device status 3
+
+[BMC-I3C @ 39845123] I3C Recovery request for Image 2 (prot_err=0x00): 64 DWORDs (256 bytes, padded to 256 bytes)
+[BMC-I3C @ 39868757] Image 2 progress: 256 / 256 bytes
+
+[BMC-I3C @ 39868757] Finished streaming Image 2 over I3C (256/256 bytes), waiting for DEVICE_STATUS_PENDING...
 [dma-recovery] Payload available, 256 bytes
 
-[BMC @ 14353619] Activated Recovery Image 2 (RECOVERY_CTRL.ACTIVATE_REC_IMG = 0xF)!
+[BMC-I3C @ 39873093] Activated Recovery Image 2 over I3C (RECOVERY_CTRL = {0x00, 0x00, 0x0F})!
 [rt] Verifying MCU digest: D0171A19B6FD17E9E49423BC5782B0E1D1EB5086B5716F6F2F521FCF28E625693A0F474F1A2F95C8EB36C4AD1
 
-[SIM @ 14384879] Caliptra Core asserted FW_EXEC_CTRL[2] (MCU runtime ready) = 1!
-[mcu-rom] Fir[mrtw]a Dries abilse  ernetraodpyy 
-source
-[[rmtc]u R-Tr loimst]e nFinigr fmowra mraeil bloox acdom daendtse.ct
-e
-[SIM @ 14387993] Caliptra Core asserted ready_for_runtime = 1!
-d
+[SIM @ 39904333] Caliptra Core asserted FW_EXEC_CTRL[2] (MCU runtime ready) = 1!
+[mcu-rom] Firmw[ratr]e D iisasb ler eeantdryop
+y sourc[e
+m[crut-] rRoT ml]i stFeinirnmgw faorr em alilobaoxd  cdometanedcs.ted
+
+
+[SIM @ 39907447] Caliptra Core asserted ready_for_runtime = 1!
 [mcu-rom-hook] post_load_firmware
-[SIM @ 14389847] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f01
+[SIM @ 39909220] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f01
 [mcu-rom] Waiting for Caliptra RT to be ready for runtime mailbox commands
 [mcu-fuse-write] Locking vendor PK hash slots from index 0
-[SIM @ 14500000] Progress: 7097.29 s elapsed (2.04 kHz)
+[SIM @ 40000000] Progress: 18034.80 s elapsed (2.22 kHz)
 [rt] Received comand=0x434d5349 (CMSI), len=4108
-[SIM @ 15000000] Progress: 7329.63 s elapsed (2.05 kHz)
+[SIM @ 40500000] Progress: 18240.73 s elapsed (2.22 kHz)
 [rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 15500000] Progress: 7560.12 s elapsed (2.05 kHz)
+[SIM @ 41000000] Progress: 18444.87 s elapsed (2.22 kHz)
 [rt] Received comand=0x434d535 (CMSU), len=4304
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 16000000] Progress: 7788.56 s elapsed (2.05 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 16500000] Progress: 8032.69 s elapsed (2.05 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 17000000] Progress: 8263.11 s elapsed (2.06 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 17500000] Progress: 8504.87 s elapsed (2.06 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 18000000] Progress: 8733.55 s elapsed (2.06 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 18500000] Progress: 8936.24 s elapsed (2.07 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 19000000] Progress: 9138.71 s elapsed (2.08 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 19500000] Progress: 9341.62 s elapsed (2.09 kHz)
-[rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 20000000] Progress: 9546.97 s elapsed (2.09 kHz)
+[SIM @ 41500000] Progress: 18651.78 s elapsed (2.22 kHz)
 [rt] Received comand=0x434d535 (CMSU), len=4304
 [rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 20500000] Progress: 9750.23 s elapsed (2.10 kHz)
+[SIM @ 42000000] Progress: 18858.98 s elapsed (2.23 kHz)
 [rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 21000000] Progress: 9953.20 s elapsed (2.11 kHz)
+[SIM @ 42500000] Progress: 19066.22 s elapsed (2.23 kHz)
 [rt] Received comand=0x434d535 (CMSU), len=4304
-[SIM @ 21500000] Progress: 10158.67 s elapsed (2.12 kHz)
+[SIM @ 43000000] Progress: 19271.98 s elapsed (2.23 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 43500000] Progress: 19477.57 s elapsed (2.23 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 44000000] Progress: 19683.71 s elapsed (2.24 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 44500000] Progress: 19888.47 s elapsed (2.24 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 45000000] Progress: 20095.14 s elapsed (2.24 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 45500000] Progress: 20302.25 s elapsed (2.24 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 46000000] Progress: 20508.21 s elapsed (2.24 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 46500000] Progress: 20715.02 s elapsed (2.24 kHz)
+[rt] Received comand=0x434d535 (CMSU), len=4304
+[SIM @ 47000000] Progress: 20920.34 s elapsed (2.25 kHz)
 [rt] Received comand=0x434d5346 (CMSF), len=4304
 [mcu-rom] MCU ROM digest: 7F440BF98B6B6BB7DB03BDB921D1F219A5B44A6C67FF6774A641FCE039175D6251C571AB7B1B1EBA95F615766A6CECFF
 [mcu-rom] MCU ROM expected digest: 7F440BF98B6B6BB7DB03BDB921D1F219A5B44A6C67FF6774A641FCE039175D6251C571AB7B1B1EBA95F615766A6CECFF
 [mcu-rom] Finished boot-mode-specific initialization
 [rt] Received comand=0x434d5349 (CMSI), len=4108
-[SIM @ 22000000] Progress: 10362.89 s elapsed (2.12 kHz)
+[SIM @ 47500000] Progress: 21127.04 s elapsed (2.25 kHz)
 [rt] Received comand=0x434d5346 (CMSF), len=4304
 [rt] Received comand=0x4d454153 (MEAS), len=108
 [mcu-rom] Disabling recovery interface
 [mcu-rom] Resetting to boot firmware
 [mcu-rom-hook] post_cold_boot
-[SIM @ 22269960] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f03
-[SIM @ 22270045] MCI Boot Sequencer asserted MCU reset (cptra_ss_mcu_rst_b_o = 0)
-[SIM @ 22270062] MCI Boot Sequencer released MCU reset (cptra_ss_mcu_rst_b_o = 1)
+[SIM @ 47789333] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f03
+[SIM @ 47789418] MCI Boot Sequencer asserted MCU reset (cptra_ss_mcu_rst_b_o = 0)
+[SIM @ 47789435] MCI Boot Sequencer released MCU reset (cptra_ss_mcu_rst_b_o = 1)
 
 Calightra MCU ROM (caliptra-mcu-sw main-2.1)
 [mcu-rom] Starting Calightra MCU ROM
@@ -249,21 +320,21 @@ Calightra MCU ROM (caliptra-mcu-sw main-2.1)
 [mcu-rom] MCI RESET_REASON: 0x00000002
 [mcu-rom] Firmware boot reset detected
 [mcu-rom-hook] pre_fw_boot
-[SIM @ 22299747] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f13
+[SIM @ 47819120] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f13
 [mcu-rom] Starting fw boot reset flow
 [mcu-rom] Jumping to firmware
 [mcu-rom-hook] post_fw_boot
-[SIM @ 22304493] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f33
-[SIM @ 22304604] MCI GENERIC_OUTPUT_WIRES_0 = 0xca1100ff
+[SIM @ 47823866] MCI GENERIC_OUTPUT_WIRES_0 = 0x00003f33
+[SIM @ 47823977] MCI GENERIC_OUTPUT_WIRES_0 = 0xca1100ff
 
 [mcu-rt] Hello from Calightra MCU Runtime Firmware at 0x21c00000!
 [mcu-rt] Full I3C Recovery Flow (Caliptra FMC/RT + SoC Manifest + MCU RT) COMPLETE!
 
-[SIM @ 22314855] MCU signaled TEST PASS (0xFF) via MCI DEBUG_OUT!
+[SIM @ 47834228] MCU signaled TEST PASS (0xFF) via MCI DEBUG_OUT!
 ================================================================
 Calightra-SS Simulation Summary:
-  Total Cycles            : 22314856
-  Wall-Clock Time         : 10490.75 s (2.13 kHz)
+  Total Cycles            : 47834229
+  Wall-Clock Time         : 21263.96 s (2.25 kHz)
   MCU Reset Released      : YES
   Caliptra Reset Released : YES
   ready_for_fuses         : YES

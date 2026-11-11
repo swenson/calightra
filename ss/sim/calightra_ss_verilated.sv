@@ -59,13 +59,16 @@ module calightra_ss_verilated
     output logic [31:0] soc_rdata,
     output logic [1:0]  soc_rresp,
 
-    // Physical I3C Target Bus Pins
-    input  logic        i3c_scl_i,
-    input  logic        i3c_sda_i,
-    output logic        i3c_scl_o,
-    output logic        i3c_sda_o,
-    output logic        i3c_scl_oe,
-    output logic        i3c_sda_oe,
+    // External Host I3C Controller (Master) MMIO Register Interface
+    input  logic [7:0]  i3c_ctrl_addr_i,
+    input  logic [31:0] i3c_ctrl_wdata_i,
+    input  logic        i3c_ctrl_we_i,
+    input  logic        i3c_ctrl_re_i,
+    output logic [31:0] i3c_ctrl_rdata_o,
+
+    // Physical I3C Bus Monitor Outputs
+    output logic        i3c_bus_scl_o,
+    output logic        i3c_bus_sda_o,
 
     // Status & Console Outputs
     output logic        cptra_ss_mci_cptra_rst_b_o,
@@ -437,6 +440,20 @@ module calightra_ss_verilated
     logic        cptra_ss_i3c_recovery_payload_available_o;
     logic        cptra_ss_i3c_recovery_image_activated_o;
 
+    logic target_i3c_scl_o, target_i3c_sda_o, target_i3c_scl_oe, target_i3c_sda_oe;
+    logic ctrl_i3c_scl_o,   ctrl_i3c_sda_o,   ctrl_i3c_scl_oe,   ctrl_i3c_sda_oe;
+
+    wire target_scl_line = target_i3c_scl_oe ? target_i3c_scl_o : 1'b1;
+    wire ctrl_scl_line   = ctrl_i3c_scl_oe   ? ctrl_i3c_scl_o   : 1'b1;
+    wire i3c_bus_scl     = target_scl_line & ctrl_scl_line;
+
+    wire target_sda_line = target_i3c_sda_oe ? target_i3c_sda_o : 1'b1;
+    wire ctrl_sda_line   = ctrl_i3c_sda_oe   ? ctrl_i3c_sda_o   : 1'b1;
+    wire i3c_bus_sda     = target_sda_line & ctrl_sda_line;
+
+    assign i3c_bus_scl_o = i3c_bus_scl;
+    assign i3c_bus_sda_o = i3c_bus_sda;
+
     caliptra_ss_top #(
         .MCU_SRAM_SIZE_KB            (MCU_SRAM_SIZE_KB),
         .MCU_MBOX0_SIZE_KB           (MCU_MBOX0_SIZE_KB),
@@ -629,12 +646,12 @@ module calightra_ss_verilated
         .cptra_ss_fuse_macro_outputs_i        ('0),
         .cptra_ss_fuse_macro_inputs_o         (cptra_ss_fuse_macro_inputs_o),
 
-        .cptra_ss_i3c_scl_i                   (i3c_scl_i),
-        .cptra_ss_i3c_sda_i                   (i3c_sda_i),
-        .cptra_ss_i3c_scl_o                   (i3c_scl_o),
-        .cptra_ss_i3c_sda_o                   (i3c_sda_o),
-        .cptra_ss_i3c_scl_oe                  (i3c_scl_oe),
-        .cptra_ss_i3c_sda_oe                  (i3c_sda_oe),
+        .cptra_ss_i3c_scl_i                   (i3c_bus_scl),
+        .cptra_ss_i3c_sda_i                   (i3c_bus_sda),
+        .cptra_ss_i3c_scl_o                   (target_i3c_scl_o),
+        .cptra_ss_i3c_sda_o                   (target_i3c_sda_o),
+        .cptra_ss_i3c_scl_oe                  (target_i3c_scl_oe),
+        .cptra_ss_i3c_sda_oe                  (target_i3c_sda_oe),
         .cptra_ss_sel_od_pp_o                 (),
         .cptra_ss_i3c_recovery_payload_available_o(cptra_ss_i3c_recovery_payload_available_o),
         .cptra_ss_i3c_recovery_payload_available_i(cptra_ss_i3c_recovery_payload_available_o),
@@ -650,6 +667,25 @@ module calightra_ss_verilated
         .cptra_ss_cptra_core_ready_for_runtime_o      (cptra_ss_ready_for_runtime_o),
         .cptra_error_fatal                    (),
         .cptra_error_non_fatal                ()
+    );
+
+    // -------------------------------------------------------------------------
+    // Physical 2-Wire I3C Bus & External Open-Source I3C Controller (Master)
+    // -------------------------------------------------------------------------
+    calightra_i3c_ctrl u_i3c_ctrl (
+        .clk_i        (core_clk),
+        .rst_ni       (cptra_ss_rst_b_i),
+        .reg_addr_i   (i3c_ctrl_addr_i),
+        .reg_wdata_i  (i3c_ctrl_wdata_i),
+        .reg_we_i     (i3c_ctrl_we_i),
+        .reg_re_i     (i3c_ctrl_re_i),
+        .reg_rdata_o  (i3c_ctrl_rdata_o),
+        .i3c_scl_i    (i3c_bus_scl),
+        .i3c_scl_o    (ctrl_i3c_scl_o),
+        .i3c_scl_oe_o (ctrl_i3c_scl_oe),
+        .i3c_sda_i    (i3c_bus_sda),
+        .i3c_sda_o    (ctrl_i3c_sda_o),
+        .i3c_sda_oe_o (ctrl_i3c_sda_oe)
     );
 
     assign cptra_ss_fw_exec_ctrl_2_mcu_o = cptra_ss_cptra_generic_fw_exec_ctrl_2_mcu_o;

@@ -37,7 +37,7 @@ VFLAGS := --cc --exe \
 
 all: $(OBJ_DIR)/V$(TOP)
 
-$(OBJ_DIR)/V$(TOP).mk: calightra_ss_top.vf calightra_ss_verilated.sv ../rtl/calightra_ss_axi_xbar.sv
+$(OBJ_DIR)/V$(TOP).mk: calightra_ss_top.vf calightra_ss_verilated.sv ../rtl/calightra_ss_axi_xbar.sv ../rtl/calightra_i3c_ctrl.sv
 	$(VERILATOR) $(VFLAGS) -f calightra_ss_top.vf ss_boot_sim.cpp
 
 $(OBJ_DIR)/V$(TOP): $(OBJ_DIR)/V$(TOP).mk ss_boot_sim.cpp
@@ -51,12 +51,12 @@ run: $(OBJ_DIR)/V$(TOP)
 run-recovery: $(OBJ_DIR)/V$(TOP)
 	$(MAKE) -C ../mcu-rom
 	$(MAKE) -C ../fw
-	./$(OBJ_DIR)/V$(TOP) --cptra-rom=../../fw/fake-caliptra-rom.bin --bundle=../../fw/fake-image-bundle-mldsa.bin --max-cycles=30000000
+	./$(OBJ_DIR)/V$(TOP) --cptra-rom=../../fw/fake-caliptra-rom.bin --bundle=../../fw/fake-image-bundle-mldsa.bin --max-cycles=60000000
 
 run-recovery-full: $(OBJ_DIR)/V$(TOP)
 	$(MAKE) -C ../mcu-rom
 	$(MAKE) -C ../fw
-	./$(OBJ_DIR)/V$(TOP) --max-cycles=45000000
+	./$(OBJ_DIR)/V$(TOP) --max-cycles=70000000
 
 clean:
 	rm -rf $(OBJ_DIR)

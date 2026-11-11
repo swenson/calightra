@@ -832,4 +832,5 @@ ${CALIPTRA_SS_ROOT}/third_party/caliptra-rtl/src/integration/tb/caliptra_top_tb_
 ${CALIPTRA_SS_ROOT}/third_party/caliptra-rtl/src/integration/tb/caliptra_veer_sram_export.sv
 ${CALIPTRA_SS_ROOT}/src/integration/rtl/caliptra_ss_top.sv
 ${CALIPTRA_SS_ROOT}/../ss/rtl/calightra_ss_axi_xbar.sv
+${CALIPTRA_SS_ROOT}/../ss/rtl/calightra_i3c_ctrl.sv
 ${CALIPTRA_SS_ROOT}/../ss/sim/calightra_ss_verilated.sv
