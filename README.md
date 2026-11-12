@@ -2,11 +2,11 @@
 
 # Calightra-SS: Stripped Caliptra 2.1 Subsystem for Fast Verilator Simulation & Open-Source FPGAs
 
-**Calightra-SS** (`caliptra-ss` branch) is a stripped-down, 100% binary-compatible implementation of the full **Caliptra 2.1 Subsystem** ([`chipsalliance/caliptra-ss`](https://github.com/chipsalliance/caliptra-ss) `patch_ss_v2.1` + [`caliptra-rtl`](https://github.com/chipsalliance/caliptra-rtl) `patch_v2.1` + [`adams-bridge`](https://github.com/chipsalliance/adams-bridge) `v2.0.3` + [`i3c-core`](https://github.com/chipsalliance/i3c-core)) engineered to:
+**Calightra-SS** (`main` and `caliptra-ss` branches) is a stripped-down, 100% binary-compatible implementation of the full **Caliptra 2.1 Subsystem** ([`chipsalliance/caliptra-ss`](https://github.com/chipsalliance/caliptra-ss) `patch_ss_v2.1` + [`caliptra-rtl`](https://github.com/chipsalliance/caliptra-rtl) `patch_v2.1` + [`adams-bridge`](https://github.com/chipsalliance/adams-bridge) `v2.0.3` + [`i3c-core`](https://github.com/chipsalliance/i3c-core)) engineered to:
 1. **Synthesize, place, and route on a single open-source Lattice ECP5-85F FPGA** (**Radiona ULX3S-85F**, `LFE5U-85F-6BG381C`) using `sv2v` + `yosys` + `nextpnr-ecp5` + `ecppack`.
 2. **Simulate the full dual-VeeR-EL2 subsystem in Verilator**, booting the real [`chipsalliance/caliptra-mcu-sw`](https://github.com/chipsalliance/caliptra-mcu-sw) (`main-2.1`) Rust MCU ROM ([`ss/mcu-rom/`](ss/mcu-rom/)) alongside the unmodified [`chipsalliance/caliptra-sw`](https://github.com/chipsalliance/caliptra-sw) 2.1 Core ROM (`caliptra-rom.bin`) and firmware (`image-bundle-mldsa.bin`) through the complete **3-stage MIPI I3C / OCP Recovery streaming boot flow** (`ColdBoot` $\to$ `RI_DOWNLOAD_FIRMWARE` $\to$ `Image 0` Caliptra FMC+RT $\to$ `Image 1` MLDSA-87/ECC-384 SoC Authorization Manifest $\to$ `Image 2` MCU Runtime Firmware $\to$ `CM_SHA384` ROM digest check $\to$ `STASH_MEASUREMENT` $\to$ warm reset $\to$ `FwBoot` $\to$ MCU Runtime execution in SRAM @ `0x21C0_0000`).
 
-For the standalone Caliptra Core (`caliptra-rtl` without the subsystem MCU/MCI/I3C/OTP/LC), see [`sim/`](sim/), [`fpga/`](fpga/), or the `main` branch. For granular architectural details, phase-by-phase stripping tables, and full boot traces, see **[`DETAILS.md`](DETAILS.md)**.
+For the standalone Caliptra Core (`caliptra-rtl` without the subsystem MCU/MCI/I3C/OTP/LC), see [`sim/`](sim/), [`fpga/`](fpga/), or the **`caliptra-core` branch**. For granular architectural details, phase-by-phase stripping tables, and full boot traces, see **[`DETAILS.md`](DETAILS.md)**.
 
 ---
 

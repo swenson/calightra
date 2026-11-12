@@ -199,7 +199,7 @@ Using the Phase 2 build (`sim/out_phase2/boot_sim` with `+full_boot`, full log i
 
 ---
 
-## 5. Repository Structure (`caliptra-ss` Branch)
+## 5. Repository Structure (`main` and `caliptra-ss` Branches)
 
 - [`README.md`](README.md): Concise TL;DR summary, bottom-line synthesis/simulation metrics, ULX3S-85F pinout, and quick-start commands.
 - [`DETAILS.md`](DETAILS.md): This document — detailed architecture, stripping phases, hierarchical area tables, and boot logs.
