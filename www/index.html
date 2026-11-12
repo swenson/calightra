@@ -38,7 +38,9 @@
       Adams Bridge ML-DSA-87 &amp; ML-KEM-1024, ECC P-384, SHA2/SHA3, AES-GCM, Key/PCR Vaults, and AXI4-Lite
       Mailbox — with side-channel masking/blinding countermeasures, SRAM ECC, VeeR PMP/JTAG debug, and SVA
       assertions stripped out for a ~20× smaller model) compiled with Verilator to WebAssembly and executing
-      <strong>unmodified upstream Caliptra 2.1 ROM &amp; Runtime firmware</strong> cycle-by-cycle in a Web Worker.
+      <strong>unmodified upstream Caliptra 2.1 ROM &amp; Runtime firmware</strong> by default (with an optional
+      <code>caliptra-sw</code> <strong>Fake ROM</strong> test mode that skips KATs and IDevID/LDevID DICE flows
+      for faster interactive mailbox testing).
     </p>
     <span class="build-info" id="build-info"></span>
   </div>
@@ -53,41 +55,56 @@
         <fieldset>
           <legend>Images</legend>
           <div class="field">
-            <label for="image-preset">Firmware preset</label>
+            <label for="image-preset">Quick preset</label>
             <select id="image-preset">
-              <optgroup label="Fast RTL simulation (skip lengthy ROM power-on KATs)">
-                <option value="fast-mldsa" selected>ROM + Runtime — Fast Boot, ML-DSA (~7.4M cycles)</option>
-                <option value="rom-only-fast">ROM Mailbox Only — Fast Boot (~420k cycles, ~2 min)</option>
-                <option value="fast-lms">ROM + Runtime — Fast Boot, LMS (~7.4M cycles)</option>
+              <optgroup label="Real Caliptra 2.1 ROM (full KATs + IDevID &amp; LDevID DICE)">
+                <option value="full-mldsa" selected>Real ROM + Real Runtime — ML-DSA-87 (~31.5M cycles)</option>
+                <option value="rom-only-full">Real ROM Only — Mailbox Ready (~4.6M cycles, ~21 min)</option>
+                <option value="full-lms">Real ROM + Real Runtime — LMS (~31.5M cycles)</option>
               </optgroup>
-              <optgroup label="Production KAT builds (full hardware self-tests)">
-                <option value="rom-only-full">ROM Mailbox Only — Full KATs (~4.6M cycles)</option>
-                <option value="full-mldsa">ROM + Runtime — Full KATs, ML-DSA (~31.5M cycles)</option>
-                <option value="full-lms">ROM + Runtime — Full KATs, LMS (~31.5M cycles)</option>
+              <optgroup label="Fake ROM test builds (caliptra-sw fake-rom: skips KATs, IDevID &amp; LDevID)">
+                <option value="rom-only-fast">Fake ROM Only — Mailbox Ready (~420k cycles, ~2 min)</option>
+                <option value="fast-mldsa">Fake ROM + Fake-ROM Runtime — ML-DSA-87 (~7.4M cycles)</option>
+                <option value="fast-lms">Fake ROM + Fake-ROM Runtime — LMS (~7.4M cycles)</option>
               </optgroup>
-              <optgroup label="User binaries">
-                <option value="custom">Custom uploaded binaries</option>
+              <optgroup label="Custom selection">
+                <option value="custom">Custom ROM / firmware combination</option>
               </optgroup>
             </select>
             <span class="hint" id="preset-hint">
-              Because Verilator evaluates every flip-flop and crypto engine each clock cycle (~3.5 kHz in WASM),
-              <em>ROM Mailbox Only (Fast Boot)</em> reaches interactive mailbox readiness in ~2 minutes (~420k cycles),
-              while full <em>ROM + Runtime</em> verifies ECC-384 + ML-DSA-87 + SHA-384 in hardware (~7.4M cycles).
+              Real Caliptra 2.1 ROM selected: executes full hardware power-on KATs, IDevID, and LDevID DICE
+              derivations (~4.6M cycles / ~21 min to ROM mailbox, ~31.5M cycles for full ROM + FMC + Runtime
+              at ~3.5 kHz in WASM). For a quick ~2-minute mailbox test without KATs or DICE, switch
+              <em>Caliptra ROM</em> below to <em>Fake ROM</em>.
             </span>
           </div>
 
           <div class="field">
-            <label for="rom-file">Caliptra ROM</label>
-            <input type="file" id="rom-file" accept=".bin,.rom">
+            <label for="rom-select">Caliptra ROM</label>
+            <select id="rom-select">
+              <option value="caliptra-rom-with-log.bin" selected>Real ROM — with UART log (caliptra-rom-with-log.bin)</option>
+              <option value="caliptra-rom.bin">Real ROM — production quiet (caliptra-rom.bin)</option>
+              <option value="fake-caliptra-rom.bin">Fake ROM — skips KATs, IDevID &amp; LDevID (fake-caliptra-rom.bin)</option>
+              <option value="custom">Custom uploaded ROM (.bin)…</option>
+            </select>
+            <input type="file" id="rom-file" accept=".bin,.rom" style="margin-top: 4px">
             <span class="hint" id="rom-info">Loading preset ROM…</span>
           </div>
 
           <div class="field">
             <div class="toolbar" style="justify-content: space-between; gap: 6px">
-              <label for="fw-file" style="font-size: 0.88rem; font-weight: 550">Caliptra firmware bundle</label>
+              <label for="fw-select" style="font-size: 0.88rem; font-weight: 550">Caliptra firmware bundle</label>
               <button type="button" id="btn-clear-fw" class="small" title="Boot ROM only and stop at ready_for_mb_processing">ROM-only</button>
             </div>
-            <input type="file" id="fw-file" accept=".bin,.bundle">
+            <select id="fw-select">
+              <option value="image-bundle-mldsa.bin" selected>Real FMC + Runtime — ML-DSA-87 (image-bundle-mldsa.bin)</option>
+              <option value="image-bundle-lms.bin">Real FMC + Runtime — LMS (image-bundle-lms.bin)</option>
+              <option value="none">None — ROM mailbox only</option>
+              <option value="fake-image-bundle-mldsa.bin">Fake-ROM FMC + Runtime — ML-DSA-87 (fake-image-bundle-mldsa.bin)</option>
+              <option value="fake-image-bundle-lms.bin">Fake-ROM FMC + Runtime — LMS (fake-image-bundle-lms.bin)</option>
+              <option value="custom">Custom uploaded bundle (.bin)…</option>
+            </select>
+            <input type="file" id="fw-file" accept=".bin,.bundle" style="margin-top: 4px">
             <span class="hint" id="fw-info">Loading preset firmware…</span>
           </div>
         </fieldset>

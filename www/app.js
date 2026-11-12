@@ -9,48 +9,79 @@
 const DEFAULT_MANUF_DBG_TOKEN_HEX =
   "d8922c55792b737f2913f3e5cbe654756252016eaee963a1dd4e753af787f096";
 
-const PRESETS = {
-  "fast-mldsa": {
-    rom: "fake-caliptra-rom.bin",
-    fw: "fake-image-bundle-mldsa.bin",
-    pqc: 1,
-    romLabel: "Fast-boot ROM (fake-caliptra-rom.bin)",
-    fwLabel: "Fast-boot ML-DSA bundle (fake-image-bundle-mldsa.bin)",
+const ROM_IMAGES = {
+  "caliptra-rom-with-log.bin": {
+    label: "Real Caliptra 2.1 ROM with UART log — full KATs + IDevID + LDevID",
+    isFake: false,
   },
-  "rom-only-fast": {
-    rom: "fake-caliptra-rom.bin",
-    fw: null,
-    pqc: 1,
-    romLabel: "Fast-boot ROM (fake-caliptra-rom.bin)",
-    fwLabel: "None — ROM mailbox only (~420k cycles, ~2 min)",
+  "caliptra-rom.bin": {
+    label: "Real Caliptra 2.1 production ROM (quiet UART) — full KATs + IDevID + LDevID",
+    isFake: false,
   },
-  "fast-lms": {
-    rom: "fake-caliptra-rom.bin",
-    fw: "fake-image-bundle-lms.bin",
+  "fake-caliptra-rom.bin": {
+    label: "Fake ROM (caliptra-sw test build: skips KATs, IDevID & LDevID)",
+    isFake: true,
+  },
+};
+
+const FW_IMAGES = {
+  "image-bundle-mldsa.bin": {
+    label: "Real FMC + Runtime bundle, ML-DSA-87",
+    pqc: 1,
+    isFake: false,
+  },
+  "image-bundle-lms.bin": {
+    label: "Real FMC + Runtime bundle, LMS",
     pqc: 3,
-    romLabel: "Fast-boot ROM (fake-caliptra-rom.bin)",
-    fwLabel: "Fast-boot LMS bundle (fake-image-bundle-lms.bin)",
+    isFake: false,
+  },
+  none: {
+    label: "None — ROM mailbox only (stops at ready_for_mb_processing)",
+    pqc: 1,
+    isFake: false,
+  },
+  "fake-image-bundle-mldsa.bin": {
+    label: "Fake-ROM FMC + Runtime bundle, ML-DSA-87 (skips RT KATs)",
+    pqc: 1,
+    isFake: true,
+  },
+  "fake-image-bundle-lms.bin": {
+    label: "Fake-ROM FMC + Runtime bundle, LMS (skips RT KATs)",
+    pqc: 3,
+    isFake: true,
+  },
+};
+
+const PRESETS = {
+  "full-mldsa": {
+    rom: "caliptra-rom-with-log.bin",
+    fw: "image-bundle-mldsa.bin",
+    pqc: 1,
   },
   "rom-only-full": {
     rom: "caliptra-rom-with-log.bin",
     fw: null,
     pqc: 1,
-    romLabel: "Production ROM with KATs (caliptra-rom-with-log.bin)",
-    fwLabel: "None — ROM mailbox only (~4.2M cycles)",
-  },
-  "full-mldsa": {
-    rom: "caliptra-rom-with-log.bin",
-    fw: "image-bundle-mldsa.bin",
-    pqc: 1,
-    romLabel: "Production ROM with KATs (caliptra-rom-with-log.bin)",
-    fwLabel: "Production ML-DSA bundle (image-bundle-mldsa.bin)",
   },
   "full-lms": {
     rom: "caliptra-rom-with-log.bin",
     fw: "image-bundle-lms.bin",
     pqc: 3,
-    romLabel: "Production ROM with KATs (caliptra-rom-with-log.bin)",
-    fwLabel: "Production LMS bundle (image-bundle-lms.bin)",
+  },
+  "rom-only-fast": {
+    rom: "fake-caliptra-rom.bin",
+    fw: null,
+    pqc: 1,
+  },
+  "fast-mldsa": {
+    rom: "fake-caliptra-rom.bin",
+    fw: "fake-image-bundle-mldsa.bin",
+    pqc: 1,
+  },
+  "fast-lms": {
+    rom: "fake-caliptra-rom.bin",
+    fw: "fake-image-bundle-lms.bin",
+    pqc: 3,
   },
 };
 
@@ -98,8 +129,11 @@ const ROM_BOOT_STATUS_NAMES = {
 
 // DOM elements
 const imagePresetSelect = document.getElementById("image-preset");
+const presetHint = document.getElementById("preset-hint");
+const romSelect = document.getElementById("rom-select");
 const romFileInput = document.getElementById("rom-file");
 const romInfo = document.getElementById("rom-info");
+const fwSelect = document.getElementById("fw-select");
 const fwFileInput = document.getElementById("fw-file");
 const fwInfo = document.getElementById("fw-info");
 const btnClearFw = document.getElementById("btn-clear-fw");
@@ -386,7 +420,9 @@ function setStepButtonsDisabled(disabled) {
 
 function setConfigDisabled(disabled) {
   imagePresetSelect.disabled = disabled;
+  romSelect.disabled = disabled;
   romFileInput.disabled = disabled;
+  fwSelect.disabled = disabled;
   fwFileInput.disabled = disabled;
   btnClearFw.disabled = disabled;
   vendorPkInput.disabled = disabled;
@@ -779,47 +815,117 @@ async function autoFillPkHashes(fwU8) {
   autoPk = { vendor: h.vendor_pk_hash, owner: h.owner_pk_hash };
 }
 
-async function loadSelectedPreset(presetKey) {
+function findMatchingPresetKey(romChoice, fwChoice) {
+  const fwNorm = fwChoice === "none" ? null : fwChoice;
+  for (const [key, p] of Object.entries(PRESETS)) {
+    if (p.rom === romChoice && p.fw === fwNorm) return key;
+  }
+  return "custom";
+}
+
+function updatePresetHint(romChoice) {
+  if (!presetHint) return;
+  if (ROM_IMAGES[romChoice]?.isFake) {
+    presetHint.textContent =
+      "Fake ROM selected (caliptra-sw fake-rom test build): skips power-on KATs and IDevID/LDevID DICE derivations ([fake-rom-cold-reset]) to reach mailbox readiness in ~420k cycles (~2 min). Select Real ROM below for full KAT & DICE execution.";
+  } else if (romChoice === "custom") {
+    presetHint.textContent =
+      "Custom ROM selected: Verilator clocks every hardware flip-flop and crypto engine each cycle (~3.5 kHz in WASM).";
+  } else {
+    presetHint.textContent =
+      "Real Caliptra 2.1 ROM selected: executes full hardware power-on KATs, IDevID, and LDevID DICE derivations (~4.6M cycles / ~21 min to ROM mailbox, ~31.5M cycles for full ROM + FMC + Runtime at ~3.5 kHz in WASM). For a quick ~2-minute mailbox test without KATs or DICE, switch Caliptra ROM to Fake ROM.";
+  }
+}
+
+let customRomName = "Custom ROM";
+let customFwName = "Custom firmware";
+
+async function loadSelectedImages() {
   const gen = ++presetLoadGeneration;
-  if (presetKey === "custom") {
-    activeRomBytes = customRomBytes;
-    activeFwBytes = customFwBytes;
-    romInfo.textContent = customRomBytes
-      ? `Custom ROM (${(customRomBytes.length / 1024).toFixed(1)} KB)`
-      : "Choose a custom Caliptra ROM binary (.bin)";
-    fwInfo.textContent = customFwBytes
-      ? `Custom firmware (${(customFwBytes.length / 1024).toFixed(1)} KB)`
-      : "None — ROM mailbox only (or choose a bundle)";
-    return;
+  const romChoice = romSelect.value;
+  const fwChoice = fwSelect.value;
+
+  imagePresetSelect.value = findMatchingPresetKey(romChoice, fwChoice);
+  updatePresetHint(romChoice);
+
+  if (romChoice !== "custom" && ROM_IMAGES[romChoice]) {
+    romInfo.textContent = `Loading ${romChoice}…`;
+  }
+  if (fwChoice !== "none" && fwChoice !== "custom" && FW_IMAGES[fwChoice]) {
+    fwInfo.textContent = `Loading ${fwChoice}…`;
   }
 
-  const preset = PRESETS[presetKey];
-  if (!preset) return;
-
-  romInfo.textContent = `Loading ${preset.rom}…`;
-  fwInfo.textContent = preset.fw ? `Loading ${preset.fw}…` : preset.fwLabel;
-
   const [romBytes, fwBytes] = await Promise.all([
-    fetchBinaryCached(preset.rom),
-    preset.fw ? fetchBinaryCached(preset.fw) : Promise.resolve(null),
+    romChoice === "custom"
+      ? Promise.resolve(customRomBytes)
+      : fetchBinaryCached(romChoice),
+    fwChoice === "none"
+      ? Promise.resolve(null)
+      : fwChoice === "custom"
+        ? Promise.resolve(customFwBytes)
+        : fetchBinaryCached(fwChoice),
   ]);
   if (gen !== presetLoadGeneration) return;
 
   activeRomBytes = romBytes;
   activeFwBytes = fwBytes;
-  romInfo.textContent = `${preset.romLabel} (${(romBytes.length / 1024).toFixed(0)} KB)`;
-  fwInfo.textContent = fwBytes
-    ? `${preset.fwLabel} (${(fwBytes.length / 1024).toFixed(1)} KB)`
-    : preset.fwLabel;
+
+  if (romChoice === "custom") {
+    romInfo.textContent = romBytes
+      ? `${customRomName} (${(romBytes.length / 1024).toFixed(1)} KB)`
+      : "Choose a custom Caliptra ROM binary (.bin)";
+  } else {
+    const meta = ROM_IMAGES[romChoice];
+    romInfo.textContent = `${meta ? meta.label : romChoice} (${(romBytes.length / 1024).toFixed(0)} KB)`;
+  }
+
+  if (fwChoice === "none") {
+    fwInfo.textContent = FW_IMAGES.none.label;
+  } else if (fwChoice === "custom") {
+    fwInfo.textContent = fwBytes
+      ? `${customFwName} (${(fwBytes.length / 1024).toFixed(1)} KB)`
+      : "Choose a custom firmware bundle (.bin), or select None above";
+  } else {
+    const meta = FW_IMAGES[fwChoice];
+    fwInfo.textContent = `${meta ? meta.label : fwChoice} (${(fwBytes.length / 1024).toFixed(1)} KB)`;
+  }
 
   if (fwBytes) {
     await autoFillPkHashes(fwBytes);
   }
 }
 
+async function applyPreset(presetKey) {
+  if (presetKey === "custom") {
+    updatePresetHint(romSelect.value);
+    return;
+  }
+  const preset = PRESETS[presetKey];
+  if (!preset) return;
+  romFileInput.value = "";
+  fwFileInput.value = "";
+  romSelect.value = preset.rom;
+  fwSelect.value = preset.fw || "none";
+  await loadSelectedImages();
+}
+
 imagePresetSelect.addEventListener("change", () => {
-  loadSelectedPreset(imagePresetSelect.value).catch((err) => {
+  applyPreset(imagePresetSelect.value).catch((err) => {
     setStatus(`Failed to load preset: ${err.message}`, "exited");
+  });
+});
+
+romSelect.addEventListener("change", () => {
+  if (romSelect.value !== "custom") romFileInput.value = "";
+  loadSelectedImages().catch((err) => {
+    setStatus(`Failed to load ROM: ${err.message}`, "exited");
+  });
+});
+
+fwSelect.addEventListener("change", () => {
+  if (fwSelect.value !== "custom") fwFileInput.value = "";
+  loadSelectedImages().catch((err) => {
+    setStatus(`Failed to load firmware: ${err.message}`, "exited");
   });
 });
 
@@ -829,9 +935,11 @@ romFileInput.addEventListener("change", (e) => {
   const reader = new FileReader();
   reader.onload = () => {
     customRomBytes = new Uint8Array(reader.result);
-    activeRomBytes = customRomBytes;
-    imagePresetSelect.value = "custom";
-    romInfo.textContent = `${file.name} (${(customRomBytes.length / 1024).toFixed(1)} KB)`;
+    customRomName = file.name;
+    romSelect.value = "custom";
+    loadSelectedImages().catch((err) => {
+      console.warn("Error applying custom ROM:", err);
+    });
   };
   reader.readAsArrayBuffer(file);
 });
@@ -840,38 +948,40 @@ fwFileInput.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = async () => {
+  reader.onload = () => {
     customFwBytes = new Uint8Array(reader.result);
-    if (!customRomBytes && activeRomBytes) {
-      customRomBytes = activeRomBytes;
-    }
-    activeFwBytes = customFwBytes;
-    imagePresetSelect.value = "custom";
-    fwInfo.textContent = `${file.name} (${(customFwBytes.length / 1024).toFixed(1)} KB)`;
-    try {
-      await autoFillPkHashes(customFwBytes);
-    } catch (err) {
+    customFwName = file.name;
+    fwSelect.value = "custom";
+    loadSelectedImages().catch((err) => {
       console.warn("Could not extract PK hashes from custom FW:", err);
-    }
+    });
   };
   reader.readAsArrayBuffer(file);
 });
 
 btnClearFw.addEventListener("click", () => {
   fwFileInput.value = "";
-  const cur = imagePresetSelect.value;
-  if (cur.startsWith("fast-") || cur === "rom-only-fast") {
-    imagePresetSelect.value = "rom-only-fast";
-    loadSelectedPreset("rom-only-fast");
-  } else if (cur.startsWith("full-") || cur === "rom-only-full") {
-    imagePresetSelect.value = "rom-only-full";
-    loadSelectedPreset("rom-only-full");
-  } else {
-    customFwBytes = null;
-    activeFwBytes = null;
-    fwInfo.textContent = "None — ROM mailbox only";
-  }
+  fwSelect.value = "none";
+  loadSelectedImages().catch((err) => {
+    setStatus(`Failed to update firmware selection: ${err.message}`, "exited");
+  });
 });
+
+function inferActivePqcKeyType() {
+  if (activeFwBytes && activeFwBytes.length >= 12) {
+    const hdrPqc =
+      (activeFwBytes[8] |
+        (activeFwBytes[9] << 8) |
+        (activeFwBytes[10] << 16) |
+        (activeFwBytes[11] << 24)) >>>
+      0;
+    if (hdrPqc === 1 || hdrPqc === 3) return hdrPqc;
+  }
+  const fwMetaPqc = FW_IMAGES[fwSelect.value]?.pqc;
+  if (fwMetaPqc !== undefined) return fwMetaPqc;
+  const presetPqc = PRESETS[imagePresetSelect.value]?.pqc;
+  return presetPqc !== undefined ? presetPqc : 1;
+}
 
 function parseInt32Maybe(s) {
   s = (s || "").trim();
@@ -897,8 +1007,7 @@ function buildFuseConfigJson() {
     const v = parseInt(fusePqcKeyType.value, 10);
     if (Number.isFinite(v)) cfg.fuse_pqc_key_type = v;
   } else {
-    const presetPqc = PRESETS[imagePresetSelect.value]?.pqc;
-    cfg.fuse_pqc_key_type = presetPqc !== undefined ? presetPqc : 1;
+    cfg.fuse_pqc_key_type = inferActivePqcKeyType();
   }
 
   const ecc = parseInt32Maybe(fuseEccRevocation.value);
@@ -957,8 +1066,8 @@ window.resetFuseFields = resetFuseFields;
 async function ensureSimInitialized() {
   if (simInitialized) return true;
 
-  if (!activeRomBytes && imagePresetSelect.value !== "custom") {
-    await loadSelectedPreset(imagePresetSelect.value);
+  if (!activeRomBytes && romSelect.value !== "custom") {
+    await loadSelectedImages();
   }
   if (!activeRomBytes) {
     setStatus("No Caliptra ROM image selected.", "stopped");
@@ -2409,9 +2518,20 @@ async function startup() {
   updateInputSection(mboxCmdSelect.value, getInputMode());
   applyStatus(lastStatus);
 
-  const qPreset = new URLSearchParams(location.search).get("preset");
+  const params = new URLSearchParams(location.search);
+  const qPreset = params.get("preset");
+  const qRom = params.get("rom");
+  const qFw = params.get("fw");
   if (qPreset && PRESETS[qPreset]) {
     imagePresetSelect.value = qPreset;
+    romSelect.value = PRESETS[qPreset].rom;
+    fwSelect.value = PRESETS[qPreset].fw || "none";
+  }
+  if (qRom && ROM_IMAGES[qRom]) {
+    romSelect.value = qRom;
+  }
+  if (qFw && FW_IMAGES[qFw]) {
+    fwSelect.value = qFw;
   }
 
   try {
@@ -2434,7 +2554,7 @@ async function startup() {
       }
     }
 
-    await loadSelectedPreset(imagePresetSelect.value);
+    await loadSelectedImages();
 
     setStatus("Ready", "");
     btnRun.disabled = false;

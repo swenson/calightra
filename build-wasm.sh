@@ -42,12 +42,13 @@ mkdir -p "${WWW_DIR}"
 make -C "${REPO_DIR}/wasm" WWW_DIR="${WWW_DIR}"
 
 # 2. Stage Caliptra 2.1 ROM & Firmware Bundles into www/
-cp -f "${FW_DIR}/fake-caliptra-rom.bin"        "${WWW_DIR}/fake-caliptra-rom.bin"
-cp -f "${FW_DIR}/fake-image-bundle-mldsa.bin"  "${WWW_DIR}/fake-image-bundle-mldsa.bin"
-cp -f "${FW_DIR}/fake-image-bundle-lms.bin"    "${WWW_DIR}/fake-image-bundle-lms.bin"
 cp -f "${FW_DIR}/caliptra-rom-with-log.bin"    "${WWW_DIR}/caliptra-rom-with-log.bin"
+cp -f "${FW_DIR}/caliptra-rom.bin"             "${WWW_DIR}/caliptra-rom.bin"
+cp -f "${FW_DIR}/fake-caliptra-rom.bin"        "${WWW_DIR}/fake-caliptra-rom.bin"
 cp -f "${FW_DIR}/image-bundle-mldsa.bin"       "${WWW_DIR}/image-bundle-mldsa.bin"
 cp -f "${FW_DIR}/image-bundle-lms.bin"         "${WWW_DIR}/image-bundle-lms.bin"
+cp -f "${FW_DIR}/fake-image-bundle-mldsa.bin"  "${WWW_DIR}/fake-image-bundle-mldsa.bin"
+cp -f "${FW_DIR}/fake-image-bundle-lms.bin"    "${WWW_DIR}/fake-image-bundle-lms.bin"
 
 # 3. Generate www/build-info.json
 VERILATOR_VER="$(verilator --version | awk '{print $2}')"

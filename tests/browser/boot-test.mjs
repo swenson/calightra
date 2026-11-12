@@ -6,16 +6,18 @@
 //
 // Serves www/ locally, launches headless Firefox over native WebDriver BiDi
 // (zero npm dependencies; requires Node 22+ built-in WebSocket), and verifies:
-//   1. index.html loads cleanly, initializes the Verilated RTL Worker, and
-//      auto-computes Caliptra 2.1 ML-DSA PK hashes from the firmware bundle.
-//   2. Booting "rom-only-fast" clocks caliptra_top to ROM_IDLE
-//      (ready_for_mb_processing=1), streams UART output, populates hardware
+//   1. index.html defaults to the real Caliptra 2.1 ROM + Runtime
+//      (caliptra-rom-with-log.bin + image-bundle-mldsa.bin), synchronizes the
+//      independent ROM/firmware dropdowns (#rom-select, #fw-select, #image-preset),
+//      and boots the real Caliptra 2.1 ROM into hardware power-on KATs ([kat] ++,
+//      BOOT_STATUS=KatStarted, no [fake-rom-cold-reset]).
+//   2. Switching #rom-select to fake-caliptra-rom.bin clocks calightra's
+//      caliptra_top to ROM_IDLE (ready_for_mb_processing=1), populates hardware
 //      KeyVault/PCR/Fuse DPI inspectors, and executes VERSION & CAPABILITIES
 //      over the AXI4-Lite Mailbox UI.
-//   3. Booting "fast-mldsa" (ROM + Runtime) streams the 227,840-byte firmware
-//      bundle over AXI4-Lite FW_LOAD into SRAM and enters hardware ECC-384 +
-//      ML-DSA-87 verification (or full ready_for_runtime + FW_INFO when
-//      --full-runtime is passed).
+//   3. Booting "fast-mldsa" streams the firmware bundle over AXI4-Lite FW_LOAD
+//      into SRAM and enters hardware ECC-384 + ML-DSA-87 verification (or full
+//      ready_for_runtime + FW_INFO when --full-runtime is passed).
 //   4. pk-hash.html and debug-unlock.html compute expected cryptographic
 //      digests and mailbox payloads without console errors.
 
@@ -295,8 +297,8 @@ async function sendMailboxCommandUi(bidi, context, cmdValue, expectedRegex, time
   }
 }
 
-async function testRomMailboxBoot(bidi, context, baseUrl, timeoutSecs, outDir, pageErrors) {
-  console.log("\n=== [1/4] Caliptra 2.1 Verilated RTL: ROM Boot + Inspectors + AXI Mailbox ===");
+async function testDefaultRealRomAndSelectors(bidi, context, baseUrl, timeoutSecs, outDir, pageErrors) {
+  console.log("\n=== [1/5] Default Real Caliptra 2.1 ROM + Selector Sync + Hardware KAT Boot ===");
   pageErrors.length = 0;
 
   await bidi.send("browsingContext.navigate", {
@@ -316,17 +318,184 @@ async function testRomMailboxBoot(bidi, context, baseUrl, timeoutSecs, outDir, p
     throw new Error(`Unexpected auto-computed owner PK hash: ${ready.ownerPk}`);
   }
 
-  // Switch to "rom-only-fast" and click Run
+  // Verify default selection is Real Caliptra 2.1 ROM + Real ML-DSA-87 Runtime bundle
+  const initialSel = await bidi.eval(
+    context,
+    `({
+      preset: document.getElementById("image-preset").value,
+      rom: document.getElementById("rom-select").value,
+      fw: document.getElementById("fw-select").value,
+      hint: document.getElementById("preset-hint").textContent,
+      romInfo: document.getElementById("rom-info").textContent,
+      fwInfo: document.getElementById("fw-info").textContent,
+    })`
+  );
+  if (
+    initialSel.preset !== "full-mldsa" ||
+    initialSel.rom !== "caliptra-rom-with-log.bin" ||
+    initialSel.fw !== "image-bundle-mldsa.bin"
+  ) {
+    throw new Error(`Expected default full-mldsa Real ROM + Real FW, got: ${JSON.stringify(initialSel)}`);
+  }
+  if (!initialSel.hint.includes("Real Caliptra 2.1 ROM selected")) {
+    throw new Error(`Expected Real ROM hint by default, got: ${initialSel.hint}`);
+  }
+
+  // Verify independent #rom-select switching (production quiet ROM -> preset becomes "custom")
   await bidi.eval(
     context,
     `(() => {
-      const sel = document.getElementById("image-preset");
-      sel.value = "rom-only-fast";
-      sel.dispatchEvent(new Event("change", { bubbles: true }));
+      const r = document.getElementById("rom-select");
+      r.value = "caliptra-rom.bin";
+      r.dispatchEvent(new Event("change", { bubbles: true }));
       return true;
     })()`
   );
+  await sleep(400);
+  const quietSel = await bidi.eval(
+    context,
+    `({
+      preset: document.getElementById("image-preset").value,
+      romInfo: document.getElementById("rom-info").textContent,
+    })`
+  );
+  if (quietSel.preset !== "custom" || !quietSel.romInfo.includes("(96 KB)")) {
+    throw new Error(`Expected quiet ROM custom sync, got: ${JSON.stringify(quietSel)}`);
+  }
+
+  // Switch back to Real ROM with UART log + ROM-only button -> syncs to "rom-only-full"
+  await bidi.eval(
+    context,
+    `(() => {
+      const r = document.getElementById("rom-select");
+      r.value = "caliptra-rom-with-log.bin";
+      r.dispatchEvent(new Event("change", { bubbles: true }));
+      document.getElementById("btn-clear-fw").click();
+      return true;
+    })()`
+  );
+  await sleep(400);
+  const realRomOnlySel = await bidi.eval(
+    context,
+    `({
+      preset: document.getElementById("image-preset").value,
+      rom: document.getElementById("rom-select").value,
+      fw: document.getElementById("fw-select").value,
+    })`
+  );
+  if (
+    realRomOnlySel.preset !== "rom-only-full" ||
+    realRomOnlySel.rom !== "caliptra-rom-with-log.bin" ||
+    realRomOnlySel.fw !== "none"
+  ) {
+    throw new Error(`Expected rom-only-full sync, got: ${JSON.stringify(realRomOnlySel)}`);
+  }
+  console.log("  Verified default Real ROM + independent #rom-select / #fw-select dropdown sync");
+
+  // Boot the REAL Caliptra 2.1 ROM into hardware power-on KATs ([kat] ++, BOOT_STATUS=KatStarted)
+  await bidi.eval(
+    context,
+    `(() => {
+      document.getElementById("pause-on-ready").checked = true;
+      document.getElementById("start-paused").checked = false;
+      document.getElementById("btn-run").click();
+      return true;
+    })()`
+  );
+
+  const t0 = Date.now();
+  let katState = null;
+  for (;;) {
+    await sleep(750);
+    const st = await bidi.eval(
+      context,
+      `({
+        status: document.getElementById("status").textContent,
+        stats: document.getElementById("stats").textContent,
+        phase: document.getElementById("hw-phase").textContent,
+        bootStatus: document.getElementById("hw-boot-status").textContent,
+        uart: document.getElementById("uart-output").textContent,
+        errHidden: document.getElementById("error-decoder").hidden,
+        errText: document.getElementById("error-decoder").textContent,
+      })`
+    );
+    if (pageErrors.length) {
+      throw new Error(`Console errors during Real ROM boot:\n${pageErrors.join("\n")}`);
+    }
+    if (!st.errHidden) {
+      throw new Error(`Error decoder triggered during Real ROM boot:\n${st.errText}`);
+    }
+    if (/Halted|Exited: failed|init failed/i.test(st.status)) {
+      throw new Error(`Simulator halted unexpectedly during Real ROM boot: ${st.status}\nUART:\n${st.uart}`);
+    }
+    if (st.uart.includes("fake-rom")) {
+      throw new Error(`Real ROM unexpectedly printed fake-rom banner:\n${st.uart}`);
+    }
+    if (
+      st.uart.includes("Running Caliptra ROM") &&
+      st.uart.includes("[kat]") &&
+      /0x0000018[23]/.test(st.bootStatus)
+    ) {
+      katState = st;
+      break;
+    }
+    const elapsed = (Date.now() - t0) / 1000;
+    if (elapsed > timeoutSecs) {
+      throw new Error(
+        `Real ROM KAT milestone timed out after ${timeoutSecs}s (phase=${st.phase}, boot=${st.bootStatus}, stats=${st.stats})`
+      );
+    }
+  }
+
+  const katSecs = ((Date.now() - t0) / 1000).toFixed(1);
+  console.log(
+    `  Real Caliptra 2.1 ROM entered hardware KATs (${katState.bootStatus}) in ${katSecs}s — ${katState.stats}`
+  );
+
+  await bidi.eval(context, `(document.getElementById("btn-stop").click(), true)`);
   await sleep(300);
+
+  if (outDir) {
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(join(outDir, "real-rom-kat-uart.txt"), katState.uart);
+    await saveScreenshot(bidi, context, outDir, "simulator-real-rom-kat");
+  }
+}
+
+async function testRomMailboxBoot(bidi, context, timeoutSecs, outDir, pageErrors) {
+  console.log("\n=== [2/5] Fake ROM UI Selector + ROM_IDLE + Inspectors + AXI Mailbox ===");
+
+  // Reset and select Fake ROM directly via #rom-select (#fw-select is already "none")
+  await bidi.eval(
+    context,
+    `(() => {
+      document.getElementById("btn-reset").click();
+      return true;
+    })()`
+  );
+  await sleep(400);
+
+  await bidi.eval(
+    context,
+    `(() => {
+      const r = document.getElementById("rom-select");
+      r.value = "fake-caliptra-rom.bin";
+      r.dispatchEvent(new Event("change", { bubbles: true }));
+      return true;
+    })()`
+  );
+  await sleep(400);
+
+  const fakeSel = await bidi.eval(
+    context,
+    `({
+      preset: document.getElementById("image-preset").value,
+      hint: document.getElementById("preset-hint").textContent,
+    })`
+  );
+  if (fakeSel.preset !== "rom-only-fast" || !fakeSel.hint.includes("skips power-on KATs and IDevID/LDevID")) {
+    throw new Error(`Expected Fake ROM selector to sync preset & hint, got: ${JSON.stringify(fakeSel)}`);
+  }
 
   await bidi.eval(
     context,
@@ -445,8 +614,8 @@ async function testRomMailboxBoot(bidi, context, baseUrl, timeoutSecs, outDir, p
 async function testFwLoadAndRuntimeFlow(bidi, context, fullRuntime, timeoutSecs, outDir, pageErrors) {
   console.log(
     fullRuntime
-      ? "\n=== [2/4] Caliptra 2.1 Verilated RTL: Full ROM + FMC + Runtime Boot (fast-mldsa) ==="
-      : "\n=== [2/4] Caliptra 2.1 Verilated RTL: ROM + AXI FW_LOAD + PQC Verification Handoff ==="
+      ? "\n=== [3/5] Caliptra 2.1 Verilated RTL: Full ROM + FMC + Runtime Boot (fast-mldsa) ==="
+      : "\n=== [3/5] Caliptra 2.1 Verilated RTL: ROM + AXI FW_LOAD + PQC Verification Handoff ==="
   );
 
   // Reset simulator and select fast-mldsa (ROM + Runtime bundle)
@@ -558,7 +727,7 @@ async function testFwLoadAndRuntimeFlow(bidi, context, fullRuntime, timeoutSecs,
 }
 
 async function testPkHashPage(bidi, context, baseUrl, outDir, pageErrors) {
-  console.log("\n=== [3/4] Companion Tool: pk-hash.html ===");
+  console.log("\n=== [4/5] Companion Tool: pk-hash.html ===");
   pageErrors.length = 0;
   await bidi.send("browsingContext.navigate", {
     context,
@@ -597,7 +766,7 @@ async function testPkHashPage(bidi, context, baseUrl, outDir, pageErrors) {
 }
 
 async function testDebugUnlockPage(bidi, context, baseUrl, outDir, pageErrors) {
-  console.log("\n=== [4/4] Companion Tool: debug-unlock.html ===");
+  console.log("\n=== [5/5] Companion Tool: debug-unlock.html ===");
   pageErrors.length = 0;
   await bidi.send("browsingContext.navigate", {
     context,
@@ -673,7 +842,15 @@ async function main() {
     const tree = await bidi.send("browsingContext.getTree", {});
     const context = tree.contexts[0].context;
 
-    await testRomMailboxBoot(bidi, context, baseUrl, args.timeout, args.outDir, pageErrors);
+    await testDefaultRealRomAndSelectors(
+      bidi,
+      context,
+      baseUrl,
+      args.timeout,
+      args.outDir,
+      pageErrors
+    );
+    await testRomMailboxBoot(bidi, context, args.timeout, args.outDir, pageErrors);
     await testFwLoadAndRuntimeFlow(
       bidi,
       context,
