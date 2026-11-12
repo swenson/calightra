@@ -324,9 +324,9 @@ fetch("error-codes.json")
   .catch((e) => console.warn("Failed to load error-codes.json:", e));
 
 const UPSTREAM_REPOS = {
-  caliptra_rtl_rev: ["caliptra-rtl", "https://github.com/chipsalliance/caliptra-rtl/commit/"],
-  caliptra_sw_rev: ["caliptra-sw", "https://github.com/chipsalliance/caliptra-sw/commit/"],
   calightra_rev: ["calightra", "https://github.com/swenson/calightra/commit/"],
+  caliptra_rtl_rev: ["base caliptra-rtl", "https://github.com/chipsalliance/caliptra-rtl/commit/"],
+  caliptra_sw_rev: ["caliptra-sw", "https://github.com/chipsalliance/caliptra-sw/commit/"],
 };
 
 fetch("build-info.json", { cache: "no-cache" })
@@ -334,7 +334,7 @@ fetch("build-info.json", { cache: "no-cache" })
   .then((info) => {
     if (!info) return;
     if (info.caliptra_release) {
-      document.getElementById("caliptra-release-badge").textContent = `Caliptra ${info.caliptra_release}`;
+      document.getElementById("caliptra-release-badge").textContent = `Caliptra ${info.caliptra_release} compat`;
     }
     const el = document.getElementById("build-info");
     const parts = [];

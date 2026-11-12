@@ -853,9 +853,9 @@ struct CalightraSim {
         uart_line_buf.clear();
         log_delta.clear();
 
-        char init_msg[160];
+        char init_msg[192];
         std::snprintf(init_msg, sizeof(init_msg),
-                      "[RTL] Initialized Verilated Caliptra 2.1 Core (ROM=%u B, FW=%zu B, security_state=0x%x)",
+                      "[RTL] Initialized Verilated Calightra Core (stripped Caliptra 2.1 RTL, ROM=%u B, FW=%zu B, security_state=0x%x)",
                       rom_len, fw_bytes.size(), unsigned(sec_state));
         append_log_line(init_msg);
         return 0;

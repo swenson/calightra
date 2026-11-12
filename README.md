@@ -54,8 +54,8 @@ On the ULX3S-85F ([`ss/fpga/calightra_ss_ulx3s_top.sv`](ss/fpga/calightra_ss_ulx
 
 ## Browser RTL Simulator (WebAssembly — GitHub Pages)
 
-Try the Verilated Caliptra 2.1 Core RTL directly in your browser at **[`https://swenson.github.io/calightra/`](https://swenson.github.io/calightra/)**:
-- **Real Hardware RTL in a `3.5 MB` `.wasm` Binary ([`wasm/`](wasm/), [`www/`](www/))**: Compiles `caliptra_top` (`VeeR EL2` + Adams Bridge ML-DSA-87/ML-KEM-1024 + SHA2-512/384, SHA3/SHAKE256, HMAC, AES-256-GCM, P-384 ECC, KeyVault, PCR Vault, Mailbox SRAM, and SoC Interface) via Verilator + Emscripten (`-msimd128`) and clocks it inside a non-blocking Web Worker.
+Try **Calightra's stripped Caliptra 2.1 Core RTL** (`CALIGHTRA_PHASE1` + `CALIGHTRA_NO_COUNTERMEASURES`) directly in your browser at **[`https://swenson.github.io/calightra/`](https://swenson.github.io/calightra/)**:
+- **Stripped Hardware RTL in a `3.5 MB` `.wasm` Binary ([`wasm/`](wasm/), [`www/`](www/))**: Compiles Calightra's modified `caliptra_top` (`VeeR EL2` + Adams Bridge ML-DSA-87/ML-KEM-1024 + unmasked SHA2-512/384, SHA3/SHAKE256, HMAC, AES-256-GCM, P-384 ECC, KeyVault, PCR Vault, Mailbox SRAM, and SoC Interface — side-channel masking/blinding countermeasures, SRAM ECC, PMP/debug, and SVA assertions removed) via Verilator + Emscripten (`-msimd128`) and clocks it inside a non-blocking Web Worker.
 - **Unmodified Caliptra 2.1 ROM & Firmware Presets**: Boots fast (`fake-caliptra-rom.bin`, `~420k` cycles to `ready_for_mb_processing=1`, `~7.39M` cycles to `ready_for_runtime=1`) or full production (`caliptra-rom-with-log.bin`, full KATs + 3-layer DICE) with ML-DSA-87 or LMS firmware bundles — or custom `.bin` uploads.
 - **Interactive AXI4-Lite Mailbox & Zero-Cycle DPI Hardware Inspectors**: Issue ROM and Runtime mailbox commands (`VERSION`, `CAPABILITIES`, `FW_INFO`, DICE X.509 `GET_*_CERT` / `GET_*_CSR` with PEM decoding, `QUOTE_PCRS_ECC384` / `QUOTE_PCRS_MLDSA87`, `STASH_MEASUREMENT`, `CM_SHA_HASH`, debug unlock) and inspect live hardware KeyVault slots, all 32 PCRs, Fuse registers, and Fatal/Non-Fatal error registers via SystemVerilog `DPI-C`.
 

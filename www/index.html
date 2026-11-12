@@ -4,8 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Calightra — Caliptra 2.1 RTL Simulator (WASM)</title>
-<meta name="description" content="Cycle-accurate Verilated Caliptra 2.1 hardware Root-of-Trust RTL running in your browser via WebAssembly.">
+<title>Calightra — Stripped Caliptra 2.1 RTL Simulator (WASM)</title>
+<meta name="description" content="Cycle-accurate Verilated WebAssembly simulator for Calightra (stripped Caliptra 2.1 Core RTL) running unmodified Caliptra 2.1 ROM and Runtime firmware in your browser.">
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -28,15 +28,17 @@
 <div class="container">
   <div class="page-head">
     <h1>
-      Caliptra 2.1 RTL Simulator
-      <span class="badge" id="caliptra-release-badge" title="Caliptra hardware release">Caliptra 2.1</span>
-      <span class="badge accent" title="Compiled from SystemVerilog RTL with Verilator and Emscripten">Verilated RTL · WASM</span>
+      Calightra RTL Simulator
+      <span class="badge" id="caliptra-release-badge" title="Binary-compatible with unmodified upstream Caliptra 2.1 firmware">Caliptra 2.1 compat</span>
+      <span class="badge accent" title="Calightra Phase 2 stripped SystemVerilog RTL compiled with Verilator and Emscripten">Stripped RTL · Verilator WASM</span>
     </h1>
     <p class="lede">
-      Actual Caliptra 2.1 SystemVerilog RTL (<code>caliptra_top</code>: VeeR EL2 RISC-V core,
-      Adams Bridge ML-DSA-87 &amp; ML-KEM-1024, ECC P-384, SHA2/SHA3, AES-GCM, Key Vault, PCR
-      Vault, and AXI4-Lite Mailbox) compiled with Verilator to WebAssembly and clocked
-      cycle-by-cycle in a Web Worker.
+      <a href="https://github.com/swenson/calightra" target="_blank" rel="noopener"><strong>Calightra</strong></a>’s
+      modified, area-stripped Caliptra 2.1 SystemVerilog RTL (<code>caliptra_top</code>: VeeR EL2 RISC-V core,
+      Adams Bridge ML-DSA-87 &amp; ML-KEM-1024, ECC P-384, SHA2/SHA3, AES-GCM, Key/PCR Vaults, and AXI4-Lite
+      Mailbox — with side-channel masking/blinding countermeasures, SRAM ECC, VeeR PMP/JTAG debug, and SVA
+      assertions stripped out for a ~20× smaller model) compiled with Verilator to WebAssembly and executing
+      <strong>unmodified upstream Caliptra 2.1 ROM &amp; Runtime firmware</strong> cycle-by-cycle in a Web Worker.
     </p>
     <span class="build-info" id="build-info"></span>
   </div>

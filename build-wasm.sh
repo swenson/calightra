@@ -57,7 +57,7 @@ GIT_REV="$(git -C "${REPO_DIR}" rev-parse --short HEAD 2>/dev/null || echo "loca
 cat > "${WWW_DIR}/build-info.json" <<EOF
 {
   "caliptra_release": "2.1",
-  "engine": "Verilator ${VERILATOR_VER} (WASM)",
+  "engine": "Calightra Phase 2 · Verilator ${VERILATOR_VER} (WASM)",
   "emscripten_version": "${EMCC_VER}",
   "rom_version": "2.1.3",
   "fmc_version": "2.1.4",
