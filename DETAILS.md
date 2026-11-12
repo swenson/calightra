@@ -111,7 +111,7 @@ The automated `sv2v` + `yosys` + `nextpnr` flow lives in [`fpga/`](fpga/):
 
 ---
 
-## 4. Repository Structure (`main` Branch)
+## 4. Repository Structure (`caliptra-core` Branch)
 
 - [`README.md`](README.md): Concise TL;DR summary, bottom-line synthesis/simulation metrics, ULX3S-85F pinout, and quick-start commands.
 - [`DETAILS.md`](DETAILS.md): This document — detailed architecture, stripping phases, block-level area tables, and boot logs.

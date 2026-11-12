@@ -2,11 +2,11 @@
 
 # Calightra: Stripped Caliptra 2.1 RTL for Fast Verilator Simulation & Open-Source FPGAs
 
-**Calightra** (`main` branch) is a stripped-down, 100% binary-compatible implementation of [`chipsalliance/caliptra-rtl`](https://github.com/chipsalliance/caliptra-rtl) (`patch_v2.1` branch `188b0b0e` + [`adams-bridge`](https://github.com/chipsalliance/adams-bridge) `v2.0.3` `b77e3d89`) engineered to:
+**Calightra** (`caliptra-core` branch) is a stripped-down, 100% binary-compatible implementation of [`chipsalliance/caliptra-rtl`](https://github.com/chipsalliance/caliptra-rtl) (`patch_v2.1` branch `188b0b0e` + [`adams-bridge`](https://github.com/chipsalliance/adams-bridge) `v2.0.3` `b77e3d89`) engineered to:
 1. **Simulate at high speed in Verilator**: **7.53x faster** compilation, **19.3x smaller** model, and **2.00x faster** wall-clock boot of the unmodified [`chipsalliance/caliptra-sw`](https://github.com/chipsalliance/caliptra-sw) 2.1 release binaries (`rom-2.1.3-1`: `caliptra-rom.bin` + `image-bundle-mldsa.bin` `fw-2.1.4`).
 2. **Synthesize, place, and route on small open-source Lattice FPGAs** (**Radiona ULX3S-85F** / **ECP5-45F** / **iCE40**) using `sv2v` + `yosys` + `nextpnr` + `ecppack`, stripping side-channel countermeasures (DOM masking, scalar blinding, LFSRs), SRAM SECDED ECC (`39b` $\to$ `32b`), and VeeR EL2 branch predictors/PMP/debug while bridging all 608 KB of SRAM/ROM over a `728 LUT4` external QSPI RAM/Flash controller (`0` internal BRAMs required).
 
-For the full **Caliptra 2.1 Subsystem** (dual VeeR EL2 cores, MCI, OpenTitan Fuse/Lifecycle controllers, full MIPI I3C + OCP Recovery core, and open-source AXI4 crossbar), see the **`caliptra-ss` branch**. For granular architectural details, phase-by-phase stripping tables, and full boot traces, see **[`DETAILS.md`](DETAILS.md)**.
+For the full **Caliptra 2.1 Subsystem** (dual VeeR EL2 cores, MCI, OpenTitan Fuse/Lifecycle controllers, full MIPI I3C + OCP Recovery core, and open-source AXI4 crossbar), see the **`main` (or `caliptra-ss`) branch**. For granular architectural details, phase-by-phase stripping tables, and full boot traces, see **[`DETAILS.md`](DETAILS.md)**.
 
 ---
 
