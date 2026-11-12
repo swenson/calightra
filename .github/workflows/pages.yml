@@ -41,7 +41,6 @@ jobs:
         uses: mymindstorm/setup-emsdk@v14
         with:
           version: latest
-          actions-cache-folder: emsdk-cache
 
       - name: Cache Emscripten object files (ccache)
         uses: actions/cache@v4
@@ -68,6 +67,7 @@ jobs:
         with:
           name: browser-test-diagnostics
           path: ${{ runner.temp }}/browser-test
+          if-no-files-found: ignore
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'

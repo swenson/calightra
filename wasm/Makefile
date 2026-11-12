@@ -34,6 +34,7 @@ VERILATOR_DEFINES = \
 COMMON_CXXFLAGS = \
 	-std=c++17 \
 	-include stdint.h \
+	-include type_traits \
 	-fno-exceptions \
 	-faligned-new \
 	-msimd128 \
