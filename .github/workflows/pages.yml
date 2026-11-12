@@ -1,0 +1,88 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Calightra Contributors.
+#
+# Build the Verilated Caliptra 2.1 Core WASM RTL Simulator, run end-to-end
+# headless Firefox verification, and publish www/ to GitHub Pages.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Verilator and build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator ccache pkg-config
+          if ! command -v firefox >/dev/null 2>&1; then
+            sudo apt-get install -y firefox
+          fi
+
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+          actions-cache-folder: emsdk-cache
+
+      - name: Cache Emscripten object files (ccache)
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-wasm-${{ runner.os }}-${{ hashFiles('wasm/Makefile', 'wasm/calightra_verilated_wasm.sv', 'wasm/calightra_wasm.cpp', 'sim/calightra_top.vf') }}
+          restore-keys: |
+            ccache-wasm-${{ runner.os }}-
+
+      - name: Build Verilated Caliptra 2.1 WASM site
+        run: ./build-wasm.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run headless browser boot & mailbox E2E tests
+        run: node tests/browser/boot-test.mjs --out "${RUNNER_TEMP}/browser-test"
+
+      - name: Upload browser test diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-diagnostics
+          path: ${{ runner.temp }}/browser-test
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: www
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -2,6 +2,13 @@
 sim/out/
 sim/out_*/
 ss/sim/obj_dir_ss/
+wasm/obj_wasm/
+
+# Generated WASM & staged firmware binaries in www/ (rebuilt by ./build-wasm.sh)
+www/calightra_verilated.js
+www/calightra_verilated.wasm
+www/*.bin
+www/build-info.json
 
 # FPGA intermediate synthesis & PnR outputs
 fpga/*.v

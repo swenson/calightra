@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calightra — Caliptra 2.1 Debug Unlock Calculator</title>
+<meta name="description" content="Build Caliptra 2.1 manufacturing and production debug unlock mailbox commands.">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container narrow">
+    <a class="brand" href="index.html">Calightra <span class="brand-long">RTL Simulator</span></a>
+    <nav class="site-nav" aria-label="Pages">
+      <a href="index.html">Simulator</a>
+      <a href="pk-hash.html">PK hash calculator</a>
+      <a href="debug-unlock.html" aria-current="page">Debug unlock</a>
+      <a class="nav-ext" href="https://github.com/swenson/calightra" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container narrow">
+  <div class="page-head">
+    <h1>Debug unlock calculator</h1>
+    <p class="lede">
+      Build debug unlock mailbox commands for the Caliptra 2.1 RTL simulator.
+      Manufacturing unlock sends a shared-secret 32-byte token. Production
+      unlock performs a 4-step challenge-response signed with ECC P-384 and ML-DSA-87.
+    </p>
+    <p class="lede">
+      To test manufacturing debug unlock, start the simulator in
+      <em>Manufacturing</em> lifecycle with <em>Debug intent</em> enabled, pick
+      <code>MANUF_DEBUG_UNLOCK_REQ_TOKEN</code> in the Mailbox panel, switch
+      input to Raw hex, and paste <em>Copy payload</em> (the simulator computes
+      the 4-byte checksum automatically).
+    </p>
+  </div>
+
+  <main class="tool">
+
+    <!-- Manufacturing debug unlock -->
+    <section class="card" aria-labelledby="manuf-title">
+      <h2 id="manuf-title">Manufacturing debug unlock</h2>
+      <p class="note">
+        Send a 32-byte token with <code>MANUF_DEBUG_UNLOCK_REQ_TOKEN</code> (0x4D445554).
+        The ROM hashes the token with SHA-512 in hardware and compares the digest
+        against <code>fuse_manuf_dbg_unlock_token</code>.
+      </p>
+
+      <h3>Standalone Caliptra 2.1 Core fuse token</h3>
+      <p class="help">The default token pre-programmed into the simulator's <code>fuse_manuf_dbg_unlock_token</code> registers.</p>
+      <div class="field" style="margin-top: 10px">
+        <label for="manuf-token">Token (32 bytes, hex)</label>
+        <input type="text" id="manuf-token" value="d8922c55792b737f2913f3e5cbe654756252016eaee963a1dd4e753af787f096" spellcheck="false" autocomplete="off">
+      </div>
+      <div class="toolbar">
+        <button type="button" class="primary" onclick="computeManufHash()">Compute</button>
+        <button type="button" onclick="resetManufToken()">Reset token</button>
+      </div>
+      <div class="field" style="margin-top: 14px">
+        <span class="label">SHA-512 of the token (the 64-byte <code>fuse_manuf_dbg_unlock_token</code> value)</span>
+        <div id="manuf-hash" class="hash muted"></div>
+      </div>
+      <div class="field">
+        <span class="label">Mailbox command, with checksum</span>
+        <div id="manuf-cmd" class="console cmd" data-empty="Press Compute to build the command."></div>
+        <div class="toolbar"><button type="button" class="small primary" onclick="copyPayload('manuf-cmd')">Copy payload</button><button type="button" class="small" onclick="copyText('manuf-cmd')">Copy command</button></div>
+      </div>
+    </section>
+
+    <!-- Production auth debug unlock -->
+    <section class="card" aria-labelledby="prod-title">
+      <h2 id="prod-title">Production debug unlock</h2>
+      <p class="note">
+        A four-step challenge-response signed with ECC P-384 and ML-DSA-87
+        (<code>PRODUCTION_AUTH_DEBUG_UNLOCK_REQ</code> + <code>PRODUCTION_AUTH_DEBUG_UNLOCK_TOKEN</code>).
+      </p>
+
+      <h3>1. Keys</h3>
+      <p class="help">Generate both key pairs, or import existing ones as hex.</p>
+
+      <div class="key-block" style="margin-top: 10px">
+        <div class="card-head" style="margin-bottom: 10px">
+          <span class="label">ECC P-384</span>
+          <span id="ecc-status" class="status status-warn">Not generated</span>
+        </div>
+        <div class="toolbar" style="margin-bottom: 12px">
+          <button type="button" id="btn-ecc-gen" class="primary" onclick="generateEccKeys()">Generate ECC keys</button>
+        </div>
+        <div class="field">
+          <label for="ecc-pub-x">Public key X (48 bytes)</label>
+          <input type="text" id="ecc-pub-x" readonly placeholder="Generate or import a key pair">
+        </div>
+        <div class="field">
+          <label for="ecc-pub-y">Public key Y (48 bytes)</label>
+          <input type="text" id="ecc-pub-y" readonly>
+        </div>
+        <div class="field">
+          <label for="ecc-priv-d">Private key D (48 bytes)</label>
+          <input type="text" id="ecc-priv-d" placeholder="Paste a private key to import it" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="toolbar"><button type="button" onclick="importEccPrivateKey()">Import ECC private key</button></div>
+      </div>
+
+      <div class="key-block">
+        <div class="card-head" style="margin-bottom: 10px">
+          <span class="label">ML-DSA-87</span>
+          <span class="toolbar">
+            <span id="mldsa-lib-status" class="status status-warn">Loading library…</span>
+            <span id="mldsa-status" class="status status-warn">Not generated</span>
+          </span>
+        </div>
+        <div class="toolbar" style="margin-bottom: 12px">
+          <button type="button" id="btn-mldsa-gen" class="primary" onclick="generateMldsaKeys()" disabled>Generate ML-DSA-87 keys</button>
+        </div>
+        <div class="field">
+          <label for="mldsa-pub">Public key (2592 bytes)</label>
+          <textarea id="mldsa-pub" rows="2" placeholder="Generated, or paste one to import" spellcheck="false"></textarea>
+        </div>
+        <div class="field">
+          <label for="mldsa-sec">Secret key (4896 bytes)</label>
+          <textarea id="mldsa-sec" rows="2" placeholder="Paste a secret key to import it" spellcheck="false"></textarea>
+        </div>
+        <div class="toolbar"><button type="button" onclick="importMldsaKeys()">Import ML-DSA-87 keys</button></div>
+      </div>
+
+      <div class="field">
+        <span class="label">Public key hash</span>
+        <span class="hint">SHA-384 of the ECC public key followed by the MLDSA public key, both in hardware format (48 bytes).</span>
+        <div id="pk-hash-output" class="hash">Generate or import both key pairs first.</div>
+      </div>
+
+      <hr class="divider">
+
+      <h3>2. Request</h3>
+      <p class="help">Send <code>PRODUCTION_AUTH_DEBUG_UNLOCK_REQ</code> (0x50445552) to get a challenge.</p>
+      <div class="toolbar" style="margin: 10px 0 14px">
+        <label class="label" for="unlock-level">Unlock level</label>
+        <select id="unlock-level" style="width: auto">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+          <option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+        </select>
+        <button type="button" class="primary" onclick="generateRequest()">Build request</button>
+      </div>
+      <div class="field">
+        <span class="label">Mailbox command</span>
+        <div id="prod-req-cmd" class="console cmd" data-empty="Press Build request."></div>
+        <div class="toolbar"><button type="button" class="small primary" onclick="copyPayload('prod-req-cmd')">Copy payload</button><button type="button" class="small" onclick="copyText('prod-req-cmd')">Copy command</button></div>
+      </div>
+
+      <hr class="divider">
+
+      <h3>3. Challenge</h3>
+      <p class="help">Paste the simulator's response to <code>PRODUCTION_AUTH_DEBUG_UNLOCK_REQ</code>.</p>
+      <div class="field" style="margin-top: 10px">
+        <label for="challenge-hex">Response (88 bytes, hex)</label>
+        <textarea id="challenge-hex" rows="3" placeholder="Paste the hex response from the Mailbox panel" spellcheck="false"></textarea>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="primary" onclick="parseChallenge()">Parse</button>
+        <span id="challenge-status" class="status"></span>
+      </div>
+      <div class="key-block parsed" id="challenge-parsed" hidden>
+        <div class="field-grid">
+          <div class="field">
+            <label for="challenge-fips">FIPS status</label>
+            <input type="text" id="challenge-fips" readonly>
+          </div>
+          <div class="field">
+            <label for="challenge-length">Length</label>
+            <input type="text" id="challenge-length" readonly>
+          </div>
+        </div>
+        <div class="field">
+          <label for="challenge-uid">Unique device identifier (32 bytes)</label>
+          <input type="text" id="challenge-uid" readonly>
+        </div>
+        <div class="field">
+          <label for="challenge-nonce">Challenge nonce (48 bytes)</label>
+          <input type="text" id="challenge-nonce" readonly>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <h3>4. Token</h3>
+      <p class="help">
+        Signs SHA-384(uid || level || reserved || challenge) with ECC and
+        SHA-512(uid || level || reserved || challenge) with MLDSA, then builds the
+        <code>PRODUCTION_AUTH_DEBUG_UNLOCK_TOKEN</code> (0x50445554) command.
+      </p>
+      <div class="toolbar" style="margin: 10px 0 14px">
+        <button type="button" id="btn-sign" class="primary" onclick="signAndBuildToken()" disabled>Sign and build token</button>
+        <span id="sign-status" class="status"></span>
+      </div>
+      <div class="field">
+        <span class="label">Token command (<span id="token-size">7504</span> bytes)</span>
+        <div id="prod-token-cmd" class="console cmd token" data-empty="Sign to build the token command."></div>
+        <div class="toolbar"><button type="button" class="small primary" onclick="copyPayload('prod-token-cmd')">Copy payload</button><button type="button" class="small" onclick="copyText('prod-token-cmd')">Copy command</button></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script type="module">
+// SPDX-License-Identifier: Apache-2.0
+
+function hexToBytes(hex) {
+  hex = hex.replace(/\s+/g, "");
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  }
+  return bytes;
+}
+
+function bytesToHex(bytes) {
+  return Array.from(bytes).map((b) => (b >>> 0).toString(16).padStart(2, "0")).join("");
+}
+
+function writeU32LE(buf, offset, val) {
+  buf[offset] = val & 0xff;
+  buf[offset + 1] = (val >>> 8) & 0xff;
+  buf[offset + 2] = (val >>> 16) & 0xff;
+  buf[offset + 3] = (val >>> 24) & 0xff;
+}
+
+function readU32LE(buf, offset) {
+  return (buf[offset] | (buf[offset + 1] << 8) | (buf[offset + 2] << 16) | (buf[offset + 3] << 24)) >>> 0;
+}
+
+function swapEndianPerU32(bytes) {
+  const out = new Uint8Array(bytes.length);
+  for (let i = 0; i < bytes.length; i += 4) {
+    out[i] = bytes[i + 3];
+    out[i + 1] = bytes[i + 2];
+    out[i + 2] = bytes[i + 1];
+    out[i + 3] = bytes[i];
+  }
+  return out;
+}
+
+function computeChecksum(cmdId, payloadBytes) {
+  let sum = 0;
+  sum = (sum + (cmdId & 0xff)) | 0;
+  sum = (sum + ((cmdId >>> 8) & 0xff)) | 0;
+  sum = (sum + ((cmdId >>> 16) & 0xff)) | 0;
+  sum = (sum + ((cmdId >>> 24) & 0xff)) | 0;
+  for (let i = 0; i < payloadBytes.length; i++) {
+    sum = (sum + payloadBytes[i]) | 0;
+  }
+  return ((~sum) + 1) >>> 0;
+}
+
+function copyText(elementId) {
+  const el = document.getElementById(elementId);
+  navigator.clipboard.writeText(el.textContent);
+}
+
+function copyPayload(elementId) {
+  const el = document.getElementById(elementId);
+  navigator.clipboard.writeText(el.textContent.slice(8));
+}
+
+let eccKeyPair = null;
+let eccPubRaw = null;
+let eccPrivRaw = null;
+let mldsaLib = null;
+let mldsaPubKey = null;
+let mldsaSecKey = null;
+let challengeData = null;
+
+const DEFAULT_MANUF_TOKEN = "d8922c55792b737f2913f3e5cbe654756252016eaee963a1dd4e753af787f096";
+const CMD_MANUF_DEBUG_UNLOCK = 0x4D445554;
+
+async function computeManufHashGeneric(tokenInputId, hashOutputId, cmdOutputId) {
+  const hex = document.getElementById(tokenInputId).value.replace(/\s+/g, "");
+  if (hex.length !== 64) {
+    document.getElementById(hashOutputId).textContent = "The token must be exactly 32 bytes (64 hex characters).";
+    return;
+  }
+  const tokenBytes = hexToBytes(hex);
+  const hashBuf = await crypto.subtle.digest("SHA-512", tokenBytes);
+  const hashBytes = new Uint8Array(hashBuf);
+  document.getElementById(hashOutputId).textContent = bytesToHex(hashBytes);
+
+  const checksum = computeChecksum(CMD_MANUF_DEBUG_UNLOCK, tokenBytes);
+  const cmd = new Uint8Array(36);
+  writeU32LE(cmd, 0, checksum);
+  cmd.set(tokenBytes, 4);
+  document.getElementById(cmdOutputId).textContent = bytesToHex(cmd);
+}
+
+window.computeManufHash = () => computeManufHashGeneric("manuf-token", "manuf-hash", "manuf-cmd");
+window.resetManufToken = () => {
+  document.getElementById("manuf-token").value = DEFAULT_MANUF_TOKEN;
+  computeManufHashGeneric("manuf-token", "manuf-hash", "manuf-cmd");
+};
+
+computeManufHashGeneric("manuf-token", "manuf-hash", "manuf-cmd");
+
+async function generateEccKeys() {
+  try {
+    eccKeyPair = await crypto.subtle.generateKey(
+      { name: "ECDSA", namedCurve: "P-384" },
+      true, ["sign"]
+    );
+    const pubRaw = await crypto.subtle.exportKey("raw", eccKeyPair.publicKey);
+    const pubBytes = new Uint8Array(pubRaw);
+    eccPubRaw = pubBytes.slice(1);
+    document.getElementById("ecc-pub-x").value = bytesToHex(eccPubRaw.slice(0, 48));
+    document.getElementById("ecc-pub-y").value = bytesToHex(eccPubRaw.slice(48));
+
+    const jwk = await crypto.subtle.exportKey("jwk", eccKeyPair.privateKey);
+    eccPrivRaw = base64urlToBytes(jwk.d);
+    document.getElementById("ecc-priv-d").value = bytesToHex(eccPrivRaw);
+    document.getElementById("ecc-status").textContent = "Generated";
+    document.getElementById("ecc-status").className = "status status-ok";
+    updateSignButton();
+    computePkHash();
+  } catch (e) {
+    document.getElementById("ecc-status").textContent = "Error: " + e.message;
+    document.getElementById("ecc-status").className = "status status-err";
+  }
+}
+
+async function importEccPrivateKey() {
+  const dHex = document.getElementById("ecc-priv-d").value.replace(/\s+/g, "");
+  if (dHex.length !== 96) {
+    document.getElementById("ecc-status").textContent = "The private key must be 48 bytes (96 hex characters).";
+    document.getElementById("ecc-status").className = "status status-err";
+    return;
+  }
+  try {
+    eccPrivRaw = hexToBytes(dHex);
+    const pkcs8 = buildEccPkcs8(eccPrivRaw);
+    const privateKey = await crypto.subtle.importKey(
+      "pkcs8", pkcs8,
+      { name: "ECDSA", namedCurve: "P-384" },
+      true, ["sign"]
+    );
+    const jwk = await crypto.subtle.exportKey("jwk", privateKey);
+    const xBytes = base64urlToBytes(jwk.x);
+    const yBytes = base64urlToBytes(jwk.y);
+    eccPubRaw = new Uint8Array(96);
+    eccPubRaw.set(xBytes, 0);
+    eccPubRaw.set(yBytes, 48);
+    document.getElementById("ecc-pub-x").value = bytesToHex(xBytes);
+    document.getElementById("ecc-pub-y").value = bytesToHex(yBytes);
+
+    const pubJwk = { kty: "EC", crv: "P-384", x: jwk.x, y: jwk.y };
+    const publicKey = await crypto.subtle.importKey(
+      "jwk", pubJwk,
+      { name: "ECDSA", namedCurve: "P-384" },
+      true, ["verify"]
+    );
+    eccKeyPair = { privateKey, publicKey };
+    document.getElementById("ecc-status").textContent = "Imported";
+    document.getElementById("ecc-status").className = "status status-ok";
+    updateSignButton();
+    computePkHash();
+  } catch (e) {
+    document.getElementById("ecc-status").textContent = "Import failed: " + e.message;
+    document.getElementById("ecc-status").className = "status status-err";
+  }
+}
+
+function buildEccPkcs8(dBytes) {
+  const oid_ec = [0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01];
+  const oid_p384 = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22];
+  const alg_seq = [0x30, oid_ec.length + oid_p384.length, ...oid_ec, ...oid_p384];
+  const d_octet = [0x04, 48, ...dBytes];
+  const inner_seq = [0x30, d_octet.length + 3, 0x02, 0x01, 0x01, ...d_octet];
+  const priv_octet = [0x04, inner_seq.length, ...inner_seq];
+  const version = [0x02, 0x01, 0x00];
+  const total_len = version.length + alg_seq.length + priv_octet.length;
+  const outer = [0x30, 0x81, total_len, ...version, ...alg_seq, ...priv_octet];
+  return new Uint8Array(outer);
+}
+
+function base64urlToBytes(b64url) {
+  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = (4 - (b64.length % 4)) % 4;
+  const raw = atob(b64 + "=".repeat(pad));
+  return new Uint8Array([...raw].map((c) => c.charCodeAt(0)));
+}
+
+window.generateEccKeys = generateEccKeys;
+window.importEccPrivateKey = importEccPrivateKey;
+
+async function loadMldsaLib() {
+  try {
+    const mod = await import("https://esm.sh/@noble/post-quantum@0.2.1/ml-dsa");
+    mldsaLib = mod.ml_dsa87;
+    document.getElementById("mldsa-lib-status").textContent = "Library loaded";
+    document.getElementById("mldsa-lib-status").className = "status status-ok";
+    document.getElementById("btn-mldsa-gen").disabled = false;
+  } catch (e) {
+    document.getElementById("mldsa-lib-status").textContent = "Library unavailable. Paste keys to import them.";
+    document.getElementById("mldsa-lib-status").className = "status status-warn";
+  }
+}
+
+async function generateMldsaKeys() {
+  if (!mldsaLib) return;
+  document.getElementById("mldsa-status").textContent = "Generating; this takes a few seconds…";
+  document.getElementById("mldsa-status").className = "status status-warn";
+  await new Promise((r) => setTimeout(r, 50));
+  try {
+    const keys = mldsaLib.keygen();
+    mldsaPubKey = new Uint8Array(keys.publicKey);
+    mldsaSecKey = new Uint8Array(keys.secretKey);
+    document.getElementById("mldsa-pub").value = bytesToHex(mldsaPubKey);
+    document.getElementById("mldsa-sec").value = bytesToHex(mldsaSecKey);
+    document.getElementById("mldsa-status").textContent = `Generated (public ${mldsaPubKey.length} B, secret ${mldsaSecKey.length} B)`;
+    document.getElementById("mldsa-status").className = "status status-ok";
+    updateSignButton();
+    computePkHash();
+  } catch (e) {
+    document.getElementById("mldsa-status").textContent = "Error: " + e.message;
+    document.getElementById("mldsa-status").className = "status status-err";
+  }
+}
+
+function importMldsaKeys() {
+  const pubHex = document.getElementById("mldsa-pub").value.replace(/\s+/g, "");
+  const secHex = document.getElementById("mldsa-sec").value.replace(/\s+/g, "");
+  if (pubHex.length !== 2592 * 2) {
+    document.getElementById("mldsa-status").textContent = `The public key must be 2592 bytes; got ${pubHex.length / 2}.`;
+    document.getElementById("mldsa-status").className = "status status-err";
+    return;
+  }
+  if (secHex.length !== 4896 * 2) {
+    document.getElementById("mldsa-status").textContent = `The secret key must be 4896 bytes; got ${secHex.length / 2}.`;
+    document.getElementById("mldsa-status").className = "status status-err";
+    return;
+  }
+  mldsaPubKey = hexToBytes(pubHex);
+  mldsaSecKey = hexToBytes(secHex);
+  document.getElementById("mldsa-status").textContent = "Imported";
+  document.getElementById("mldsa-status").className = "status status-ok";
+  updateSignButton();
+  computePkHash();
+}
+
+window.generateMldsaKeys = generateMldsaKeys;
+window.importMldsaKeys = importMldsaKeys;
+
+async function computePkHash() {
+  if (!eccPubRaw || !mldsaPubKey) {
+    document.getElementById("pk-hash-output").textContent = "Generate or import both key pairs first.";
+    return;
+  }
+  const eccHw = swapEndianPerU32(eccPubRaw);
+  const mldsaHw = mldsaPubKey;
+  const combined = new Uint8Array(eccHw.length + mldsaHw.length);
+  combined.set(eccHw, 0);
+  combined.set(mldsaHw, eccHw.length);
+  const hashBuf = await crypto.subtle.digest("SHA-384", combined);
+  document.getElementById("pk-hash-output").textContent = bytesToHex(new Uint8Array(hashBuf));
+}
+
+const CMD_PROD_DBG_UNLOCK_REQ = 0x50445552;
+const CMD_PROD_DBG_UNLOCK_TOKEN = 0x50445554;
+
+function generateRequest() {
+  const level = parseInt(document.getElementById("unlock-level").value, 10);
+  const payload = new Uint8Array(8);
+  writeU32LE(payload, 0, 2);
+  payload[4] = level;
+
+  const checksum = computeChecksum(CMD_PROD_DBG_UNLOCK_REQ, payload);
+  const cmd = new Uint8Array(12);
+  writeU32LE(cmd, 0, checksum);
+  cmd.set(payload, 4);
+  document.getElementById("prod-req-cmd").textContent = bytesToHex(cmd);
+}
+
+window.generateRequest = generateRequest;
+
+function parseChallenge() {
+  const hex = document.getElementById("challenge-hex").value.replace(/\s+/g, "");
+  if (hex.length < 176) {
+    const st = document.getElementById("challenge-status");
+    st.textContent = `Need at least 88 bytes (176 hex characters); got ${hex.length / 2}.`;
+    st.className = "status status-err";
+    return;
+  }
+  document.getElementById("challenge-status").textContent = "";
+  const bytes = hexToBytes(hex);
+  const fips = readU32LE(bytes, 0);
+  const length = readU32LE(bytes, 4);
+  const uid = bytes.slice(8, 40);
+  const challenge = bytes.slice(40, 88);
+
+  challengeData = { uid, challenge };
+
+  document.getElementById("challenge-fips").value = "0x" + fips.toString(16).padStart(8, "0");
+  document.getElementById("challenge-length").value = length + " (" + length * 4 + " bytes)";
+  document.getElementById("challenge-uid").value = bytesToHex(uid);
+  document.getElementById("challenge-nonce").value = bytesToHex(challenge);
+  document.getElementById("challenge-parsed").hidden = false;
+  updateSignButton();
+}
+
+window.parseChallenge = parseChallenge;
+
+function updateSignButton() {
+  const ready = eccKeyPair && mldsaPubKey && mldsaSecKey && challengeData;
+  document.getElementById("btn-sign").disabled = !ready;
+  if (!ready) {
+    const missing = [];
+    if (!eccKeyPair) missing.push("ECC keys");
+    if (!mldsaPubKey || !mldsaSecKey) missing.push("MLDSA keys");
+    if (!challengeData) missing.push("challenge");
+    document.getElementById("sign-status").textContent = "Still needed: " + missing.join(", ");
+    document.getElementById("sign-status").className = "status status-warn";
+  } else {
+    document.getElementById("sign-status").textContent = "Ready to sign";
+    document.getElementById("sign-status").className = "status status-ok";
+  }
+}
+
+async function signAndBuildToken() {
+  if (!eccKeyPair || !mldsaPubKey || !mldsaSecKey || !challengeData) return;
+
+  const level = parseInt(document.getElementById("unlock-level").value, 10);
+  const reserved = new Uint8Array(3);
+
+  const message = new Uint8Array(84);
+  message.set(challengeData.uid, 0);
+  message[32] = level;
+  message.set(reserved, 33);
+  message.set(challengeData.challenge, 36);
+
+  document.getElementById("sign-status").textContent = "Signing…";
+  document.getElementById("sign-status").className = "status status-warn";
+
+  try {
+    const eccSigBuf = await crypto.subtle.sign(
+      { name: "ECDSA", hash: "SHA-384" },
+      eccKeyPair.privateKey,
+      message
+    );
+    const eccSigBytes = new Uint8Array(eccSigBuf);
+
+    const sha512Buf = await crypto.subtle.digest("SHA-512", message);
+    const sha512Hash = new Uint8Array(sha512Buf);
+    if (!mldsaLib) {
+      throw new Error("MLDSA library not loaded.");
+    }
+    const mldsaSigBytes = mldsaLib.sign(mldsaSecKey, sha512Hash);
+
+    const payloadSize = 4 + 32 + 1 + 3 + 48 + 96 + 2592 + 96 + 4628;
+    const payload = new Uint8Array(payloadSize);
+    let off = 0;
+
+    writeU32LE(payload, off, payloadSize / 4); off += 4;
+    payload.set(challengeData.uid, off); off += 32;
+    payload[off] = level; off += 1;
+    off += 3;
+    payload.set(challengeData.challenge, off); off += 48;
+    payload.set(swapEndianPerU32(eccPubRaw), off); off += 96;
+    payload.set(mldsaPubKey, off); off += 2592;
+    payload.set(swapEndianPerU32(eccSigBytes), off); off += 96;
+    payload.set(new Uint8Array(mldsaSigBytes).slice(0, 4627), off); off += 4628;
+
+    const checksum = computeChecksum(CMD_PROD_DBG_UNLOCK_TOKEN, payload);
+    const cmd = new Uint8Array(4 + payloadSize);
+    writeU32LE(cmd, 0, checksum);
+    cmd.set(payload, 4);
+
+    document.getElementById("token-size").textContent = cmd.length;
+    document.getElementById("prod-token-cmd").textContent = bytesToHex(cmd);
+    document.getElementById("sign-status").textContent = `Token built (${cmd.length} bytes)`;
+    document.getElementById("sign-status").className = "status status-ok";
+  } catch (e) {
+    document.getElementById("sign-status").textContent = "Error: " + e.message;
+    document.getElementById("sign-status").className = "status status-err";
+  }
+}
+
+window.signAndBuildToken = signAndBuildToken;
+window.copyText = copyText;
+window.copyPayload = copyPayload;
+
+updateSignButton();
+generateRequest();
+loadMldsaLib();
+</script>
+</body>
+</html>
