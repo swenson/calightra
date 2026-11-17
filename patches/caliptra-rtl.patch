@@ -182,26 +182,24 @@ index b4780fc0..0d1c0582 100644
    // reg_update
    //
 diff --git a/src/integration/rtl/caliptra_top.sv b/src/integration/rtl/caliptra_top.sv
-index 2bd11836..2c307b1c 100755
+index 2bd11836..e73d6840 100755
 --- a/src/integration/rtl/caliptra_top.sv
 +++ b/src/integration/rtl/caliptra_top.sv
-@@ -917,6 +917,107 @@ caliptra_ahb_srom #(
+@@ -917,6 +917,105 @@ caliptra_ahb_srom #(
  
  );
  
 +`ifdef CALIGHTRA_ICE40
-+always_comb begin
-+    for (int s = 0; s < `CALIPTRA_AHB_SLAVES_NUM; s++) begin
-+        if (s != `CALIPTRA_SLAVE_SEL_SOC_IFC &&
-+            s != `CALIPTRA_SLAVE_SEL_DDMA &&
-+            s != `CALIPTRA_SLAVE_SEL_IDMA &&
-+            s != `CALIPTRA_SLAVE_SEL_IMEM &&
-+            s != `CALIPTRA_SLAVE_SEL_CSRNG &&
-+            s != `CALIPTRA_SLAVE_SEL_ENTROPY_SRC) begin
-+            responder_inst[s].hresp     = 1'b0;
-+            responder_inst[s].hreadyout = 1'b1;
-+            responder_inst[s].hrdata    = 64'h0000_0003_0000_0003;
-+        end
++for (genvar s = 0; s < `CALIPTRA_AHB_SLAVES_NUM; s++) begin : g_ice40_ahb_stub
++    if (s != `CALIPTRA_SLAVE_SEL_SOC_IFC &&
++        s != `CALIPTRA_SLAVE_SEL_DDMA &&
++        s != `CALIPTRA_SLAVE_SEL_IDMA &&
++        s != `CALIPTRA_SLAVE_SEL_IMEM &&
++        s != `CALIPTRA_SLAVE_SEL_CSRNG &&
++        s != `CALIPTRA_SLAVE_SEL_ENTROPY_SRC) begin : g_stub_slave
++        assign responder_inst[s].hresp     = 1'b0;
++        assign responder_inst[s].hreadyout = 1'b1;
++        assign responder_inst[s].hrdata    = 64'h0000_0003_0000_0003;
 +    end
 +end
 +assign sha512_error_intr = 1'b0;
@@ -293,7 +291,7 @@ index 2bd11836..2c307b1c 100755
  sha512_ctrl #(
      .AHB_DATA_WIDTH (`CALIPTRA_AHB_HDATA_SIZE),
      .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA512))
-@@ -1264,6 +1365,7 @@ data_vault1
+@@ -1264,6 +1363,7 @@ data_vault1
      .hreadyout_o     (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hreadyout),
      .hrdata_o        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hrdata)
  );
@@ -1149,7 +1147,7 @@ index 08a3587b..720abdf3 100644
  
  always_comb hwif_in.mbox_status.status.we = dmi_mbox_avail & dmi_reg_wen & (dmi_reg_addr == DMI_REG_MBOX_STATUS_ADDR) & (tap_has_lock | (mbox_fsm_ps == MBOX_EXECUTE_TAP));
 diff --git a/src/soc_ifc/rtl/soc_ifc_reg.sv b/src/soc_ifc/rtl/soc_ifc_reg.sv
-index 3eef5635..3bf2125a 100644
+index 3eef5635..ef2ee964 100644
 --- a/src/soc_ifc/rtl/soc_ifc_reg.sv
 +++ b/src/soc_ifc/rtl/soc_ifc_reg.sv
 @@ -5233,7 +5233,11 @@ module soc_ifc_reg (
@@ -1180,14 +1178,22 @@ index 3eef5635..3bf2125a 100644
      assign readback_array[14][31:0] = (decoded_reg_strb.CPTRA_BOOT_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_BOOT_STATUS.status.value : '0;
      assign readback_array[15][23:0] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.status.value : '0;
      assign readback_array[15][24:24] = (decoded_reg_strb.CPTRA_FLOW_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_FLOW_STATUS.idevid_csr_ready.value : '0;
-@@ -7331,6 +7341,18 @@ module soc_ifc_reg (
+@@ -7331,6 +7341,26 @@ module soc_ifc_reg (
      assign readback_array[17][2:2] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.debug_locked.next : '0;
      assign readback_array[17][3:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.scan_mode.next : '0;
      assign readback_array[17][31:4] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 28'h0 : '0;
 +`ifdef CALIGHTRA_ICE40
-+    for(genvar i0=18; i0<44; i0++) begin
++    for(genvar i0=18; i0<30; i0++) begin
 +        assign readback_array[i0][31:0] = '0;
 +    end
++    for(genvar i0=0; i0<12; i0++) begin
++        assign readback_array[i0*1 + 30][31:0] = (decoded_reg_strb.CPTRA_TRNG_DATA[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_DATA[i0].DATA.value : '0;
++    end
++    assign readback_array[42][0:0] = (decoded_reg_strb.CPTRA_TRNG_CTRL && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_CTRL.clear.value : '0;
++    assign readback_array[42][31:1] = '0;
++    assign readback_array[43][0:0] = (decoded_reg_strb.CPTRA_TRNG_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_STATUS.DATA_REQ.value : '0;
++    assign readback_array[43][1:1] = (decoded_reg_strb.CPTRA_TRNG_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_STATUS.DATA_WR_DONE.value : '0;
++    assign readback_array[43][31:2] = '0;
 +    assign readback_array[44][0:0] = (decoded_reg_strb.CPTRA_FUSE_WR_DONE && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_WR_DONE.done.value : '0;
 +    assign readback_array[44][31:1] = '0;
 +    assign readback_array[45][31:0] = '0;
@@ -1199,7 +1205,7 @@ index 3eef5635..3bf2125a 100644
      for(genvar i0=0; i0<5; i0++) begin
          assign readback_array[i0*1 + 18][31:0] = (decoded_reg_strb.CPTRA_MBOX_VALID_AXI_USER[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_MBOX_VALID_AXI_USER[i0].AXI_USER.value : '0;
      end
-@@ -7357,6 +7379,7 @@ module soc_ifc_reg (
+@@ -7357,6 +7387,7 @@ module soc_ifc_reg (
      assign readback_array[47][31:0] = (decoded_reg_strb.CPTRA_DBG_MANUF_SERVICE_REG && !decoded_req_is_wr) ? field_storage.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value : '0;
      assign readback_array[48][0:0] = (decoded_reg_strb.CPTRA_CLK_GATING_EN && !decoded_req_is_wr) ? field_storage.CPTRA_CLK_GATING_EN.clk_gating_en.value : '0;
      assign readback_array[48][31:1] = '0;
@@ -1207,7 +1213,7 @@ index 3eef5635..3bf2125a 100644
      for(genvar i0=0; i0<2; i0++) begin
          assign readback_array[i0*1 + 49][31:0] = (decoded_reg_strb.CPTRA_GENERIC_INPUT_WIRES[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_GENERIC_INPUT_WIRES[i0].generic_wires.value : '0;
      end
-@@ -7375,6 +7398,16 @@ module soc_ifc_reg (
+@@ -7375,6 +7406,16 @@ module soc_ifc_reg (
      assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next : '0;
      assign readback_array[56][6:6] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next : '0;
      assign readback_array[56][31:7] = '0;
@@ -1224,7 +1230,7 @@ index 3eef5635..3bf2125a 100644
      assign readback_array[57][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_EN && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value : '0;
      assign readback_array[57][31:1] = '0;
      assign readback_array[58][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_CTRL && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_CTRL.timer1_restart.value : '0;
-@@ -7496,6 +7529,7 @@ module soc_ifc_reg (
+@@ -7496,6 +7537,7 @@ module soc_ifc_reg (
      for(genvar i0=0; i0<4; i0++) begin
          assign readback_array[i0*1 + 198][31:0] = (decoded_reg_strb.SS_GENERIC_FW_EXEC_CTRL[i0] && !decoded_req_is_wr) ? field_storage.SS_GENERIC_FW_EXEC_CTRL[i0].go.value : '0;
      end
@@ -1232,7 +1238,7 @@ index 3eef5635..3bf2125a 100644
      assign readback_array[202][0:0] = (decoded_reg_strb.internal_iccm_lock && !decoded_req_is_wr) ? field_storage.internal_iccm_lock.lock.value : '0;
      assign readback_array[202][31:1] = '0;
      assign readback_array[203][0:0] = (decoded_reg_strb.internal_fw_update_reset && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset.core_rst.value : '0;
-@@ -7503,6 +7537,11 @@ module soc_ifc_reg (
+@@ -7503,6 +7545,11 @@ module soc_ifc_reg (
      assign readback_array[204][7:0] = (decoded_reg_strb.internal_fw_update_reset_wait_cycles && !decoded_req_is_wr) ? field_storage.internal_fw_update_reset_wait_cycles.wait_cycles.value : '0;
      assign readback_array[204][31:8] = '0;
      assign readback_array[205][31:0] = (decoded_reg_strb.internal_nmi_vector && !decoded_req_is_wr) ? field_storage.internal_nmi_vector.vec.value : '0;
@@ -1244,7 +1250,7 @@ index 3eef5635..3bf2125a 100644
      assign readback_array[206][0:0] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value : '0;
      assign readback_array[206][1:1] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value : '0;
      assign readback_array[206][2:2] = (decoded_reg_strb.internal_hw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_hw_error_fatal_mask.mask_nmi_pin.value : '0;
-@@ -7514,6 +7553,7 @@ module soc_ifc_reg (
+@@ -7514,6 +7561,7 @@ module soc_ifc_reg (
      assign readback_array[207][31:3] = '0;
      assign readback_array[208][31:0] = (decoded_reg_strb.internal_fw_error_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_fatal_mask.mask.value : '0;
      assign readback_array[209][31:0] = (decoded_reg_strb.internal_fw_error_non_fatal_mask && !decoded_req_is_wr) ? field_storage.internal_fw_error_non_fatal_mask.mask.value : '0;
@@ -1252,7 +1258,7 @@ index 3eef5635..3bf2125a 100644
      assign readback_array[210][31:0] = (decoded_reg_strb.internal_rv_mtime_l && !decoded_req_is_wr) ? field_storage.internal_rv_mtime_l.count_l.value : '0;
      assign readback_array[211][31:0] = (decoded_reg_strb.internal_rv_mtime_h && !decoded_req_is_wr) ? field_storage.internal_rv_mtime_h.count_h.value : '0;
      assign readback_array[212][31:0] = (decoded_reg_strb.internal_rv_mtimecmp_l && !decoded_req_is_wr) ? field_storage.internal_rv_mtimecmp_l.compare_l.value : '0;
-@@ -7557,6 +7597,11 @@ module soc_ifc_reg (
+@@ -7557,6 +7605,11 @@ module soc_ifc_reg (
      assign readback_array[220][4:4] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_soc_req_lock_sts.value : '0;
      assign readback_array[220][5:5] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_gen_in_toggle_sts.value : '0;
      assign readback_array[220][31:6] = '0;
@@ -1264,7 +1270,7 @@ index 3eef5635..3bf2125a 100644
      assign readback_array[221][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value : '0;
      assign readback_array[221][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_inv_dev_trig.value : '0;
      assign readback_array[221][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_cmd_fail_trig.value : '0;
-@@ -7615,6 +7660,7 @@ module soc_ifc_reg (
+@@ -7615,6 +7668,7 @@ module soc_ifc_reg (
      assign readback_array[249][31:1] = '0;
      assign readback_array[250][0:0] = (decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.value : '0;
      assign readback_array[250][31:1] = '0;
@@ -1273,7 +1279,7 @@ index 3eef5635..3bf2125a 100644
      // Reduce the array
      always_comb begin
 diff --git a/src/soc_ifc/rtl/soc_ifc_top.sv b/src/soc_ifc/rtl/soc_ifc_top.sv
-index 032160ec..64609562 100644
+index 032160ec..184115b2 100644
 --- a/src/soc_ifc/rtl/soc_ifc_top.sv
 +++ b/src/soc_ifc/rtl/soc_ifc_top.sv
 @@ -727,7 +727,7 @@ always_comb begin
@@ -1309,7 +1315,7 @@ index 032160ec..64609562 100644
  
 +`ifdef CALIGHTRA_ICE40
 +assign sha_req_hold = 1'b0;
-+assign sha_rdata = '0;
++assign sha_rdata = 32'h0000_0003;
 +assign sha_error = 1'b0;
 +assign sha_sram_req_dv = 1'b0;
 +assign sha_sram_req_addr = '0;
@@ -1397,9 +1403,3 @@ index 032160ec..64609562 100644
  
  ////////////////////////////////////////////////////////
  // Write-enables for CPTRA_HW_ERROR_FATAL and CPTRA_HW_ERROR_NON_FATAL
-diff --git a/submodules/adams-bridge b/submodules/adams-bridge
---- a/submodules/adams-bridge
-+++ b/submodules/adams-bridge
-@@ -1 +1 @@
--Subproject commit b77e3d899e828d626cfc2a0d26a6b5704cc121e0
-+Subproject commit b77e3d899e828d626cfc2a0d26a6b5704cc121e0-dirty

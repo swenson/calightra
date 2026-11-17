@@ -7342,9 +7342,17 @@ module soc_ifc_reg (
     assign readback_array[17][3:3] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? hwif_in.CPTRA_SECURITY_STATE.scan_mode.next : '0;
     assign readback_array[17][31:4] = (decoded_reg_strb.CPTRA_SECURITY_STATE && !decoded_req_is_wr) ? 28'h0 : '0;
 `ifdef CALIGHTRA_ICE40
-    for(genvar i0=18; i0<44; i0++) begin
+    for(genvar i0=18; i0<30; i0++) begin
         assign readback_array[i0][31:0] = '0;
     end
+    for(genvar i0=0; i0<12; i0++) begin
+        assign readback_array[i0*1 + 30][31:0] = (decoded_reg_strb.CPTRA_TRNG_DATA[i0] && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_DATA[i0].DATA.value : '0;
+    end
+    assign readback_array[42][0:0] = (decoded_reg_strb.CPTRA_TRNG_CTRL && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_CTRL.clear.value : '0;
+    assign readback_array[42][31:1] = '0;
+    assign readback_array[43][0:0] = (decoded_reg_strb.CPTRA_TRNG_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_STATUS.DATA_REQ.value : '0;
+    assign readback_array[43][1:1] = (decoded_reg_strb.CPTRA_TRNG_STATUS && !decoded_req_is_wr) ? field_storage.CPTRA_TRNG_STATUS.DATA_WR_DONE.value : '0;
+    assign readback_array[43][31:2] = '0;
     assign readback_array[44][0:0] = (decoded_reg_strb.CPTRA_FUSE_WR_DONE && !decoded_req_is_wr) ? field_storage.CPTRA_FUSE_WR_DONE.done.value : '0;
     assign readback_array[44][31:1] = '0;
     assign readback_array[45][31:0] = '0;

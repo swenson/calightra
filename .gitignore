@@ -28,6 +28,7 @@ fw/*.zip
 fw/*.elf
 fw/caliptra-rtl/
 fw/fpga/
+ss/fw/cptra_rom_b*.hex
 ss/mcu-rom/*.elf
 caliptra-mcu-sw/
 

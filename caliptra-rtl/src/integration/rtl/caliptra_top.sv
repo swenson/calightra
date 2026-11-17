@@ -918,18 +918,16 @@ caliptra_ahb_srom #(
 );
 
 `ifdef CALIGHTRA_ICE40
-always_comb begin
-    for (int s = 0; s < `CALIPTRA_AHB_SLAVES_NUM; s++) begin
-        if (s != `CALIPTRA_SLAVE_SEL_SOC_IFC &&
-            s != `CALIPTRA_SLAVE_SEL_DDMA &&
-            s != `CALIPTRA_SLAVE_SEL_IDMA &&
-            s != `CALIPTRA_SLAVE_SEL_IMEM &&
-            s != `CALIPTRA_SLAVE_SEL_CSRNG &&
-            s != `CALIPTRA_SLAVE_SEL_ENTROPY_SRC) begin
-            responder_inst[s].hresp     = 1'b0;
-            responder_inst[s].hreadyout = 1'b1;
-            responder_inst[s].hrdata    = 64'h0000_0003_0000_0003;
-        end
+for (genvar s = 0; s < `CALIPTRA_AHB_SLAVES_NUM; s++) begin : g_ice40_ahb_stub
+    if (s != `CALIPTRA_SLAVE_SEL_SOC_IFC &&
+        s != `CALIPTRA_SLAVE_SEL_DDMA &&
+        s != `CALIPTRA_SLAVE_SEL_IDMA &&
+        s != `CALIPTRA_SLAVE_SEL_IMEM &&
+        s != `CALIPTRA_SLAVE_SEL_CSRNG &&
+        s != `CALIPTRA_SLAVE_SEL_ENTROPY_SRC) begin : g_stub_slave
+        assign responder_inst[s].hresp     = 1'b0;
+        assign responder_inst[s].hreadyout = 1'b1;
+        assign responder_inst[s].hrdata    = 64'h0000_0003_0000_0003;
     end
 end
 assign sha512_error_intr = 1'b0;

@@ -1141,7 +1141,7 @@ assign timer_intr =  {soc_ifc_reg_hwif_out.internal_rv_mtime_h.count_h.value    
 
 `ifdef CALIGHTRA_ICE40
 assign sha_req_hold = 1'b0;
-assign sha_rdata = '0;
+assign sha_rdata = 32'h0000_0003;
 assign sha_error = 1'b0;
 assign sha_sram_req_dv = 1'b0;
 assign sha_sram_req_addr = '0;

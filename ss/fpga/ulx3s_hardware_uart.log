@@ -1,0 +1,39 @@
+
+====================================================================
+ Calightra-SS Dual-VeeR-EL2 Subsystem on Radiona ULX3S-85F (ECP5-85F)
+ Core Clock: 12.5 MHz | UART: 115200 8N1 | Interconnect: AXI4 Xbar
+====================================================================
+[MCU] VeeR EL2 #1 (Subsystem MCU) booted from EBR ROM @ 0x80000000
+[MCU] OTP_STATUS=0x40000000 LC_STATUS=0x00000003 LC_STATE=0x02108421 LC_CNT=0x00000001
+[MCU] Verified MCU_SRAM, MCU_MBOX0, and SOC_SRAM over AXI4 crossbar
+[MCU] I3C_VER=0x00000120 PROT_CAP=0x2050434f/0x56434552 ("OCP RECV") ADDR=0x5a/0x5b BUS_EN=1
+[MCU] Releasing VeeR EL2 #2 (Caliptra Core) via MCI CPTRA_BOOT_GO=1
+[MCU] Waiting for Caliptra Core READY_FOR_FUSES...
+[MCU] READY_FOR_FUSES=1 (CPTRA_HW_REV=0x00000212)! Programming AXI_USER=1, FUSE_WR_DONE=1 & BOOTFSM_GO=1
+[MCU] CPTRA_BOOT_STATUS=0x00000000 FLOW=0x08000000 ETRNG=0
+[MCU] CPTRA_BOOT_STATUS=0x00000181 FLOW=0x08000000 ETRNG=3
+[MCU] CPTRA_BOOT_STATUS=0x00000101 FLOW=0x08000000 ETRNG=5
+[MCU] Caliptra Core reached READY_FOR_MB_PROCESSING=1! (ETRNG serviced: 5)
+[MCU] Sending AXI4 Mailbox VERSION (0x46505652) -> Caliptra Core...
+[MCU] VERSION Resp (36B): fips_status=0x00000000 mode=0x46495053 hw_rev=0x00000212 name="Caliptra RTM"
+[MCU] Sending AXI4 Mailbox CAPABILITIES (0x43415053) -> Caliptra Core...
+[MCU] CAPABILITIES Resp (24B): fips_status=0x00000000 caps=0x00000000_0x00000000_0x00000000_0x01000000
+[MCU] Calightra-SS ULX3S-85F Boot & Mailbox Self-Test PASS!
+[MCU] Interactive UART console ready ([v]=VERSION [c]=CAPABILITIES [s]=STATUS [r]=COLD_RESET)
+
+Running Caliptra ROM ...
+
+[state] WD Timer not started. Device not locked for debugging
+[state] LifecycleState = Unprovisioned
+[state] DebugLocked = No
+[state] WD Timer not started. Device not locked for debugging
+[fake-rom-cold-reset] ++
+[fwproc] Wait for Commands...
+[fwproc] Recv command 0x46505652
+[rt] FIPS Version
+[fwproc] Recv command 0x43415053
+[MCU] STATUS: CPTRA_FLOW=0x18000000 BOOT=0x00000101 MCI_FLOW=0x00000008 HW_ERR=0x00000000 FW_ERR=0x00000000 ETRNG=6
+[MCU] Sending AXI4 Mailbox VERSION (0x46505652) -> Caliptra Core...
+[MCU] VERSION Resp (36B): fips_status=0x00000000 mode=0x46495053 hw_rev=0x00000212 name="Caliptra RTM"
+[fwproc] Recv command 0x46505652
+[rt] FIPS Version

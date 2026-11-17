@@ -17,22 +17,54 @@
 // Radiona ULX3S (Lattice ECP5-85F, LFE5U-85F-6BG381C) top-level wrapper for
 // the stripped Caliptra 2.1 Subsystem ("Calightra-SS"):
 //   - Instantiates caliptra_ss_top (MCU VeeR EL2 + Caliptra Core VeeR EL2 +
-//     MCI + OTP_CTRL + LC_CTRL + MCU ROM controller).
+//     MCI + OTP_CTRL + LC_CTRL + I3C + MCU ROM controller).
 //   - Instantiates the open-source 5-Manager x 7-Subordinate AXI4 Crossbar
 //     (calightra_ss_axi_xbar).
 //   - Connects the onboard ESP32 SPI Host Bridge to AXI4 Manager M3 (m3_soc)
 //     with full 32-bit addressing across the subsystem address map.
-//   - Maps MCU ROM (initialized with mcu_rom.hex), MCU DCCM, MCI MCU SRAM,
-//     MCU MBOX0 SRAM, and SoC SRAM to ECP5 EBR block RAMs, and exports
-//     Caliptra Core ICCM/DCCM/MBOX/IMEM to the external QSPI RAM bridge.
-//   - Streams MCI DEBUG_OUT / Caliptra Core UART characters to the onboard
-//     FTDI USB-UART (115200 baud @ 12.5 MHz core clock) and drives the 8 LEDs.
+//   - Backs MCU ROM (8 KB, mcu_rom.hex), MCU DCCM (16 KB), MCI MCU SRAM (4 KB),
+//     MCU MBOX0 SRAM (4 KB), SoC SRAM (4 KB), Caliptra Core IMEM ROM (96 KB,
+//     fake-caliptra-rom.bin), Caliptra Core DCCM (128 KB), and Caliptra Core
+//     Mailbox SRAM (32 KB) directly in on-chip ECP5 DP16KD EBR block RAMs so
+//     both RISC-V cores boot self-contained on a bare ULX3S-85F board.
+//   - Buffers MCI DEBUG_OUT + Caliptra Core UART characters in an 8 KB EBR
+//     FIFO and serializes them over FTDI USB-UART (115200 8N1 @ 12.5 MHz),
+//     plus deserializes host UART RX commands ('v', 'c', 's', 'r'=cold reset).
 
 `include "common_defines.sv"
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
 `include "caliptra_macros.svh"
 `include "caliptra_ss_includes.svh"
+
+module calightra_cptra_dccm_ebr (
+    input  logic              clk,
+    input  logic [3:0]        dccm_clken,
+    input  logic [3:0]        dccm_wren_bank,
+    input  logic [3:0][13:0]  dccm_addr_bank,
+    input  logic [3:0][31:0]  dccm_wr_data_bank,
+    output logic [3:0][31:0]  dccm_bank_dout
+);
+    // Maps 0x5000_0000..0x5001_BFFF (112 KB PersistentData + DATA) to 0..7167
+    // and  0x5003_C000..0x5003_FFFF (top 16 KB Stack/EStack/NStack) to 7168..8191
+    for (genvar cb = 0; cb < 4; cb++) begin : g_cptra_dccm_bank
+        logic [31:0] cptra_dccm_ram [0:8191];
+        logic [31:0] cptra_dccm_dout_q;
+        wire  [12:0] ram_idx = (dccm_addr_bank[cb][13:10] == 4'b1111)
+                               ? {3'b111, dccm_addr_bank[cb][9:0]}
+                               : dccm_addr_bank[cb][12:0];
+        always_ff @(posedge clk) begin
+            if (dccm_clken[cb]) begin
+                if (dccm_wren_bank[cb]) begin
+                    cptra_dccm_ram[ram_idx] <= dccm_wr_data_bank[cb];
+                end else begin
+                    cptra_dccm_dout_q <= cptra_dccm_ram[ram_idx];
+                end
+            end
+        end
+        assign dccm_bank_dout[cb] = cptra_dccm_dout_q;
+    end
+endmodule
 
 module calightra_ss_ulx3s_top
     import axi_pkg::*;
@@ -42,6 +74,7 @@ module calightra_ss_ulx3s_top
     import otp_ctrl_pkg::*;
     import lc_ctrl_pkg::*;
 #(
+    parameter int STARTUP_DELAY_CLKS = 4375000, // 0.35s @ 12.5 MHz so /dev/ttyUSB0 is open
     `include "css_mcu0_el2_param.vh"
 ) (
     input  logic       clk_25mhz,
@@ -51,7 +84,7 @@ module calightra_ss_ulx3s_top
     // 8 Onboard Status LEDs
     output logic [7:0] led,
 
-    // FTDI USB-UART (fpga TX -> ftdi_rxd)
+    // FTDI USB-UART (fpga TX -> ftdi_rxd, FTDI TX -> ftdi_txd)
     output logic       ftdi_rxd,
     input  logic       ftdi_txd,
 
@@ -63,16 +96,12 @@ module calightra_ss_ulx3s_top
     input  logic       esp_mosi,    // wifi_gpio17
     output logic       esp_miso,    // wifi_gpio12
 
-    // External QSPI PSRAM / Flash Interface (Header GP/GN)
+    // External QSPI PSRAM / Flash Interface (Header GP/GN, kept idle in EBR mode)
     output logic       qspi_sck,
     output logic       qspi_ce_n,
     inout  wire  [3:0] qspi_io,
 
     // MIPI I3C / I2C Recovery Target Interface
-    //   - i3c_scl / i3c_sda (SITE F4 / E3): connected on ULX3S PCB to both
-    //     onboard ESP32 (wifi_gpio26 / wifi_gpio25) and header (gp[11] / gn[11]).
-    //   - ext_i3c_scl / ext_i3c_sda (SITE A7 / A8): dedicated external GPIO
-    //     header pins (gp[4] / gn[4]) for external BMC/RoT host or analyzer.
     inout  wire        i3c_scl,
     inout  wire        i3c_sda,
     inout  wire        ext_i3c_scl,
@@ -100,9 +129,12 @@ module calightra_ss_ulx3s_top
         32'h0000_0003, 32'h0000_0002, 32'h0000_0001, 32'h1111_1111, 32'h0000_0000
     };
 
-    // Keep ESP32 enabled and in normal boot mode
+    // Keep ESP32 enabled and in normal boot mode; keep external QSPI header idle
     assign wifi_en    = 1'b1;
     assign wifi_gpio0 = 1'b1;
+    assign qspi_sck   = 1'b0;
+    assign qspi_ce_n  = 1'b1;
+    assign qspi_io    = 4'bzzzz;
 
     // Generate 12.5 MHz core clock from 25 MHz oscillator
     logic clk_core = 1'b0;
@@ -110,25 +142,48 @@ module calightra_ss_ulx3s_top
         clk_core <= ~clk_core;
     end
 
-    // Synchronize reset buttons + allow ESP32 soft reset override
-    logic esp_rst_n;
-    logic [2:0] rst_sync = 3'b000;
+    // -------------------------------------------------------------------------
+    // Power-On Startup Delay & Cold-Reset Sequencer
+    //   1. Waits STARTUP_DELAY_CLKS after bitstream configuration so /dev/ttyUSB0
+    //      is re-attached and open on the host before UART boot logs begin.
+    //   2. Sequences 64 cycles of (pwrgood=0, rst_b=0) followed by 64 cycles of
+    //      (pwrgood=1, rst_b=0) before releasing rst_b=1.
+    //   3. Re-triggers cleanly on B0 (!btn_pwr_n), B1 (fire1), ESP32 soft reset,
+    //      or receiving 'r'/'R' over USB-UART RX (ftdi_txd).
+    // -------------------------------------------------------------------------
+    logic        esp_rst_n = 1'b1;
+    logic        uart_rx_reset_req;
+    logic [2:0]  btn_ext_sync = 3'b000;
+    logic [22:0] startup_cnt  = 23'd0;
+    logic        startup_done = 1'b0;
+    logic [7:0]  rst_seq_cnt  = 8'd0;
+
     always_ff @(posedge clk_core) begin
-        rst_sync <= {rst_sync[1:0], (btn_pwr_n & ~fire1 & esp_rst_n)};
+        btn_ext_sync <= {btn_ext_sync[1:0], (~btn_pwr_n | fire1 | ~esp_rst_n)};
+        if (!startup_done) begin
+            if (startup_cnt >= STARTUP_DELAY_CLKS[22:0]) begin
+                startup_done <= 1'b1;
+            end else begin
+                startup_cnt <= startup_cnt + 23'd1;
+            end
+            rst_seq_cnt <= 8'd0;
+        end else if (btn_ext_sync[2] || uart_rx_reset_req) begin
+            rst_seq_cnt <= 8'd0;
+        end else if (rst_seq_cnt < 8'd128) begin
+            rst_seq_cnt <= rst_seq_cnt + 8'd1;
+        end
     end
-    wire cptra_ss_rst_b_i   = rst_sync[2];
-    wire cptra_ss_pwrgood_i = rst_sync[2];
+
+    wire cptra_ss_pwrgood_i = startup_done && (rst_seq_cnt >= 8'd64);
+    wire cptra_ss_rst_b_i   = startup_done && (rst_seq_cnt >= 8'd128);
 
     // -------------------------------------------------------------------------
-    // ESP32 SPI Slave -> 32-bit AXI4 Master Bridge (72-bit / 64-bit frame)
-    //   Bits [63:62]: [63]=Valid, [62]=Write(1)/Read(0)
-    //   Bit  [61]:    SoftResetN
-    //   Bits [60:32]: {3'b0, axi_addr[28:0]} (with bit 31 = axi_addr[28])
-    //   Bits [31:0]:  Write data (MOSI) / Read data from previous op (MISO)
+    // ESP32 SPI Slave -> 32-bit AXI4 Master Bridge (64-bit frame)
     // -------------------------------------------------------------------------
-    logic [2:0] sck_sync, csn_sync;
-    logic [1:0] mosi_sync;
-    always_ff @(posedge clk_core or negedge btn_pwr_n) begin
+    logic [2:0] sck_sync  = 3'b000;
+    logic [2:0] csn_sync  = 3'b111;
+    logic [1:0] mosi_sync = 2'b00;
+    always_ff @(posedge clk_core) begin
         if (!btn_pwr_n) begin
             sck_sync  <= 3'b000;
             csn_sync  <= 3'b111;
@@ -144,17 +199,17 @@ module calightra_ss_ulx3s_top
     wire sck_fall = (sck_sync[2:1] == 2'b10);
     wire csn_act  = ~csn_sync[2];
 
-    logic [5:0]  spi_bit_cnt;
-    logic [63:0] spi_rx_shreg;
-    logic [63:0] spi_tx_shreg;
-    logic        spi_cmd_valid;
-    logic        spi_cmd_write;
-    logic [31:0] spi_cmd_addr;
-    logic [31:0] spi_cmd_wdata;
+    logic [5:0]  spi_bit_cnt   = 6'd0;
+    logic [63:0] spi_rx_shreg  = 64'd0;
+    logic [63:0] spi_tx_shreg  = 64'd0;
+    logic        spi_cmd_valid = 1'b0;
+    logic        spi_cmd_write = 1'b0;
+    logic [31:0] spi_cmd_addr  = 32'd0;
+    logic [31:0] spi_cmd_wdata = 32'd0;
     logic [31:0] last_axi_rdata;
     logic [7:0]  status_byte;
 
-    always_ff @(posedge clk_core or negedge btn_pwr_n) begin
+    always_ff @(posedge clk_core) begin
         if (!btn_pwr_n) begin
             spi_bit_cnt   <= 6'd0;
             spi_rx_shreg  <= 64'd0;
@@ -306,7 +361,7 @@ module calightra_ss_ulx3s_top
     );
 
     // -------------------------------------------------------------------------
-    // Memory Export Interfaces & ECP5 EBR Backing Memories
+    // Memory Export Interfaces & On-Chip ECP5 DP16KD EBR Backing Memories
     // -------------------------------------------------------------------------
     mci_mcu_sram_if #(
         .ADDR_WIDTH(MCU_SRAM_ADDR_WIDTH)
@@ -357,14 +412,14 @@ module calightra_ss_ulx3s_top
     assign abr_memory_export.sig_z_mem_rdata_o       = '0;
     assign abr_memory_export.pk_mem_rdata_o          = '0;
 
-    // 1. MCU VeeR EL2 DCCM (16 KB = 4 banks x 1024 x 32-bit in ECP5 EBR)
-    assign cptra_ss_mcu0_el2_mem_export.iccm_bank_dout            = '0;
-    assign cptra_ss_mcu0_el2_mem_export.iccm_bank_ecc             = '0;
-    assign cptra_ss_mcu0_el2_mem_export.dccm_bank_ecc             = '0;
-    assign cptra_ss_mcu0_el2_mem_export.wb_packeddout_pre         = '0;
-    assign cptra_ss_mcu0_el2_mem_export.wb_dout_pre_up            = '0;
+    // 1. MCU VeeR EL2 DCCM (16 KB = 4 banks x 1024 x 32-bit = 8 DP16KD)
+    assign cptra_ss_mcu0_el2_mem_export.iccm_bank_dout             = '0;
+    assign cptra_ss_mcu0_el2_mem_export.iccm_bank_ecc              = '0;
+    assign cptra_ss_mcu0_el2_mem_export.dccm_bank_ecc              = '0;
+    assign cptra_ss_mcu0_el2_mem_export.wb_packeddout_pre          = '0;
+    assign cptra_ss_mcu0_el2_mem_export.wb_dout_pre_up             = '0;
     assign cptra_ss_mcu0_el2_mem_export.ic_tag_data_raw_packed_pre = '0;
-    assign cptra_ss_mcu0_el2_mem_export.ic_tag_data_raw_pre       = '0;
+    assign cptra_ss_mcu0_el2_mem_export.ic_tag_data_raw_pre        = '0;
 
     for (genvar b = 0; b < pt.DCCM_NUM_BANKS; b++) begin : g_mcu_dccm_bank
         logic [31:0] mcu_dccm_ram [0:1023];
@@ -372,29 +427,29 @@ module calightra_ss_ulx3s_top
         always_ff @(posedge clk_core) begin
             if (cptra_ss_mcu0_el2_mem_export.dccm_clken[b]) begin
                 if (cptra_ss_mcu0_el2_mem_export.dccm_wren_bank[b]) begin
-                    mcu_dccm_ram[cptra_ss_mcu0_el2_mem_export.dccm_addr_bank[b][11:2]] <=
+                    mcu_dccm_ram[cptra_ss_mcu0_el2_mem_export.dccm_addr_bank[b]] <=
                         cptra_ss_mcu0_el2_mem_export.dccm_wr_data_bank[b];
                 end else begin
                     mcu_dccm_dout_q <=
-                        mcu_dccm_ram[cptra_ss_mcu0_el2_mem_export.dccm_addr_bank[b][11:2]];
+                        mcu_dccm_ram[cptra_ss_mcu0_el2_mem_export.dccm_addr_bank[b]];
                 end
             end
         end
         assign cptra_ss_mcu0_el2_mem_export.dccm_bank_dout[b] = mcu_dccm_dout_q;
     end
 
-    // 2. MCU ROM (4 KB = 512 x 64-bit in ECP5 EBR, initialized with mcu_rom.hex)
-    logic [63:0] mcu_rom [0:511];
+    // 2. MCU ROM (8 KB = 1024 x 64-bit = 4 DP16KD, initialized with mcu_rom.hex)
+    logic [63:0] mcu_rom [0:1023];
     initial begin
         $readmemh("../fw/mcu_rom.hex", mcu_rom);
     end
     always_ff @(posedge clk_core) begin
         if (mcu_rom_mem_export_if.req.cs) begin
-            mcu_rom_mem_export_if.resp.rdata <= mcu_rom[mcu_rom_mem_export_if.req.addr[8:0]];
+            mcu_rom_mem_export_if.resp.rdata.data <= mcu_rom[mcu_rom_mem_export_if.req.addr[9:0]];
         end
     end
 
-    // 3. MCI MCU SRAM (4 KB = 1024 x 32-bit in ECP5 EBR)
+    // 3. MCI MCU SRAM (4 KB = 1024 x 32-bit = 2 DP16KD)
     logic [31:0] mcu_sram [0:MCU_SRAM_DEPTH-1];
     logic [31:0] mcu_sram_rdata_q;
     assign cptra_ss_mci_mcu_sram_req_if.resp.rdata.ecc  = 7'h00;
@@ -409,7 +464,7 @@ module calightra_ss_ulx3s_top
         end
     end
 
-    // 4. MCI MCU MBOX0 SRAM (4 KB = 1024 x 32-bit in ECP5 EBR)
+    // 4. MCI MCU MBOX0 SRAM (4 KB = 1024 x 32-bit = 2 DP16KD)
     logic [31:0] mcu_mbox0_sram [0:MCU_MBOX0_DEPTH-1];
     logic [31:0] mcu_mbox0_sram_rdata_q;
     assign cptra_ss_mcu_mbox0_sram_req_if.resp.rdata.ecc  = 7'h00;
@@ -424,7 +479,7 @@ module calightra_ss_ulx3s_top
         end
     end
 
-    // 5. SoC SRAM on S6_SRAM AXI Subordinate (4 KB = 1024 x 32-bit in ECP5 EBR)
+    // 5. SoC SRAM on S6_SRAM AXI Subordinate (4 KB = 1024 x 32-bit = 2 DP16KD)
     logic [31:0] soc_sram [0:1023];
     logic [31:0] soc_sram_rdata_q;
     assign cptra_ss_soc_sram_s_axi_if.awready = 1'b1;
@@ -469,60 +524,75 @@ module calightra_ss_ulx3s_top
         end
     end
 
-    // 6. Caliptra Core ICCM/DCCM/MBOX/IMEM -> External QSPI RAM Bridge
-    logic [3:0] qspi_io_o, qspi_io_i, qspi_io_oe;
-    assign qspi_io[0] = qspi_io_oe[0] ? qspi_io_o[0] : 1'bz;
-    assign qspi_io[1] = qspi_io_oe[1] ? qspi_io_o[1] : 1'bz;
-    assign qspi_io[2] = qspi_io_oe[2] ? qspi_io_o[2] : 1'bz;
-    assign qspi_io[3] = qspi_io_oe[3] ? qspi_io_o[3] : 1'bz;
-    assign qspi_io_i  = qspi_io;
+    // 6. Caliptra Core VeeR EL2 DCCM (128 KB = 8 banks x 4096 x 32-bit = 64 DP16KD)
+    assign cptra_ss_cptra_core_el2_mem_export.iccm_bank_dout = '0;
+    assign cptra_ss_cptra_core_el2_mem_export.iccm_bank_ecc  = '0;
+    assign cptra_ss_cptra_core_el2_mem_export.dccm_bank_ecc  = '0;
 
+    calightra_cptra_dccm_ebr u_cptra_dccm_ebr (
+        .clk              (clk_core),
+        .dccm_clken       (cptra_ss_cptra_core_el2_mem_export.dccm_clken),
+        .dccm_wren_bank   (cptra_ss_cptra_core_el2_mem_export.dccm_wren_bank),
+        .dccm_addr_bank   (cptra_ss_cptra_core_el2_mem_export.dccm_addr_bank),
+        .dccm_wr_data_bank(cptra_ss_cptra_core_el2_mem_export.dccm_wr_data_bank),
+        .dccm_bank_dout   (cptra_ss_cptra_core_el2_mem_export.dccm_bank_dout)
+    );
+
+    // 7. Caliptra Core IMEM ROM (96 KB = 3 x 4096 x 64-bit = 48 DP16KD)
+    logic                                 cptra_ss_cptra_core_imem_cs_o;
+    logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] cptra_ss_cptra_core_imem_addr_o;
+    logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] cptra_ss_cptra_core_imem_rdata_i;
+
+    logic [63:0] cptra_imem_b0 [0:4095];
+    logic [63:0] cptra_imem_b1 [0:4095];
+    logic [63:0] cptra_imem_b2 [0:4095];
+    initial begin
+        $readmemh("../fw/cptra_rom_b0.hex", cptra_imem_b0);
+        $readmemh("../fw/cptra_rom_b1.hex", cptra_imem_b1);
+        $readmemh("../fw/cptra_rom_b2.hex", cptra_imem_b2);
+    end
+
+    logic [63:0] cptra_imem_r0, cptra_imem_r1, cptra_imem_r2;
+    logic [1:0]  cptra_imem_sel_q = 2'd0;
+    always_ff @(posedge clk_core) begin
+        if (cptra_ss_cptra_core_imem_cs_o) begin
+            cptra_imem_sel_q <= cptra_ss_cptra_core_imem_addr_o[13:12];
+            cptra_imem_r0    <= cptra_imem_b0[cptra_ss_cptra_core_imem_addr_o[11:0]];
+            cptra_imem_r1    <= cptra_imem_b1[cptra_ss_cptra_core_imem_addr_o[11:0]];
+            cptra_imem_r2    <= cptra_imem_b2[cptra_ss_cptra_core_imem_addr_o[11:0]];
+        end
+    end
+
+    always_comb begin
+        case (cptra_imem_sel_q)
+            2'd0:    cptra_ss_cptra_core_imem_rdata_i = cptra_imem_r0;
+            2'd1:    cptra_ss_cptra_core_imem_rdata_i = cptra_imem_r1;
+            2'd2:    cptra_ss_cptra_core_imem_rdata_i = cptra_imem_r2;
+            default: cptra_ss_cptra_core_imem_rdata_i = 64'h0;
+        endcase
+    end
+
+    // 8. Caliptra Core Mailbox SRAM (4 KB = 1024 x 32-bit = 2 DP16KD)
     logic                                 cptra_ss_cptra_core_mbox_sram_cs_o;
     logic                                 cptra_ss_cptra_core_mbox_sram_we_o;
     logic [CPTRA_MBOX_ADDR_W-1:0]         cptra_ss_cptra_core_mbox_sram_addr_o;
     logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] cptra_ss_cptra_core_mbox_sram_wdata_o;
     logic [CPTRA_MBOX_DATA_AND_ECC_W-1:0] cptra_ss_cptra_core_mbox_sram_rdata_i;
-    logic                                 cptra_ss_cptra_core_imem_cs_o;
-    logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] cptra_ss_cptra_core_imem_addr_o;
-    logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] cptra_ss_cptra_core_imem_rdata_i;
-    logic [31:0]                          mbox_sram_rdata_32;
 
-    assign cptra_ss_cptra_core_el2_mem_export.iccm_bank_ecc = '0;
-    assign cptra_ss_cptra_core_el2_mem_export.dccm_bank_ecc = '0;
-    assign cptra_ss_cptra_core_mbox_sram_rdata_i            = {7'h00, mbox_sram_rdata_32};
-
-    calightra_spi_ram_bridge u_qspi_ram_bridge (
-        .clk               (clk_core),
-        .rst_n             (cptra_ss_rst_b_i),
-
-        .iccm_clken        (cptra_ss_cptra_core_el2_mem_export.iccm_clken),
-        .iccm_wren_bank    (cptra_ss_cptra_core_el2_mem_export.iccm_wren_bank),
-        .iccm_addr_bank    (cptra_ss_cptra_core_el2_mem_export.iccm_addr_bank),
-        .iccm_bank_wr_data (cptra_ss_cptra_core_el2_mem_export.iccm_bank_wr_data),
-        .iccm_bank_dout    (cptra_ss_cptra_core_el2_mem_export.iccm_bank_dout),
-
-        .dccm_clken        (cptra_ss_cptra_core_el2_mem_export.dccm_clken),
-        .dccm_wren_bank    (cptra_ss_cptra_core_el2_mem_export.dccm_wren_bank),
-        .dccm_addr_bank    (cptra_ss_cptra_core_el2_mem_export.dccm_addr_bank),
-        .dccm_wr_data_bank (cptra_ss_cptra_core_el2_mem_export.dccm_wr_data_bank),
-        .dccm_bank_dout    (cptra_ss_cptra_core_el2_mem_export.dccm_bank_dout),
-
-        .mbox_sram_cs      (cptra_ss_cptra_core_mbox_sram_cs_o),
-        .mbox_sram_we      (cptra_ss_cptra_core_mbox_sram_we_o),
-        .mbox_sram_addr    (cptra_ss_cptra_core_mbox_sram_addr_o),
-        .mbox_sram_wdata   (cptra_ss_cptra_core_mbox_sram_wdata_o[31:0]),
-        .mbox_sram_rdata   (mbox_sram_rdata_32),
-
-        .imem_cs           (cptra_ss_cptra_core_imem_cs_o),
-        .imem_addr         (cptra_ss_cptra_core_imem_addr_o),
-        .imem_rdata        (cptra_ss_cptra_core_imem_rdata_i),
-
-        .qspi_sck          (qspi_sck),
-        .qspi_ce_n         (qspi_ce_n),
-        .qspi_io_o         (qspi_io_o),
-        .qspi_io_i         (qspi_io_i),
-        .qspi_io_oe        (qspi_io_oe)
-    );
+    logic [31:0] cptra_mbox_ram [0:1023];
+    logic [31:0] cptra_mbox_rdata_q;
+    always_ff @(posedge clk_core) begin
+        if (cptra_ss_cptra_core_mbox_sram_cs_o) begin
+            if (cptra_ss_cptra_core_mbox_sram_we_o) begin
+                cptra_mbox_ram[cptra_ss_cptra_core_mbox_sram_addr_o[9:0]] <=
+                    cptra_ss_cptra_core_mbox_sram_wdata_o[31:0];
+            end else begin
+                cptra_mbox_rdata_q <=
+                    cptra_mbox_ram[cptra_ss_cptra_core_mbox_sram_addr_o[9:0]];
+            end
+        end
+    end
+    assign cptra_ss_cptra_core_mbox_sram_rdata_i = {7'h00, cptra_mbox_rdata_q};
 
     // -------------------------------------------------------------------------
     // Caliptra Subsystem Top (caliptra_ss_top)
@@ -541,6 +611,7 @@ module calightra_ss_ulx3s_top
     logic ready_for_runtime;
     logic [63:0] cptra_generic_output_wires_o;
     logic [63:0] mci_generic_output_wires_o;
+    logic [63:0] mci_generic_input_wires_i;
 
     logic        cptra_ss_mcu_halt_status_o;
     logic        cptra_ss_mcu_halt_req_o;
@@ -698,7 +769,7 @@ module calightra_ss_ulx3s_top
 
         .cptra_ss_soc_mcu_mbox0_data_avail    (),
         .cptra_ss_soc_mcu_mbox1_data_avail    (),
-        .cptra_ss_mci_generic_input_wires_i   (64'h0),
+        .cptra_ss_mci_generic_input_wires_i   (mci_generic_input_wires_i),
         .cptra_ss_strap_mcu_reset_vector_i    (32'h8000_0000),
         .cptra_ss_mcu_no_rom_config_i         (1'b0),
         .cptra_ss_mci_boot_seq_brkpoint_i     (1'b0),
@@ -777,12 +848,9 @@ module calightra_ss_ulx3s_top
     );
 
     // -------------------------------------------------------------------------
-    // Bidirectional I3C / I2C Pad Drivers (ESP32 GPIO26/25 + Header GP11/GN11 & GP4/GN4)
+    // Bidirectional I3C / I2C Pad Drivers
     // -------------------------------------------------------------------------
-    // SCL pad drive: open-drain low when scl_o==0, or active when scl_oe==1
     wire i3c_scl_drive_en = cptra_ss_i3c_scl_oe | ~cptra_ss_i3c_scl_o;
-    // SDA pad drive: sda_oe from i3c_wrapper encodes open-drain (drive 0, high-Z 1)
-    // and push-pull (drive 0 and 1 when sel_od_pp_o==1)
     wire i3c_sda_drive_en = cptra_ss_i3c_sda_oe | (cptra_ss_sel_od_pp_o & cptra_ss_i3c_sda_oe);
 
     assign i3c_scl     = i3c_scl_drive_en ? cptra_ss_i3c_scl_o : 1'bz;
@@ -790,17 +858,16 @@ module calightra_ss_ulx3s_top
     assign ext_i3c_scl = i3c_scl_drive_en ? cptra_ss_i3c_scl_o : 1'bz;
     assign ext_i3c_sda = i3c_sda_drive_en ? cptra_ss_i3c_sda_o : 1'bz;
 
-    // Wired-AND input across ESP32/GP11-GN11 and GP4-GN4 (both pulled up via PULLMODE=UP)
     assign cptra_ss_i3c_scl_i = i3c_scl & ext_i3c_scl;
     assign cptra_ss_i3c_sda_i = i3c_sda & ext_i3c_sda;
 
     // -------------------------------------------------------------------------
-    // Status LEDs & FTDI 115200-Baud UART Serializer
+    // Status LEDs
     // -------------------------------------------------------------------------
     assign status_byte = {
         cptra_ss_all_error_fatal_o,
         cptra_error_non_fatal,
-        ready_for_runtime,
+        ready_for_runtime | (mci_generic_output_wires_o[31:0] == 32'hCA11_00AA),
         ready_for_mb_processing,
         ready_for_fuses,
         cptra_ss_mci_cptra_rst_b_o,
@@ -810,60 +877,157 @@ module calightra_ss_ulx3s_top
 
     assign led = status_byte;
 
-    // Monitor MCI DEBUG_OUT (0x2100_0414) + Caliptra Core GENERIC_OUTPUT_WIRES[8:0]
+    // -------------------------------------------------------------------------
+    // 8 KB EBR-Backed 115200-Baud UART TX Ring-Buffer FIFO + RX Command Decoder
+    // -------------------------------------------------------------------------
+    localparam int CLKS_PER_BIT = 108; // 12.5 MHz / 115200 baud (115,740 baud)
+
+    logic       mci_aw_is_debug_out;
     logic       mci_char_valid;
     logic [7:0] mci_char_data;
     always_ff @(posedge clk_core or negedge cptra_ss_rst_b_i) begin
         if (!cptra_ss_rst_b_i) begin
-            mci_char_valid <= 1'b0;
-            mci_char_data  <= 8'h00;
+            mci_aw_is_debug_out <= 1'b0;
+            mci_char_valid      <= 1'b0;
+            mci_char_data       <= 8'h00;
         end else begin
             mci_char_valid <= 1'b0;
-            if (cptra_ss_mci_s_axi_if.awvalid && cptra_ss_mci_s_axi_if.awready &&
-                cptra_ss_mci_s_axi_if.wvalid  && cptra_ss_mci_s_axi_if.wready &&
-                (cptra_ss_mci_s_axi_if.awaddr[15:0] == 16'h0414)) begin
-                mci_char_valid <= 1'b1;
-                mci_char_data  <= cptra_ss_mci_s_axi_if.wdata[7:0];
+            if (cptra_ss_mci_s_axi_if.awvalid && cptra_ss_mci_s_axi_if.awready) begin
+                if (cptra_ss_mci_s_axi_if.wvalid && cptra_ss_mci_s_axi_if.wready) begin
+                    if (cptra_ss_mci_s_axi_if.awaddr[15:0] == 16'h0414) begin
+                        mci_char_valid <= 1'b1;
+                        mci_char_data  <= cptra_ss_mci_s_axi_if.wdata[7:0];
+                    end
+                    mci_aw_is_debug_out <= 1'b0;
+                end else begin
+                    mci_aw_is_debug_out <= (cptra_ss_mci_s_axi_if.awaddr[15:0] == 16'h0414);
+                end
+            end else if (cptra_ss_mci_s_axi_if.wvalid && cptra_ss_mci_s_axi_if.wready && mci_aw_is_debug_out) begin
+                mci_char_valid      <= 1'b1;
+                mci_char_data       <= cptra_ss_mci_s_axi_if.wdata[7:0];
+                mci_aw_is_debug_out <= 1'b0;
             end
         end
     end
 
-    localparam int CLKS_PER_BIT = 108; // 12.5 MHz / 115200 baud
-    logic        uart_prev_valid;
-    logic        tx_busy;
-    logic [9:0]  tx_shreg;
-    logic [3:0]  tx_bit_idx;
-    logic [6:0]  tx_clk_cnt;
+    logic [8:0] uart_prev_uout;
+    wire  [7:0] cptra_uout_byte = cptra_generic_output_wires_o[7:0];
+    wire        cptra_char_edge = cptra_ss_rst_b_i &&
+                                  (cptra_generic_output_wires_o[8:0] != uart_prev_uout) &&
+                                  (cptra_uout_byte != 8'h00) &&
+                                  (cptra_uout_byte != 8'hFF) &&
+                                  (cptra_uout_byte != 8'h01);
 
-    wire cptra_char_valid = cptra_generic_output_wires_o[8] & ~uart_prev_valid;
+    // Dual 4 KB EBR FIFOs (2 DP16KD each) with line-atomic ('\n') arbitration
+    // so [MCU] and Caliptra Core UART lines never interleave mid-line.
+    logic [7:0]  mci_fifo_mem [0:4095];
+    logic [12:0] mci_wptr = 13'd0;
+    logic [12:0] mci_rptr = 13'd0;
+    wire         mci_full  = (mci_wptr[12] != mci_rptr[12]) && (mci_wptr[11:0] == mci_rptr[11:0]);
+    wire         mci_empty = (mci_wptr == mci_rptr);
 
-    always_ff @(posedge clk_core or negedge cptra_ss_rst_b_i) begin
-        if (!cptra_ss_rst_b_i) begin
-            uart_prev_valid <= 1'b0;
-            tx_busy         <= 1'b0;
-            tx_shreg        <= 10'h3FF;
-            tx_bit_idx      <= 4'd0;
-            tx_clk_cnt      <= 7'd0;
+    logic [7:0]  cptra_fifo_mem [0:4095];
+    logic [12:0] cptra_wptr = 13'd0;
+    logic [12:0] cptra_rptr = 13'd0;
+    wire         cptra_full  = (cptra_wptr[12] != cptra_rptr[12]) && (cptra_wptr[11:0] == cptra_rptr[11:0]);
+    wire         cptra_empty = (cptra_wptr == cptra_rptr);
+
+    always_ff @(posedge clk_core) begin
+        if (mci_char_valid && !mci_full) begin
+            mci_fifo_mem[mci_wptr[11:0]] <= mci_char_data;
+        end
+    end
+
+    always_ff @(posedge clk_core) begin
+        if (cptra_char_edge && !cptra_full) begin
+            cptra_fifo_mem[cptra_wptr[11:0]] <= cptra_uout_byte;
+        end
+    end
+
+    logic [7:0] mci_rdata_q;
+    logic [7:0] cptra_rdata_q;
+    logic       mci_pop;
+    logic       cptra_pop;
+
+    always_ff @(posedge clk_core) begin
+        if (mci_pop) begin
+            mci_rdata_q <= mci_fifo_mem[mci_rptr[11:0]];
+        end
+    end
+
+    always_ff @(posedge clk_core) begin
+        if (cptra_pop) begin
+            cptra_rdata_q <= cptra_fifo_mem[cptra_rptr[11:0]];
+        end
+    end
+
+    wire  [7:0] tx_sel_char = tx_src_cpt ? cptra_rdata_q : mci_rdata_q;
+    logic [1:0] tx_state   = 2'd0; // 0=IDLE, 1=LATCH, 2=SHIFT
+    logic       tx_src_cpt = 1'b0; // 0=MCI, 1=Caliptra Core
+    logic       line_lock  = 1'b0; // Holds current source until '\n' or empty
+    logic [9:0] tx_shreg   = 10'h3FF;
+    logic [3:0] tx_bit_idx = 4'd0;
+    logic [6:0] tx_clk_cnt = 7'd0;
+
+    logic choose_cptra;
+    always_comb begin
+        if (line_lock) begin
+            if (tx_src_cpt) choose_cptra = !cptra_empty;
+            else            choose_cptra = mci_empty && !cptra_empty;
         end else begin
-            uart_prev_valid <= cptra_generic_output_wires_o[8];
-            if (!tx_busy) begin
-                if (mci_char_valid) begin
-                    tx_busy    <= 1'b1;
-                    tx_shreg   <= {1'b1, mci_char_data, 1'b0};
-                    tx_bit_idx <= 4'd0;
-                    tx_clk_cnt <= 7'd0;
-                end else if (cptra_char_valid) begin
-                    tx_busy    <= 1'b1;
-                    tx_shreg   <= {1'b1, cptra_generic_output_wires_o[7:0], 1'b0};
-                    tx_bit_idx <= 4'd0;
-                    tx_clk_cnt <= 7'd0;
+            choose_cptra = !cptra_empty && mci_empty;
+        end
+    end
+
+    assign mci_pop   = (tx_state == 2'd0) && !mci_empty   && !choose_cptra;
+    assign cptra_pop = (tx_state == 2'd0) && !cptra_empty &&  choose_cptra;
+
+    always_ff @(posedge clk_core) begin
+        if (!cptra_ss_rst_b_i) begin
+            uart_prev_uout <= 9'h000;
+        end else begin
+            uart_prev_uout <= cptra_generic_output_wires_o[8:0];
+        end
+
+        if (mci_char_valid && !mci_full) begin
+            mci_wptr <= mci_wptr + 13'd1;
+        end
+        if (cptra_char_edge && !cptra_full) begin
+            cptra_wptr <= cptra_wptr + 13'd1;
+        end
+
+        case (tx_state)
+            2'd0: begin
+                tx_shreg <= 10'h3FF;
+                if (cptra_pop) begin
+                    cptra_rptr <= cptra_rptr + 13'd1;
+                    tx_src_cpt <= 1'b1;
+                    line_lock  <= 1'b1;
+                    tx_state   <= 2'd1;
+                end else if (mci_pop) begin
+                    mci_rptr   <= mci_rptr + 13'd1;
+                    tx_src_cpt <= 1'b0;
+                    line_lock  <= 1'b1;
+                    tx_state   <= 2'd1;
+                end else begin
+                    line_lock  <= 1'b0;
                 end
-            end else begin
+            end
+            2'd1: begin
+                tx_shreg   <= {1'b1, tx_sel_char, 1'b0};
+                if (tx_sel_char == 8'h0A) begin
+                    line_lock <= 1'b0;
+                end
+                tx_bit_idx <= 4'd0;
+                tx_clk_cnt <= 7'd0;
+                tx_state   <= 2'd2;
+            end
+            2'd2: begin
                 if (tx_clk_cnt == CLKS_PER_BIT - 1) begin
                     tx_clk_cnt <= 7'd0;
                     tx_shreg   <= {1'b1, tx_shreg[9:1]};
                     if (tx_bit_idx == 4'd9) begin
-                        tx_busy <= 1'b0;
+                        tx_state <= 2'd0;
                     end else begin
                         tx_bit_idx <= tx_bit_idx + 4'd1;
                     end
@@ -871,9 +1035,74 @@ module calightra_ss_ulx3s_top
                     tx_clk_cnt <= tx_clk_cnt + 7'd1;
                 end
             end
-        end
+            default: tx_state <= 2'd0;
+        endcase
     end
 
-    assign ftdi_rxd = tx_shreg[0] ^ (ftdi_txd & 1'b0);
+    assign ftdi_rxd = tx_shreg[0];
+
+    // UART RX 115200 8N1 Deserializer on ftdi_txd -> mci_generic_input_wires_i
+    logic [2:0] rx_sync      = 3'b111;
+    logic [1:0] rx_state     = 2'd0; // 0=IDLE, 1=START, 2=DATA, 3=STOP
+    logic [6:0] rx_clk_cnt   = 7'd0;
+    logic [2:0] rx_bit_idx   = 3'd0;
+    logic [7:0] rx_shreg     = 8'h00;
+    logic [7:0] rx_byte_q    = 8'h00;
+    logic [7:0] rx_seq_q     = 8'h00;
+    logic       rx_rst_pulse = 1'b0;
+
+    always_ff @(posedge clk_core) begin
+        rx_sync      <= {rx_sync[1:0], ftdi_txd};
+        rx_rst_pulse <= 1'b0;
+        case (rx_state)
+            2'd0: begin
+                if (!rx_sync[2]) begin
+                    rx_clk_cnt <= 7'd0;
+                    rx_state   <= 2'd1;
+                end
+            end
+            2'd1: begin
+                if (rx_clk_cnt == (CLKS_PER_BIT / 2) - 1) begin
+                    rx_clk_cnt <= 7'd0;
+                    rx_bit_idx <= 3'd0;
+                    rx_state   <= rx_sync[2] ? 2'd0 : 2'd2;
+                end else begin
+                    rx_clk_cnt <= rx_clk_cnt + 7'd1;
+                end
+            end
+            2'd2: begin
+                if (rx_clk_cnt == CLKS_PER_BIT - 1) begin
+                    rx_clk_cnt <= 7'd0;
+                    rx_shreg   <= {rx_sync[2], rx_shreg[7:1]};
+                    if (rx_bit_idx == 3'd7) begin
+                        rx_state <= 2'd3;
+                    end else begin
+                        rx_bit_idx <= rx_bit_idx + 3'd1;
+                    end
+                end else begin
+                    rx_clk_cnt <= rx_clk_cnt + 7'd1;
+                end
+            end
+            2'd3: begin
+                if (rx_clk_cnt == CLKS_PER_BIT - 1) begin
+                    rx_clk_cnt <= 7'd0;
+                    rx_state   <= 2'd0;
+                    if (rx_sync[2]) begin
+                        if (rx_shreg == 8'h72 || rx_shreg == 8'h52) begin
+                            rx_rst_pulse <= 1'b1; // 'r' / 'R' -> full cold reset
+                        end else begin
+                            rx_byte_q <= rx_shreg;
+                            rx_seq_q  <= rx_seq_q + 8'd1;
+                        end
+                    end
+                end else begin
+                    rx_clk_cnt <= rx_clk_cnt + 7'd1;
+                end
+            end
+        endcase
+    end
+
+    assign uart_rx_reset_req         = rx_rst_pulse;
+    assign mci_generic_input_wires_i = {48'h0, rx_seq_q, rx_byte_q};
 
 endmodule
