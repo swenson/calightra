@@ -103,9 +103,9 @@ module caliptra_prim_fifo_sync #(
 
     // the generate blocks below are needed to avoid lint errors due to array indexing
     // in the where the fifo only has one storage element
-    logic [Depth-1:0][Width-1:0] storage;
     logic [Width-1:0] storage_rdata;
     if (Depth == 1) begin : gen_depth_eq1
+      logic [Depth-1:0][Width-1:0] storage;
       assign storage_rdata = storage[0];
 
       if (resetOnClear) begin : gen_depth_eq1_reset
@@ -132,9 +132,18 @@ module caliptra_prim_fifo_sync #(
 
     // fifo with more than one storage element
     end else begin : gen_depth_gt1
-      assign storage_rdata = storage[fifo_rptr];
 
       if (resetOnClear) begin : gen_depth_gt1_reset
+`ifdef SYNTHESIS
+        logic [Width-1:0] storage [0:Depth-1];
+        assign storage_rdata = storage[fifo_rptr];
+        always_ff @(posedge clk_i)
+          if (fifo_incr_wptr) begin
+            storage[fifo_wptr] <= wdata_i;
+          end
+`else
+        logic [Depth-1:0][Width-1:0] storage;
+        assign storage_rdata = storage[fifo_rptr];
         
         always_ff @(posedge clk_i)
           if (clr_i) begin
@@ -143,8 +152,14 @@ module caliptra_prim_fifo_sync #(
           else if (fifo_incr_wptr) begin
             storage[fifo_wptr] <= wdata_i;
           end
-
+`endif
       end else begin : gen_depth_gt1_no_reset
+`ifdef SYNTHESIS
+        logic [Width-1:0] storage [0:Depth-1];
+`else
+        logic [Depth-1:0][Width-1:0] storage;
+`endif
+        assign storage_rdata = storage[fifo_rptr];
 
         always_ff @(posedge clk_i)
           if (fifo_incr_wptr) begin

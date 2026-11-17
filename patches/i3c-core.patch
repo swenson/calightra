@@ -150,24 +150,8 @@ index 8685307..bf64599 100644
  
    always_comb begin : wire_unconnected_regs
      hwif_in.I3C_EC.StdbyCtrlMode.STBY_CR_VIRT_DEVICE_ADDR.VIRT_STATIC_ADDR_VALID.next = '0;
-diff --git a/src/i3c.sv b/src/i3c.sv
-index aab48fd..257a528 100644
---- a/src/i3c.sv
-+++ b/src/i3c.sv
-@@ -95,7 +95,11 @@ module i3c
-     parameter int unsigned TtiTxThldWidth = 3,
-     parameter int unsigned TtiIbiThldWidth = 8,
- 
-+`ifdef CALIGHTRA_ICE40
-+    parameter int unsigned IndirectFifoDepth = 8
-+`else
-     parameter int unsigned IndirectFifoDepth = 64
-+`endif
- ) (
-     input clk_i,  // clock
-     input rst_ni, // active low reset
 diff --git a/src/i3c_defines.svh b/src/i3c_defines.svh
-index 240b251..f4f85f7 100644
+index 240b251..2625914 100644
 --- a/src/i3c_defines.svh
 +++ b/src/i3c_defines.svh
 @@ -5,6 +5,15 @@
@@ -176,8 +160,8 @@ index 240b251..f4f85f7 100644
  
 +`ifdef CALIGHTRA_ICE40
 +  `define CMD_FIFO_DEPTH   4
-+  `define RX_FIFO_DEPTH    8
-+  `define TX_FIFO_DEPTH    8
++  `define RX_FIFO_DEPTH    64
++  `define TX_FIFO_DEPTH    64
 +  `define RESP_FIFO_DEPTH  4
 +  `define IBI_FIFO_DEPTH   4
 +  `define DAT_DEPTH        4

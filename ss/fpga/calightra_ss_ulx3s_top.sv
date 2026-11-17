@@ -961,13 +961,14 @@ module calightra_ss_ulx3s_top
         end
     end
 
-    wire  [7:0] tx_sel_char = tx_src_cpt ? cptra_rdata_q : mci_rdata_q;
-    logic [1:0] tx_state   = 2'd0; // 0=IDLE, 1=LATCH, 2=SHIFT
-    logic       tx_src_cpt = 1'b0; // 0=MCI, 1=Caliptra Core
-    logic       line_lock  = 1'b0; // Holds current source until '\n' or empty
-    logic [9:0] tx_shreg   = 10'h3FF;
-    logic [3:0] tx_bit_idx = 4'd0;
-    logic [6:0] tx_clk_cnt = 7'd0;
+    wire  [7:0] tx_sel_char   = tx_src_cpt ? cptra_rdata_q : mci_rdata_q;
+    logic [1:0] tx_state      = 2'd0; // 0=IDLE, 1=LATCH, 2=SHIFT
+    logic       tx_src_cpt    = 1'b0; // 0=MCI, 1=Caliptra Core
+    logic       line_lock     = 1'b0; // Holds current source until '\n' or empty
+    logic       tx_pending_lf = 1'b0; // Emits '\r' then '\n' for raw serial terminals
+    logic [9:0] tx_shreg      = 10'h3FF;
+    logic [3:0] tx_bit_idx    = 4'd0;
+    logic [6:0] tx_clk_cnt    = 7'd0;
 
     logic choose_cptra;
     always_comb begin
@@ -1014,9 +1015,15 @@ module calightra_ss_ulx3s_top
                 end
             end
             2'd1: begin
-                tx_shreg   <= {1'b1, tx_sel_char, 1'b0};
-                if (tx_sel_char == 8'h0A) begin
-                    line_lock <= 1'b0;
+                if (tx_sel_char == 8'h0A && !tx_pending_lf) begin
+                    tx_shreg      <= {1'b1, 8'h0D, 1'b0};
+                    tx_pending_lf <= 1'b1;
+                end else begin
+                    tx_shreg      <= {1'b1, tx_sel_char, 1'b0};
+                    tx_pending_lf <= 1'b0;
+                    if (tx_sel_char == 8'h0A) begin
+                        line_lock <= 1'b0;
+                    end
                 end
                 tx_bit_idx <= 4'd0;
                 tx_clk_cnt <= 7'd0;
@@ -1027,7 +1034,7 @@ module calightra_ss_ulx3s_top
                     tx_clk_cnt <= 7'd0;
                     tx_shreg   <= {1'b1, tx_shreg[9:1]};
                     if (tx_bit_idx == 4'd9) begin
-                        tx_state <= 2'd0;
+                        tx_state <= tx_pending_lf ? 2'd1 : 2'd0;
                     end else begin
                         tx_bit_idx <= tx_bit_idx + 4'd1;
                     end

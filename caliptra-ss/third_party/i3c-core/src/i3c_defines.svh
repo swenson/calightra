@@ -7,8 +7,8 @@
 
 `ifdef CALIGHTRA_ICE40
   `define CMD_FIFO_DEPTH   4
-  `define RX_FIFO_DEPTH    8
-  `define TX_FIFO_DEPTH    8
+  `define RX_FIFO_DEPTH    64
+  `define TX_FIFO_DEPTH    64
   `define RESP_FIFO_DEPTH  4
   `define IBI_FIFO_DEPTH   4
   `define DAT_DEPTH        4

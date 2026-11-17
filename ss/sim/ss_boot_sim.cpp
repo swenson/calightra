@@ -149,7 +149,7 @@ struct SimHarness {
     std::chrono::steady_clock::time_point start_time;
 
     uint32_t last_mci_milestone = 0;
-    uint8_t  last_cptra_char    = 0;
+    uint16_t last_cptra_uout    = 0;
     bool     prev_mcu_rst_b     = false;
     bool     prev_cptra_rst_b   = false;
     bool     prev_rdy_fuses     = false;
@@ -162,6 +162,7 @@ struct SimHarness {
     bool     mcu_entered_recovery = false;
     uint32_t etrng_responses    = 0;
     std::string mcu_line_buf;
+    std::string cptra_line_buf;
 
     bool in_axi_service = false;
     bool in_bmc_service = false;
@@ -246,8 +247,8 @@ struct SimHarness {
                        static_cast<uint32_t>(dut->cptra_ss_mci_generic_output_wires_o >> 32));
                 mcu_failed = true;
             } else if (ch >= 0x20 || ch == '\n' || ch == '\r' || ch == '\t') {
-                putchar(ch);
                 if (ch == '\n') {
+                    printf("%s\n", mcu_line_buf.c_str());
                     if (mcu_line_buf.find("Waiting for Caliptra to be ready for fuses") != std::string::npos) {
                         mcu_i3c_initialized = true;
                     }
@@ -256,7 +257,7 @@ struct SimHarness {
                     }
                     mcu_line_buf.clear();
                     fflush(stdout);
-                } else {
+                } else if (ch != '\r') {
                     mcu_line_buf.push_back(static_cast<char>(ch));
                 }
             }
@@ -271,13 +272,17 @@ struct SimHarness {
             fflush(stdout);
         }
 
-        // Track Caliptra Core console output (CPT_GENERIC_OUTPUT_WIRES_0[7:0])
-        uint8_t cptra_ch = static_cast<uint8_t>(dut->cptra_ss_cptra_core_generic_output_wires_o & 0xFFU);
-        if (cptra_ch != last_cptra_char) {
-            last_cptra_char = cptra_ch;
-            if (cptra_ch >= 0x20 || cptra_ch == '\n' || cptra_ch == '\r' || cptra_ch == '\t') {
-                putchar(cptra_ch);
-                if (cptra_ch == '\n') fflush(stdout);
+        // Track Caliptra Core console output (CPT_GENERIC_OUTPUT_WIRES_0[8:0], bit 8 toggles per char)
+        uint16_t cptra_uout = static_cast<uint16_t>(dut->cptra_ss_cptra_core_generic_output_wires_o & 0x1FFU);
+        if (cptra_uout != last_cptra_uout) {
+            last_cptra_uout = cptra_uout;
+            uint8_t cptra_ch = static_cast<uint8_t>(cptra_uout & 0xFFU);
+            if (cptra_ch == '\n') {
+                printf("%s\n", cptra_line_buf.c_str());
+                cptra_line_buf.clear();
+                fflush(stdout);
+            } else if (cptra_ch >= 0x20 || cptra_ch == '\t') {
+                cptra_line_buf.push_back(static_cast<char>(cptra_ch));
             }
         }
 

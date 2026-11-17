@@ -1,115 +1,109 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# Calightra-SS: Stripped Caliptra 2.1 Subsystem for Fast Verilator Simulation & Open-Source FPGAs
+# Calightra & Calightra-SS: Stripped Caliptra 2.1 RTL for Verilator, WebAssembly & Small Open-Source FPGAs
 
-**Calightra-SS** (`main` and `caliptra-ss` branches) is a stripped-down, 100% binary-compatible implementation of the full **Caliptra 2.1 Subsystem** ([`chipsalliance/caliptra-ss`](https://github.com/chipsalliance/caliptra-ss) `patch_ss_v2.1` + [`caliptra-rtl`](https://github.com/chipsalliance/caliptra-rtl) `patch_v2.1` + [`adams-bridge`](https://github.com/chipsalliance/adams-bridge) `v2.0.3` + [`i3c-core`](https://github.com/chipsalliance/i3c-core)) engineered to:
-1. **Synthesize, place, and route on a single open-source Lattice ECP5-85F FPGA** (**Radiona ULX3S-85F**, `LFE5U-85F-6BG381C`) using `sv2v` + `yosys` + `nextpnr-ecp5` + `ecppack`.
-2. **Simulate the full dual-VeeR-EL2 subsystem in Verilator**, booting the real [`chipsalliance/caliptra-mcu-sw`](https://github.com/chipsalliance/caliptra-mcu-sw) (`main-2.1`) Rust MCU ROM ([`ss/mcu-rom/`](ss/mcu-rom/)) alongside the unmodified [`chipsalliance/caliptra-sw`](https://github.com/chipsalliance/caliptra-sw) 2.1 Core ROM (`caliptra-rom.bin`) and firmware (`image-bundle-mldsa.bin`) through the complete **3-stage MIPI I3C / OCP Recovery streaming boot flow** (`ColdBoot` $\to$ `RI_DOWNLOAD_FIRMWARE` $\to$ `Image 0` Caliptra FMC+RT $\to$ `Image 1` MLDSA-87/ECC-384 SoC Authorization Manifest $\to$ `Image 2` MCU Runtime Firmware $\to$ `CM_SHA384` ROM digest check $\to$ `STASH_MEASUREMENT` $\to$ warm reset $\to$ `FwBoot` $\to$ MCU Runtime execution in SRAM @ `0x21C0_0000`).
+**Calightra** / **Calightra-SS** adapts [`chipsalliance/caliptra-ss`](https://github.com/chipsalliance/caliptra-ss) (`patch_ss_v2.1`) + [`caliptra-rtl`](https://github.com/chipsalliance/caliptra-rtl) (`patch_v2.1`) + [`adams-bridge`](https://github.com/chipsalliance/adams-bridge) (`v2.0.3`) + [`i3c-core`](https://github.com/chipsalliance/i3c-core) across two distinct stripping tiers with very different hardware capabilities:
 
-For the standalone Caliptra Core (`caliptra-rtl` without the subsystem MCU/MCI/I3C/OTP/LC), see [`sim/`](sim/), [`fpga/`](fpga/), or the **`caliptra-core` branch**. For granular architectural details, phase-by-phase stripping tables, and full boot traces, see **[`DETAILS.md`](DETAILS.md)**.
+> [!IMPORTANT]
+> **Critical Distinction Between the Verilator/WASM Builds and the `CALIGHTRA_ICE40` FPGA Builds:**
+> - **Verilator (`sim/`, `ss/sim/`) & Browser WebAssembly (`wasm/`, `www/`) — Unmasked Crypto Included (`CALIGHTRA_PHASE1` + `CALIGHTRA_NO_COUNTERMEASURES`)**: Retains all Caliptra 2.1 cryptographic engines (`SHA2-256`, `SHA2-384/512`, `SHA512_ACC`, `SHA3/SHAKE256`, `HMAC`, `AES-256-GCM`, `DOE`, `ECDSA/ECDH P-384`, `ML-DSA-87`, `ML-KEM-1024`), `KeyVault`, `PCRVault`, `DataVault`, and `axi_dma_top` (with side-channel masking/blinding countermeasures, SRAM ECC, and PMP/debug removed). Boots the **unmodified upstream production Caliptra 2.1 ROM** (`caliptra-rom.bin` / `caliptra-rom-with-log.bin`) and signed firmware bundle (`image-bundle-mldsa.bin`).
+> - **Lattice ECP5-85F FPGA Builds (`fpga/`, `ss/fpga/`) — Crypto Engines, Vaults & AXI DMA Stubbed Out (`+ CALIGHTRA_ICE40`)**: Upstream Caliptra's unmasked parallel ASIC crypto blocks + flip-flop vaults total **`~410,000` LUT4s** (`ecc_top` P-384 alone is `125,677` LUTs, `adams-bridge` ML-DSA-87/ML-KEM-1024 is `~180,000+` LUTs, `aes_clp_wrapper` is `25,232` LUTs, `hmac_ctrl` is `17,925` LUTs) — roughly **5x larger than the entire `83,640`-LUT Lattice ECP5-85F** on the Radiona ULX3S-85F. Consequently, `CALIGHTRA_ICE40` **stubs out all cryptographic accelerators, `KeyVault`/`PCRVault`/`DataVault`, WDT, and `axi_dma_top`**. The current FPGA bitstreams **cannot** boot the real `caliptra-rom.bin` or verify signed firmware; `ss/fpga/` boots a standalone C MCU test ROM (`ss/fw/mcu_boot.c`) alongside `caliptra-sw`'s non-cryptographic **`fake-caliptra-rom.bin`** in on-chip EBR BRAM.
+
+For granular architectural details, phase-by-phase stripping tables, exact what-is-included vs. what-is-stubbed breakdowns, and boot traces, see **[`DETAILS.md`](DETAILS.md)**.
 
 ---
 
 ## TL;DR — Bottom-Line Results
 
-### 1. What Is Included in `calightra_ss_ulx3s_top` (`ss/fpga/`)
-- **Dual VeeR EL2 RISC-V Cores**:
-  - **Subsystem MCU (`css_mcu0_el2_veer_wrapper`)**: Boots from MCU ROM (`0x8000_0000`) with `16 KB` DCCM in ECP5 EBR BRAM.
-  - **Caliptra Core (`caliptra_top`)**: Boots unmodified `caliptra-rom.bin` with unmasked SHA2-512/384, SHA3/SHAKE256, HMAC, AES-256-GCM, ECDSA/ECDH P-384, ML-DSA-87, and ML-KEM-1024, plus an external QSPI RAM bridge (`calightra_spi_ram_bridge.sv`) for core SRAMs.
-- **Full Subsystem Peripherals**:
-  - **MCI (`mci_top` @ `0x2100_0000`)**: Boot sequencer, CSRs, `MCU_MBOX0` (`0x2140_0000`), and `MCU_SRAM` (`0x21C0_0000`).
+### 1. What Is Actually in `calightra_ss_ulx3s_top` (`ss/fpga/`, `CALIGHTRA_ICE40`)
+- **Included Hardware RTL (Synthesized & Verified on Physical Radiona ULX3S-85F)**:
+  - **Subsystem MCU (`css_mcu0_el2_veer_wrapper`)**: Stripped VeeR EL2 RISC-V core (`CALIGHTRA_NO_BP`, no PMP/div/bitmanip) booting `ss/fw/mcu_boot.c` (`8 KB` EBR ROM @ `0x8000_0000`) with `16 KB` EBR DCCM.
+  - **Caliptra Core (`caliptra_top` with `CALIGHTRA_ICE40` stubs)**: Stripped VeeR EL2 RISC-V core + `soc_ifc_top` + `mbox` controller, booting upstream **`fw/fake-caliptra-rom.bin`** from `96 KB` on-chip EBR IMEM with `128 KB` mapped EBR DCCM (`PersistentData` + `Stack`) and `4 KB` EBR Mailbox SRAM, servicing `VERSION` (`"Caliptra RTM"`) and `CAPABILITIES` mailbox commands over AXI4.
+  - **MCI (`mci_top` @ `0x2100_0000`)**: Boot sequencer, CSRs (readback-pruned via `CALIGHTRA_ICE40`), `MCU_MBOX0` (`4 KB` EBR @ `0x2140_0000`), and `MCU_SRAM` (`4 KB` EBR @ `0x21C0_0000`).
   - **OpenTitan Fuse & Lifecycle Controllers (`otp_ctrl` @ `0x7000_0000`, `lc_ctrl` @ `0x7000_0400`)**: Initialized to `DAI_IDLE` and `LcStTestUnlocked0`.
-  - **Full MIPI I3C + OCP Recovery Core (`i3c_wrapper` @ `0x2000_4000`)**: I2C/I3C Standby Target (`0x5A`), Target Transaction Interface (TTI), OCP Recovery protocol handler (`0x5B`, `"OCP RECV"`), and `I3CCSR` wired directly to the ULX3S-85F's onboard **ESP32** and **external J1 GPIO header**.
-- **Open-Source Apache-2.0 AXI4 Crossbar ([`ss/rtl/calightra_ss_axi_xbar.sv`](ss/rtl/calightra_ss_axi_xbar.sv))**: Replaces the proprietary simulation VIP interconnect with a `391 LUT4` 5-Manager $\times$ 7-Subordinate AXI4 crossbar with 64b $\leftrightarrow$ 32b width conversion.
-- **Independent Open-Source Apache-2.0 MIPI I3C Controller IP ([`ss/rtl/calightra_i3c_ctrl.sv`](ss/rtl/calightra_i3c_ctrl.sv))**: Synthesizable `1,251 LUT4` / `386 FF` MIPI I3C Basic v1.1.1 SDR Controller (Master) with a Xilinx `XI3C`-compatible MMIO register interface (`CMD_FIFO`, `WR_FIFO`, `RD_FIFO`, `RESP_STATUS_FIFO`), broadcast/direct CCC support (`RSTDAA`, `SETDASA`), MIPI I3C `AckHandoff` / `TReadEnd` handoff, hardware odd-parity `T-bit` generation/checking, and hardware SMBus CRC-8 (`0x07`) PEC engine — wired to `caliptra_ss_top` exclusively via the 2-wire `i3c_scl` / `i3c_sda` bus so `i3c-core` never "grades its own homework".
+  - **MIPI I3C + OCP Recovery Target (`i3c_wrapper` @ `0x2000_4000`)**: I2C/I3C Standby Target, TTI, OCP Recovery protocol handler (`"OCP RECV"`), and `I3CCSR` (active-controller queues pruned via `CALIGHTRA_ICE40`).
+  - **Open-Source AXI4 Crossbar ([`ss/rtl/calightra_ss_axi_xbar.sv`](ss/rtl/calightra_ss_axi_xbar.sv))**: `391 LUT4` 5-Manager $\times$ 7-Subordinate AXI4 crossbar with 64b $\leftrightarrow$ 32b width conversion, plus dual `4 KB` EBR USB-UART TX FIFOs and `115200 8N1` RX console on `/dev/ttyUSB0`.
+- **Excluded / Stubbed Out on FPGA (`CALIGHTRA_ICE40`)**:
+  - **All Caliptra Core Cryptographic Accelerators**: `sha256_ctrl`, `sha512_ctrl`, `sha512_acc_top`, `sha3_ctrl`, `hmac_ctrl`, `aes_clp_wrapper`, `doe_ctrl`, `ecc_top` (P-384), and `abr_top` (Adams Bridge ML-DSA-87 / ML-KEM-1024) are stubbed on AHB (`hrdata = 0x3`).
+  - **All Hardware Vaults & Core AXI DMA**: `key_vault`, `pcr_vault`, `data_vault`, `wdt`, and `axi_dma_top` are stubbed out.
+  - **Real `caliptra-rom.bin` & `caliptra-mcu-sw` ROM**: Because hardware KATs, DICE crypto, vaults, and `axi_dma_top` are absent in `CALIGHTRA_ICE40`, the current FPGA bitstream runs `ss/fw/mcu_boot.c` + `fw/fake-caliptra-rom.bin` (not `caliptra-rom.bin` or `ss/mcu-rom/`). Note also that [`calightra_i3c_ctrl.sv`](ss/rtl/calightra_i3c_ctrl.sv) is instantiated in the Verilator harness (`ss/sim/`), not inside `calightra_ss_ulx3s_top.sv`.
 
-### 2. Open-Source FPGA Synthesis & Place-and-Route (`LFE5U-85F-6BG381C` on Radiona ULX3S-85F)
+### 2. Open-Source FPGA Synthesis & Place-and-Route (`LFE5U-85F-6BG381C` on Radiona ULX3S-85F — **Crypto/Vaults/DMA Stubbed via `CALIGHTRA_ICE40`**)
 
-| Target Design | `TRELLIS_COMB` (LUT4 + Carry) | `TRELLIS_FF` (Flip-Flops) | `DP16KD` (18 Kb BRAM) | `MULT18X18D` (DSP) | `TRELLIS_IO` (Pins) | Placed & Routed `Fmax` | Bitstream |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **[`calightra_ss_ulx3s_top`](ss/fpga/calightra_ss_ulx3s_top.sv)** *(Full Dual-Core `caliptra-ss` + `i3c_wrapper` + AXI4 Xbar)* | **`71,479 / 83,640` (`85%`)** | **`20,317 / 83,640` (`24%`)** | **`16 / 208` (`7%`)** | **`14 / 156` (`8%`)** | **`29 / 365` (`7%`)** | **`15.54 MHz`** *(PASS @ 12.5 MHz)* | [`ss/fpga/calightra_ss_ulx3s_85f.bit`](ss/fpga/calightra_ss_ulx3s_85f.bit) (`1.4 MB`) |
-| **[`ulx3s_top`](fpga/ulx3s_top.sv)** *(Standalone `caliptra-rtl` Core)* | **`29,690 / 83,640` (`35%`)** | **`8,062 / 83,640` (`9%`)** | **`0 / 208` (`0%`)** | **`8 / 156` (`5%`)** | **`25 / 365` (`6%`)** | **`17.86 MHz`** *(PASS @ 12.5 MHz)* | [`fpga/calightra_ulx3s_85f.bit`](fpga/calightra_ulx3s_85f.bit) (`721 KB`) |
-
-### 3. Verilator Build & Simulation Performance
-
-| Benchmark | Build Time | Model Size | Sim Speed | Cycles | Wall-Clock Time | Key Result |
+| Target Design (`CALIGHTRA_ICE40`) | `TRELLIS_COMB` (LUT4 + Carry) | `TRELLIS_FF` (Flip-Flops) | `DP16KD` (18 Kb BRAM) | `MULT18X18D` (DSP) | Placed & Routed `Fmax` | What Boots |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **`caliptra-ss` Real `caliptra-mcu-sw` ROM + Full 3-Stage 2-Wire I3C Recovery** ([`ss/sim/`](ss/sim/)) | **`62.88 s`** | `10.1 MB` | **`2.25 kHz`** | **`47,834,229`** | **`21,264.0 s`** | Independent [`calightra_i3c_ctrl`](ss/rtl/calightra_i3c_ctrl.sv) assigns dynamic addresses (`RSTDAA`, `SETDASA` `0x3A`$\to$`0x08`, `0x3B`$\to$`0x09`) over `SCL`/`SDA` $\to$ `ColdBoot` reaches `READY_FOR_MB_PROCESSING=1` $\to$ `RI_DOWNLOAD_FIRMWARE` streams **3 images (`258.8 KB`) over the 2-wire I3C bus with hardware PEC** (`Image 0` Caliptra FMC+RT, `Image 1` MLDSA-87/ECC-384 SoC Manifest, `Image 2` MCU RT) $\to$ `FW_EXEC_CTRL[2]=1` & `ready_for_runtime=1` $\to$ `CM_SHA384` ROM digest & `STASH_MEASUREMENT` $\to$ warm reset $\to$ `FwBoot` jumps to `mcu_rt.bin` @ `0x21C0_0000` (`TEST PASS`) |
-| **`caliptra-ss` Real `caliptra-mcu-sw` ROM + Production Core ROM (`READY_FOR_MB_PROCESSING`)** ([`ss/sim/`](ss/sim/)) | **`62.88 s`** | `10.1 MB` | **`2.22 kHz`** | **`7,448,186`** | **`3,354.1 s`** | Real `caliptra-mcu-sw` ROM initializes `LCC`/`OTP`/`I3C`, populates fuses over DAI, verifies PK hashes & mailbox users, boots unmodified `caliptra-rom.bin` through `READY_FOR_MB_PROCESSING=1`, and issues `RI_DOWNLOAD_FIRMWARE` |
-| **`caliptra-rtl` Core ROM Boot** ([`sim/`](sim/), vs. unstripped baseline) | **`53.69 s`** *(was `404.2s`, **7.53x faster**)* | **`5.6 MB`** *(was `108 MB`, **19.3x smaller**)* | **`2.54 kHz`** *(was `1.53 kHz`, **1.66x faster**)* | **`4,626,321`** *(was `5,548,472`, **`-16.6%`**)* | **`1,821.2 s`** *(was `3,636.3s`, **2.00x faster**)* | Unmodified `caliptra-rom.bin` (`rom-2.1.3`) passes all ROM KATs and reaches `ready_for_mb_processing=1` |
-| **`caliptra-rtl` Full End-to-End Boot** (`ROM` $\to$ `FMC` $\to$ `Runtime` $\to$ `FW_INFO`) | **`53.69 s`** | **`5.6 MB`** | **`2.48 kHz`** | **`31,502,733`** | **`12,713.6 s`** | Unmodified `caliptra-rom.bin` + `image-bundle-mldsa.bin` (`fw-2.1.4`) completes 3 DICE layers, P-384 + ML-DSA-87 `FW_LOAD`, `ready_for_runtime=1`, and `FW_INFO` (`fips_status=0`) |
+| **[`calightra_ss_ulx3s_top`](ss/fpga/calightra_ss_ulx3s_top.sv)** *(Dual VeeR EL2 + `mci` + `i3c` + `soc_ifc`/`mbox` + EBR SRAMs; **no crypto/vaults/DMA**)* | **`71,512 / 83,640` (`85%`)** | **`20,682 / 83,640` (`24%`)** | **`133 / 208` (`63%`)** | **`14 / 156` (`8%`)** | **`17.09 MHz`** *(PASS @ 12.5 MHz)* | Self-contained on bare ULX3S-85F (`mcu_boot.c` + `fake-caliptra-rom.bin`; live log in [`ss/fpga/ulx3s_hardware_uart.log`](ss/fpga/ulx3s_hardware_uart.log)) |
+| **[`ulx3s_top`](fpga/ulx3s_top.sv)** *(Single VeeR EL2 + `soc_ifc`/`mbox` + QSPI bridge; **no crypto/vaults/DMA**)* | **`29,690 / 83,640` (`35%`)** | **`8,062 / 83,640` (`9%`)** | **`0 / 208` (`0%`)** | **`8 / 156` (`5%`)** | **`17.86 MHz`** *(PASS @ 12.5 MHz)* | Requires external QSPI RAM/Flash on GPIO header; **cannot** boot real `caliptra-rom.bin` |
+
+### 3. Verilator Build & Simulation Benchmarks (Unmasked Crypto RTL Included — `CALIGHTRA_ICE40` **NOT** Defined)
+
+| Benchmark | Build Time | Model Size | Sim Speed | Cycles | Wall-Clock Time | Exact Firmware & Key Result |
+| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
+| **`caliptra-ss` Real `caliptra-mcu-sw` ROM + 3-Stage 2-Wire I3C Recovery (Fake Core ROM/Bundle)** ([`ss/sim/`](ss/sim/), `make run-recovery`) | `62.88 s` | `10.1 MB` | `2.25 kHz` | `47,834,229` | `21,264.0 s` | Real `caliptra-mcu-sw` ROM + **`fake-caliptra-rom.bin`** + **`fake-image-bundle-mldsa.bin`** + signed `soc_manifest.bin` + `mcu_rt.bin`: [`calightra_i3c_ctrl`](ss/rtl/calightra_i3c_ctrl.sv) streams all 3 images over 2-wire `SCL`/`SDA` with PEC $\to$ ML-DSA-87 + ECC-384 SoC manifest verify $\to$ `CM_SHA384` ROM digest $\to$ warm reset $\to$ `mcu_rt.bin` @ `0x21C0_0000` (`TEST PASS`, [`ss_i3c_recovery_sim.log`](ss/sim/ss_i3c_recovery_sim.log)) |
+| **`caliptra-ss` C MCU ROM + Production Core ROM** ([`ss/sim/`](ss/sim/), [`ss_boot_sim.log`](ss/sim/ss_boot_sim.log)) | `60.73 s` | `10.1 MB` | `2.18 kHz` | `5,136,713` | `2,351.2 s` | `ss/fw/mcu_rom.bin` + **unmodified `caliptra-rom.bin`** passes all hardware ROM KATs + `IDevID` and reaches `READY_FOR_MB_PROCESSING=1` |
+| **`caliptra-rtl` Standalone Core ROM Boot** ([`sim/`](sim/), vs. unstripped baseline) | `53.69 s` *(was `404.2s`, **7.53x faster**)* | `5.6 MB` *(was `108 MB`, **19.3x smaller**)* | `2.54 kHz` *(was `1.53 kHz`)* | `4,626,321` *(was `5,548,472`)* | `1,821.2 s` *(was `3,636.3s`)* | **Unmodified `caliptra-rom.bin`** (`rom-2.1.3`) passes all ROM KATs and reaches `ready_for_mb_processing=1` |
+| **`caliptra-rtl` Standalone Core Full End-to-End Boot** (`ROM` $\to$ `FMC` $\to$ `Runtime` $\to$ `FW_INFO`) | `53.69 s` | `5.6 MB` | `2.48 kHz` | `31,502,733` | `12,713.6 s` | **Unmodified `caliptra-rom.bin` + `image-bundle-mldsa.bin`** (`fw-2.1.4`) completes 3 DICE layers, P-384 + ML-DSA-87 `FW_LOAD`, `ready_for_runtime=1`, and `FW_INFO` (`fips_status=0`) |
 
 ---
 
-## Radiona ULX3S-85F Host Wiring (ESP32 + External J1 Header)
+## Radiona ULX3S-85F Pin Wiring (`ss/fpga/ulx3s_v20.lpf`)
 
-On the ULX3S-85F ([`ss/fpga/calightra_ss_ulx3s_top.sv`](ss/fpga/calightra_ss_ulx3s_top.sv) + [`ss/fpga/ulx3s_v20.lpf`](ss/fpga/ulx3s_v20.lpf)), both the onboard **ESP32** and an **external host** can interact with the subsystem:
-- **ESP32 SPI-to-AXI4 Master (`wifi_gpio14` SCLK, `wifi_gpio13` MOSI, `wifi_gpio12` MISO, `wifi_gpio4` CS_N)**: 96-bit SPI transactions read/write any 32-bit AXI4 address (`MCI`, `Caliptra Core`, `OTP_CTRL`, `LC_CTRL`, `I3C`, `SOC_SRAM`).
-- **MIPI I3C / I2C Target + OCP Recovery (`0x5A` / `0x5B`)**:
-  - `i3c_scl` (`SITE "F4"`) & `i3c_sda` (`SITE "E3"`): Routed on the ULX3S PCB to **both** the onboard **ESP32 (`GPIO26` / `GPIO25`)** and J1 GPIO header **`gp[11]` / `gn[11]`**.
-  - `ext_i3c_scl` (`SITE "A7"`) & `ext_i3c_sda` (`SITE "A8"`): Dedicated external J1 GPIO header pins **`gp[4]` / `gn[4]`** wired-AND to the I3C controller for an external BMC/host or logic analyzer.
-- **USB-UART Console (`ftdi_rxd` @ `115200 8N1`)**: Streams live `[MCU]` and Caliptra Core console output over USB.
+- **USB-UART Console (`ftdi_rxd` `L4`, `ftdi_txd` `M1` @ `115200 8N1`)**: Streams `[MCU]` and Caliptra Core `fake-caliptra-rom.bin` console output over `/dev/ttyUSB0` and accepts interactive commands (`v` = `VERSION`, `c` = `CAPABILITIES`, `s` = `STATUS`, `r` = hardware cold reset).
+- **ESP32 SPI-to-AXI4 Master (`esp_sck` `wifi_gpio16` `L1`, `esp_cs_n` `wifi_gpio5` `N4`, `esp_mosi` `wifi_gpio17` `N3`, `esp_miso` `wifi_gpio12` `K1`)**: 96-bit SPI transactions read/write 32-bit AXI4 addresses across the subsystem crossbar.
+- **MIPI I3C / I2C Target Pins (`0x5A` / `0x5B`)**:
+  - `i3c_scl` (`F4`) & `i3c_sda` (`E3`): Shared on the ULX3S PCB between onboard ESP32 (`wifi_gpio26` / `wifi_gpio25`) and J1 header (`gp[11]` / `gn[11]`).
+  - `ext_i3c_scl` (`A7`) & `ext_i3c_sda` (`A8`): Dedicated J1 header pins (`gp[4]` / `gn[4]`).
 
 ---
 
 ## Browser RTL Simulator (WebAssembly — GitHub Pages)
 
-Try **Calightra's stripped Caliptra 2.1 Core RTL** (`CALIGHTRA_PHASE1` + `CALIGHTRA_NO_COUNTERMEASURES`) directly in your browser at **[`https://swenson.github.io/calightra/`](https://swenson.github.io/calightra/)**:
-- **Stripped Hardware RTL in a `3.5 MB` `.wasm` Binary ([`wasm/`](wasm/), [`www/`](www/))**: Compiles Calightra's modified `caliptra_top` (`VeeR EL2` + Adams Bridge ML-DSA-87/ML-KEM-1024 + unmasked SHA2-512/384, SHA3/SHAKE256, HMAC, AES-256-GCM, P-384 ECC, KeyVault, PCR Vault, Mailbox SRAM, and SoC Interface — side-channel masking/blinding countermeasures, SRAM ECC, PMP/debug, and SVA assertions removed) via Verilator + Emscripten (`-msimd128`) and clocks it inside a non-blocking Web Worker.
-- **Real Caliptra 2.1 ROM & Firmware by Default + Optional Fake-ROM Mode**: Defaults to unmodified upstream `caliptra-rom-with-log.bin` + `image-bundle-mldsa.bin` (full power-on KATs + IDevID / LDevID / FmcAlias / RtAlias DICE derivations), with dedicated UI dropdowns to switch between **Real ROM** (`caliptra-rom-with-log.bin` / `caliptra-rom.bin`), `caliptra-sw`'s **Fake ROM** (`fake-caliptra-rom.bin`, which skips KATs & IDevID/LDevID to reach `ready_for_mb_processing=1` in `~420k` cycles / `~2 min`), ML-DSA-87 or LMS firmware bundles, or custom `.bin` uploads.
-- **Interactive AXI4-Lite Mailbox & Zero-Cycle DPI Hardware Inspectors**: Issue ROM and Runtime mailbox commands (`VERSION`, `CAPABILITIES`, `FW_INFO`, DICE X.509 `GET_*_CERT` / `GET_*_CSR` with PEM decoding, `QUOTE_PCRS_ECC384` / `QUOTE_PCRS_MLDSA87`, `STASH_MEASUREMENT`, `CM_SHA_HASH`, debug unlock) and inspect live hardware KeyVault slots, all 32 PCRs, Fuse registers, and Fatal/Non-Fatal error registers via SystemVerilog `DPI-C`.
+Try **Calightra's stripped Caliptra 2.1 Core RTL** (`CALIGHTRA_PHASE1` + `CALIGHTRA_NO_COUNTERMEASURES`, **without** `CALIGHTRA_ICE40` — so all unmasked crypto engines and vaults are present) in your browser at **[`https://swenson.github.io/calightra/`](https://swenson.github.io/calightra/)**:
+- **Stripped Core RTL in a `3.5 MB` `.wasm` Binary ([`wasm/`](wasm/), [`www/`](www/))**: Compiles Calightra's modified `caliptra_top` (`VeeR EL2` + Adams Bridge ML-DSA-87/ML-KEM-1024 + unmasked SHA2-512/384, SHA3/SHAKE256, HMAC, AES-256-GCM, P-384 ECC, KeyVault, PCR Vault, Mailbox SRAM, and SoC Interface) via Verilator + Emscripten (`-msimd128`).
+- **Real Caliptra 2.1 ROM & Firmware by Default + Optional Fake-ROM Mode**: Defaults to unmodified upstream `caliptra-rom-with-log.bin` + `image-bundle-mldsa.bin`, with UI selectors to switch between Real ROM and `fake-caliptra-rom.bin`.
 
 ---
 
 ## Quick Start
 
-### Prerequisites (Ubuntu / Debian)
-```bash
-sudo apt-get install -y verilator yosys nextpnr-ice40 nextpnr-ecp5 fpga-icestorm fpga-trellis gcc-riscv64-unknown-elf ccache
-# Plus sv2v (https://github.com/zachjs/sv2v/releases) in PATH
-```
-
 ### 1. Calightra-SS Dual-Core Subsystem (`ss/`)
 ```bash
-# Build real caliptra-mcu-sw (main-2.1) ROM + signed SoC Manifest + MCU Runtime (ss/mcu-rom/)
+# Build real caliptra-mcu-sw (main-2.1) ROM + signed SoC Manifest + MCU Runtime (for Verilator ss/sim/)
 make -C ss/mcu-rom
 
-# Run Calightra-SS Verilator simulation through READY_FOR_MB_PROCESSING=1 + RI_DOWNLOAD_FIRMWARE
-make -C ss/sim run
-
-# Run full 3-stage I3C Recovery flow (Image 0 FMC+RT + Image 1 SoC Manifest + Image 2 MCU RT -> FwBoot)
+# Run Verilator 3-stage I3C Recovery flow (real caliptra-mcu-sw ROM + fake Core ROM/bundle + signed SoC Manifest)
 make -C ss/sim run-recovery
 
-# Synthesize, place-and-route, and pack the Radiona ULX3S-85F bitstream (ss/fpga/calightra_ss_ulx3s_85f.bit)
+# Run Verilator full production-crypto 3-stage I3C Recovery flow (real caliptra-mcu-sw ROM + real Core ROM/bundle)
+make -C ss/sim run-recovery-full
+
+# Synthesize & P&R ULX3S-85F bitstream (CALIGHTRA_ICE40: crypto/vaults/DMA stubbed, boots mcu_boot.c + fake-caliptra-rom.bin)
 make -C ss/fpga clean all
+
+# Program ULX3S-85F SRAM over JTAG and capture live /dev/ttyUSB0 UART logs
+python3 ss/fpga/ulx3s_run.py --bit ss/fpga/calightra_ss_ulx3s_85f.bit --port /dev/ttyUSB0
 ```
 
 ### 2. Standalone Calightra Core (`sim/` & `fpga/`)
 ```bash
-# Build and run stripped Caliptra Core Verilator simulator (ROM boot or full ROM -> FMC -> Runtime boot)
+# Build and run stripped Caliptra Core Verilator simulator (full unmasked crypto, boots real caliptra-rom.bin)
 make -C sim phase2
 make -C sim run-phase2
 make -C sim run-full-phase2
 
-# Synthesize and place-and-route standalone Caliptra Core on ULX3S-85F (fpga/calightra_ulx3s_85f.bit)
+# Synthesize standalone non-crypto CPU/mailbox shell on ULX3S-85F (CALIGHTRA_ICE40: crypto/vaults/DMA stubbed)
 make -C fpga ulx3s-85f
 ```
 
 ### 3. Browser RTL Simulator (`wasm/` & `www/`)
 ```bash
-# Compile Verilated Caliptra 2.1 Core RTL to WebAssembly (requires verilator + em++)
 ./build-wasm.sh
-
-# Run end-to-end headless Firefox boot & mailbox verification (Node 22+)
 node tests/browser/boot-test.mjs
-
-# Or serve www/ locally at http://127.0.0.1:8080/
-python3 -m http.server 8080 --directory www
 ```
 
 ---
 
 ## Documentation & License
 
-- **[`DETAILS.md`](DETAILS.md)**: Full architectural diagrams, stripping phases (`CALIGHTRA_PHASE1`, `CALIGHTRA_NO_COUNTERMEASURES`, `CALIGHTRA_NO_BP`, `CALIGHTRA_ICE40`), hierarchical LUT4/FF breakdown, AXI4 crossbar address map, and Verilator boot logs.
+- **[`DETAILS.md`](DETAILS.md)**: Detailed architecture, exact stripping phase definitions (`CALIGHTRA_PHASE1`, `CALIGHTRA_NO_COUNTERMEASURES`, `CALIGHTRA_NO_BP`, `CALIGHTRA_ICE40`), block-level LUT4 costs showing why upstream ASIC crypto exceeds an 85K-LUT ECP5, AXI4 crossbar map, and boot traces.
 - **[`LICENSE`](LICENSE)**: Licensed under the **Apache License, Version 2.0** (`SPDX-License-Identifier: Apache-2.0`), matching upstream Caliptra.
